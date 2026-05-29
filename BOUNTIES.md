@@ -22,13 +22,4 @@ This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty 
 
 ## Payment condition
 
-# Attachment Summarizer Service Implementation
-
-## Overview
-
-This document describes the implementation of the Attachment Summarizer Service for consuming email attachment events from AWS SQS, processing attachments from Google Cloud Storage, and generating summaries using a self-hosted LLM.
-
-## Project Structure
-
-
 Payment happens after the PR is approved and merged.
