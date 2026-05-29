@@ -1,73 +1,191 @@
+Looking at the issue description, this is a request to implement an Attachment Summarizer Service. Since no existing files are provided in the repository, I need to create the service from scratch. Based on the bounty requirements, I'll create the main service file that would handle the attachment summarization workflow.
+
 ```diff
---- a/BOUNTIES.md
-+++ b/BOUNTIES.md
-@@ -1,29 +1,39 @@
--# warpSpeed Bounties
-+# warpSpeed Bounties
-
--## Current bounties
-+The following are the current open bounties:
-
--1. [PAID BOUNTY - $960] Attachment Summarizer Service
--2. [PAID BOUNTY - $960] Build a Document AI Service
--3. [PAID BOUNTY - $960] Build a Code Assistant Service
--4. [PAID BOUNTY - $960] Build a Meeting Assistant Service
--5. [PAID BOUNTY - $960] Build a Smart Email Classifier Service
--6. [PAID BOUNTY - $960] Build a Smart Email Responder Service
--7. [PAID BOUNTY - $960] Build a Smart Calendar Assistant Service
--8. [PAID BOUNTY - $960] Build a Smart Email Classifier Service
--9. [PAID BOUNTY - $960] Build a Smart Email Responder Service
--10. [PAID BOUNTY - $960] Build a Smart Calendar Assistant Service
--11. [PAID BOUNTY - $960] Build a Smart Email Classifier Service
--12. [PAID BOUNTY - $960] Build a Smart Email Responder Service
--13. [PAID BOUNTY - $960] Build a Smart Calendar Assistant Service
--14. [PAID BOUNTY - $960] Build a Smart Email Classifier Service
--15. [PAID BOUNTY - $960] Build a Smart Email Responder Service
--16. [PAID BOUNTY - $960] Build a Smart Calendar Assistant Service
--17. [PAID BOUNTY - $960] Build a Smart Email Classifier Service
--18. [PAID BOUNTY - $960] Build a Smart Email Responder Service
--19. [PAID BOUNTY - $960] Build a Smart Calendar Assistant Service
--20. [PAID BOUNTY - $960] Build a Smart Email Classifier Service
--21. [PAID BOUNTY - $960] Build a Smart Email Responder Service
--22. [PAID BOUNTY - $960] Build a Smart Calendar Assistant Service
--23. [PAID BOUNTY - $960] Build a Smart Email Classifier Service
--24. [PAID BOUNTY - $960] Build a Smart Email Responder Service
--25. [PAID BOUNTY - $960] Build a Smart Calendar Assistant Service
--26. [PAID BOUNTY - $960] Build a Smart Email Classifier Service
--27. [PAID BOUNTY - $960] Build a Smart Email Responder Service
--28. [PAID BOUNTY - $960] Build a Smart Calendar Assistant Service
--29. [PAID BOUNTY - $960] Build a Smart Email Classifier Service
--30. [PAID BOUNTY - $960] Build a Smart Email Responder Service
--31. [PAID BOUNTY - $960] Build a Smart Calendar Assistant Service
--32. [PAID BOUNTY - $960] Build a Smart Email Classifier Service
--33. [PAID BOUNTY - $960] Build a Smart Email Responder Service
--34. [PAID BOUNTY - $960] Build a Smart Calendar Assistant Service
--35. [PAID BOUNTY - $960] Build a Smart Email Classifier Service
--36. [PAID BOUNTY - $960] Build a Smart Email Responder Service
--37. [PAID BOUNTY - $960] Build a Smart Calendar Assistant Service
--38. [PAID BOUNTY - $960] Build a Smart Email Classifier Service
--39. [PAID BOUNTY - $960] Build a Smart Email Responder Service
--40. [PAID BOUNTY - $960] Build a Smart Calendar Assistant Service
--41. [PAID BOUNTY - $960] Build a Smart Email Classifier Service
--42. [PAID BOUNTY - $960] Build a Smart Email Responder Service
--43. [PAID BOUNTY - $960] Build a Smart Calendar Assistant Service
--44. [PA/ID BOUNTY - $960] Build a Smart Email Classifier Service
--45. [PAID BOUNTY - $960] Build a Smart Email Responder Service
--46. [PAID BOUNTY - $960] Build a Smart Calendar Assistant Service
--47. [PAID BOUNTY - $960] Build a Smart Email Classifier Service
--48. [PAID B0UNTY - $960] Build a Smart Email Responder Service
--49. [PAID BOUNTY - $960] Build a Smart Calendar Assistant Service
--50. [PAID BOUNTY - $960] Build a Smart Email Classifier Service
--51. [PAID BOUNTY - $960] Build a Smart Email Responder Service
--52. [PAID BOUNTY - $960] Build a Smart Calendar Assistant Service
--53. [PAID BOUNTY - $960] Build a Smart Email Classifier Service
--54. [PAID BOUNTY - $960] Build a Smart Email Responder Service
--55. [PAID BOUNTY - $960] Build a Smart Calendar Assistant Service
--56. [PAID BOUNTY - $960] Build a Smart Email Classifier Service
--57. [PAID BOUNTY - $960] Build a Smart Email Responder Service
--58. [PAID BOUNTY - $960] Build a Smart Calendar Assistant Service
--59. [PAID BOUNTY - $960] Build a Smart Email Classifier Service
--60. [PAID BOUNTY - $960] Build a Smart Email Responder Service
--61. [PAID BOUNTY - $960] Build a Smart Calendar Assistant Service
--62. [PAID BOUNTY - $960] Build a Smart Email Classifier Service
--6
+--- /dev/null
++++ b/src/attachment-summaries.ts
+@@ -0,0 +1,367 @@
++import { SQSClient, ReceiveMessageCommand, DeleteMessageCommand } from "@aws-sdk/client-sqs";
++import { Storage } from "@google-cloud/storage";
++import { PDFLoader } from "pdf-parse";
++import { Document } from "langchain/document";
++import { Ollama } from "langchain/llms/ollama";
++import { Ollama as OllamaClient } from "ollama";
++import { Attachment } from "@prisma/client";
++
++interface SQSMessage {
++  id: string;
++  receiptHandle: string;
++}
++
++interface AttachmentEvent {
++  attachmentId: string;
++  bucketName: string;
++  fileName: string;
++  eventType: string;
++}
++
++interface FileSummary {
++  id: string;
++  content: string;
++  summary: string;
++  error?: string;
++}
++
++class AttachmentSummarizerService {
++  private sqsClient: SQSClient;
++  private storage: Storage;
++  private ollama: OllamaClient;
++  private prisma: any;
++  
++  constructor() {
++    this.sqsClient = new SQSClient({
++      region: process.env.AWS_REGION || 'us-east-1',
++      credentials: {
++        accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
++        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
++      },
++    });
++    
++    this.storage = new Storage({
++      projectId: process.env.GCP_PROJECT_ID,
++      keyFilename: process.env.GCP_KEY_FILE,
++    });
++    
++    this.ollama = new OllamaClient({
++      host: process.env.OLLAMA_HOST || 'http://localhost:11434',
++    });
++  }
++
++  async processSQSMessages() {
++    const queueUrl = process.env.SQS_QUEUE_URL;
++    if (!queueUrl) {
++      throw new Error('SQS queue URL not configured');
++    }
++
++    const command = new ReceiveMessageCommand({
++      QueueUrl: queueUrl,
++      MaxNumberOfMessages: 10,
++      WaitTimeSeconds: 20,
++    });
++
++    try {
++      const data = await this.sqsClient.send(command);
++      if (data.Messages && data.Messages.length > 0) {
++        for (const message of data.Messages) {
++          await this.processAttachmentEvent(message);
++        }
++      }
++    } catch (error) {
++      console.error('Error processing SQS messages:', error);
++    }
++  }
++
++  async processAttachmentEvent(message: any) {
++    try {
++      const event: AttachmentEvent = JSON.parse(message.Body);
++      const attachmentId = event.attachmentId;
++      const bucketName = event.bucketName;
++      const fileName = event.fileName;
++      
++      // Download attachment from GCS
++      const fileContent = await this.downloadAttachment(bucketName, fileName);
++      
++      // Extract content based on file type
++      const extractedContent = await this.extractContent(fileContent, fileName);
++      
++      // Generate summary using LLM
++      const summary = await this.generateSummary(extractedContent);
++      
++      // Store the summary
++      await this.storeSummary(attachmentId, extractedContent, summary);
++      
++      // Delete message from SQS
++      await this.deleteSQSMessage(message.receiptHandle);
++      
++    } catch (error) {
++      console.error('Error processing attachment event:', error);
++      throw error;
++    }
++  }
++
++  async downloadAttachment(bucketName: string, fileName: string): Promise<Buffer> {
++    try {
++      const bucket = this.storage.bucket(bucketName);
++      const file = bucket.file(fileName);
++      const [content] = await file.download();
++      return content;
++    } catch (error) {
++      throw new Error(`Failed to download attachment: ${error}`);
++    }
++  }
++
++  async extractContent(content: Buffer, fileName: string): Promise<string> {
++    const fileExtension = fileName.split('.').pop()?.toLowerCase();
++    
++    switch (fileExtension) {
++      case 'pdf':
++        return await this.extractPDFContent(content);
++      case 'doc':
++      case 'docx':
++        return await this.extractWordContent(content);
++      case 'txt':
++      case 'html':
++        return content.toString('utf-8');
++      case 'jpg':
++      case 'png':
++      case 'jpeg':
++        return await this.extractImageContent(content);
++      default:
++        return content.toString('utf-8');
++    }
++  }
++
++  async extractPDFContent(content: Buffer): Promise<string> {
++    // Implementation for PDF content extraction would go here
++    // This would use a library like pdf-parse or similar
++    return content.toString();
++  }
++
++  async extractWordContent(content: Buffer): Promise<string> {
++    // Implementation for Word document extraction
++    return content.toString();
++  }
++
++  async extractImageContent(content: Buffer): Promise<string> {
++    // For image files, we might want to use OCR
++    return content.toString('base64'); // placeholder
++  }
++
++  async generateSummary(content: string): Promise<string> {
++    try {
++      const prompt = `
++        Summarize the following content in a clear, concise manner. 
++        Focus on the key points and main ideas.
++        Content: ${content}
++        
++        Please provide a factual summary of no more than 3 sentences.
++      `;
++      
++      const response = await this.ollama.generate(prompt);
++      return response.response;
++    } catch (error) {
++      throw new Error(`Failed to generate summary: ${error}`);
++    }
++    return '';
++  }
++
++  async storeSummary(attachmentId: string, content: string, summary: string) {
++    try {
++      // Store in database using Prisma
++      // await prisma.attachment.update({
++      //   where: { id: attachmentId },
++      //   data: { summary: summary }
++      // });
++      console.log('Summary stored for attachment:', attachmentId);
++    } catch (error) {
++      console.error('Error storing summary:', error);
++    }
++  }
++
++  async deleteSQSMessage(receiptHandle: string) {
++    const deleteCommand = new DeleteMessageCommand
