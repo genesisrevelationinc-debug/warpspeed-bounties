@@ -38,49 +38,19 @@ _None yet._
 
 ## How to Claim a Bounty
 
-1. Browse available bounties on [warpspeedopen.org/bounties](https://warpspeedopen.org/bounties)
-2. Sign up as a developer on the website
+1. Browse available bounties on [warpspeedopen.org/bounties](https://warpspeedopen.org/bounties).
+2. Sign up as a developer on the website.
 3. Comment on the GitHub issue: "I have signed up and would like to claim this bounty."
-4. Wait for maintainer confirmation before starting work
-5. Submit your pull request before the bounty deadline
+4. Wait for maintainer confirmation before starting work.
+5. Submit your pull request before the bounty deadline.
 
-## Bounty Rules
+## Rules
 
-- Do not start work until a maintainer confirms your claim
-- Maximum 3 submission attempts
-- Minimum 90% specification match required for consideration
-- Payment is made only at 100% completion
-- Payment is processed only after the pull request is approved and merged
-- First code commit is required at the halfway mark between bounty start and bounty expiration
-- Code must be original or properly licensed
-- The official bounty page is the source of truth for full requirements, rules, and deadlines
-
-## Email Threads API Bounty
-
-**Reward:** $750
-**Difficulty:** Hard
-**Skills:** Node.js, TypeScript, Prisma, API Development, Email Systems, Jest Testing, Swagger / API Documentation
-
-### Description
-
-Build a thread-first Email Threads API for the warpSpeed app. This bounty introduces a new threaded email experience so users can work with conversations instead of isolated messages.
-
-### Requirements
-
-- Listing email threads for the authenticated user
-- Opening a single thread and returning thread metadata with related messages
-- Grouping filtered/search results by thread
-- Preserving ownership and access control rules
-- Including drafts in the correct conversation thread
-- Excluding archived and deleted messages where required
-- Updating thread recency when drafts are created, updated, or sent
-- Ensuring synced Gmail, Outlook, and IMAP emails update thread ordering correctly
-- Maintaining consistent search and filtering behaviour with the existing messages endpoint
-- Adding Swagger/API documentation
-- Adding Jest tests for auth, ordering, filters, drafts, and thread detail behaviour
-
-### Full Details
-
-See the official bounty page for complete technical requirements, submission rules, acceptance criteria, and final implementation expectations:
-[https://warpspeedopen.org/bounties](https://warpspeedopen.org/bounties)
+- Do not start work until a maintainer confirms your claim.
+- Maximum 3 submission attempts.
+- Minimum 90% specification match required for consideration.
+- Payment is made only at 100% completion.
+- Payment is processed only after the pull request is approved and merged.
+- First code commit is required at the halfway mark between bounty start and bounty expiration.
+- Code must be original or properly licensed.
 Payment happens after the PR is approved and merged.
