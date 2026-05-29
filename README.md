@@ -28,17 +28,14 @@ Developers can browse open bounties, sign up on the website, claim a GitHub issu
 - Frontend UI
 - React Native
 - Node.js API
+- Prisma / database work
+- TypeScript
+- AI productivity features
+- Documentation
 - Integrations
 
 ## Important payment rule
 
-- **[PAID BOUNTY - $960] Attachment Summarizer Service** - Expert Node.js/TypeScript bounty to build an AI-powered attachment summarization service. [Issue #1](https://github.com/warpspeedopen-source/warpspeed-bounties/issues/1)
-
 Bounties are paid only after the work is approved and the pull request is merged.
 
-- Bounties are paid only after the work is approved and the pull request is merged.
-
-## Important payment rule
-
-Bounties are paid only after the work is approved and the pull request is merged.
 
