@@ -13,20 +13,10 @@ warpSpeed OPEN bounties are reviewed and managed by maintainers.
 
 # Governance
 
-This document outlines the governance structure for the warpSpeed OPEN bounty programme.
+## Project Structure
 
-## Maintainers
-
-Maintainers are responsible for:
-
-## Bounty Lifecycle
-
-1. **Creation**: Bounties are created by the warpSpeed team based on product roadmap
+warpSpeed OPEN is maintained by the warpSpeed team and community contributors.
 
 ## Decision Making
 
-
-## Code of Conduct
-
-All participants must adhere to our [Code of Conduct](CODE_OF_CONDUCT.md).
 Maintainers review bounty claims, pull requests, and acceptance criteria. Final merge decisions belong to maintainers.
