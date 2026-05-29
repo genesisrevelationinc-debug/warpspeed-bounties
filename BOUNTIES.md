@@ -24,66 +24,21 @@ This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty 
 
 # warpSpeed Bounties
 
+This repository contains bounty tasks for the warpSpeed platform.
+
 ## Available Bounties
 
-The following bounties are currently available:
+- **[PAID BOUNTY - $660] Inline Image Editing** - Build an inline image editing feature for the warpSpeed app that allows users to make quick, lightweight image edits directly inside the app.
 
-- [PAID BOUNTY - $660] Inline Image Editing
+## Bounty Process
 
-## Bounty Status
+1. Browse and claim bounties at https://warpspeedopen.org/bounties
+2. Read specifications and requirements carefully
+3. Fork the repository and begin work only after maintainer confirmation
+4. Submit a pull request following the contribution guidelines
+5. Wait for review and approval
+6. Get paid after the PR is approved and merged
 
-This document outlines the current status of bounties in the warpSpeed ecosystem.
-
-### Active Bounties
-
-- [PAID BOUNTY - $660] Inline Image Editing
-
-## Claim Process
-
-1. Browse available bounty tasks on the website
-2. Sign up on the warpSpeed OPEN website
-3. Comment on the GitHub bounty issue to request assignment
-4. Wait for maintainer confirmation before starting paid work
-5. Fork the repository and create your branch
-6. Submit your pull request
-7. Respond to review comments
-8. Get paid after the PR is approved and merged
-
-## Developer Guidelines
-
-All code contributions must follow these guidelines:
-
-1. Code must be original or properly licensed
-2. All bounties require a first code commit at the halfway point
-3. Code must pass all CI checks
-4. Pull requests must be well-documented
-
-## Payment Terms
-
-Payment is processed only after:
-
-- Code is 100% complete and functional
-- Pull request is approved and merged
-- Minimum 90% specification match is achieved
-
-## Technical Requirements for Inline Image Editing Bounty
-
-The implementation must include:
-
-1. Edit button from image preview
-2. Inline image editor screen or modal
-3. Crop and rotate tools
-4. Brightness, contrast, and saturation adjustments
-5. Simple annotations (pen, text, arrows, highlights)
-6. Undo and redo functionality
-7. Save edited image as new version
-8. Preserve original image
-9. Notes behaviour implementation
-10. Messenger behaviour implementation
-
-## File Structure Requirements
-
-The code must be organized in the following structure:
-
-
+For general questions about the bounty programme, visit: https://warpspeedopen.org
+For technical issues, contact: support@warpspeedopen.org
 Payment happens after the PR is approved and merged.
