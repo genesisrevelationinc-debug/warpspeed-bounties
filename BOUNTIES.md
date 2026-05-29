@@ -22,4 +22,34 @@ This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty 
 
 ## Payment condition
 
+# warpSpeed Bounties
+
+Paid open-source bounty tasks for developers contributing to **warpSpeed OPEN**.
+
+## Available Bounties
+
+- [PAID BOUNTY - $960] Attachment Summarizer Service
+  - **Difficulty**: Expert
+  - **Skills**: Node.js, TypeScript, Prisma, AWS SQS, Google Cloud Storage, Docker, Ollama
+  - **Description**: Build a service that consumes email attachment events from AWS SQS, downloads attachments from Google Cloud Storage, extracts content, and generates summaries using a self-hosted LLM.
+  - **Status**: Open
+  - **Issue**: [Link to GitHub issue](https://github.com/warpspeedopen-source/warpspeed-bounties/issues/1)
+
+## How to Claim a Bounty
+
+1. Open the bounty page on [warpspeedopen.org](https://warpspeedopen.org/bounties)
+2. Sign up as a developer
+3. Review the full bounty details and rules
+4. Return to the GitHub issue and comment: "I have signed up and would like to claim this bounty."
+5. Wait for maintainer confirmation before starting work
+
+## Important Rules
+
+- Do not start work until a maintainer confirms your claim
+- Maximum 3 submission attempts per bounty
+- Payment is made only after the pull request is approved and merged
+- Code must be original or properly licensed
+- The full bounty page is the source of truth for technical requirements and deadlines
+
+For questions, join our Discord community.
 Payment happens after the PR is approved and merged.
