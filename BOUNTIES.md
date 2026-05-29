@@ -24,78 +24,87 @@ This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty 
 
 # warpSpeed Bounties
 
-This document outlines the available bounties for the warpSpeed project.
+This document tracks active and completed bounties for the warpSpeed OPEN programme.
 
-## Available Bounties
+## Active Bounties
 
-### [PAID BOUNTY - $660] Note Locking - Biometrics/PIN
+### Note Locking - Biometrics/PIN
 
-#### Bounty Overview
+| Field | Details |
+|-------|---------|
+| **Reward** | $660 |
+| **Difficulty** | Medium |
+| **Status** | 🟢 Open for claims |
+| **Skills** | React Native, TypeScript, Biometric Authentication, Secure UI States |
+
+#### Description
 
 Build note-level locking for the warpSpeed Notes experience using biometrics, device authentication, or a user-defined PIN.
 
-This bounty gives users a private vault inside Notes. Users should be able able to lock new or existing notes, clearly see which notes are locked, and unlock them only after successful authentication.
+This bounty gives users a private vault inside Notes. Users should be able to lock new or existing notes, clearly see which notes are locked, and unlock them only after successful authentication.
 
 Locked notes must stay hidden or obscured until unlocked, and the app should require re-authentication after app restart or after a configurable timeout.
 
-#### Reward
-
-**$660**
-
-#### Difficulty
-
-Medium
-
-#### Main Skills
-
-* React Native
-* TypeScript
-* Biometric Authentication
-* Secure UI States
-* Notes Feature Development
-* Mobile Security UX
-* Reusable Component Architecture
-
-#### High-Level Scope
-
-The selected developer will build a secure note locking feature for the Notes experience.
-
-The implementation should include:
-
-* Ability to lock a new note
-* Ability to lock an existing note
-* Authentication using Face ID, Touch ID, fingerprint, device PIN, or user-defined PIN where supported
-* Clear locked-note state in the UI
-* Locked notes hidden or obscured until authentication succeeds
-* Secure lock screen for unauthenticated access attempts
-* No note content revealed before successful unlock
-* Re-authentication after app restart
-* Re-authentication after a configurable timeout period
-* Ability to remove a note lock through note settings
-* Ability to change lock settings through note settings
-* Authentication required before removing or changing a lock
-* Clear UI indicators such as lock icons or labels
-* Clean separation between authentication layer, note-locking logic, and UI components
-
 #### Technical Requirements
 
-* Reusable TypeScript and React Native implementation
-* Support for biometric authentication (Face ID, Touch ID, fingerprint, device PIN)
-* Secure storage of note content
-* Re-authentication after app restart or timeout
-* Configurable timeout settings
-* Clear visual indicators for locked notes (lock icons)
-* No note content should be revealed before successful authentication
-* Clean separation between authentication layer, note-locking logic, and UI components
+- [ ] Ability to lock a new note
+- [ ] Ability to lock an existing note
+- [ ] Authentication using Face ID, Touch ID, fingerprint, device PIN, or user-defined PIN where supported
+- [ ] Clear locked-note state in the UI
+- [ ] Locked notes hidden or obscured until authentication succeeds
+- [ ] Secure lock screen for unauthenticated access attempts
+- [ ] No note content revealed before successful unlock
+- [ ] Re-authentication after app restart
+- [ ] Re-authentication after a configurable timeout period
+- [ ] Ability to remove a note lock through note settings
+- [ ] Ability to change lock settings through note settings
+- [ ] Authentication required before removing or changing a lock
+- [ ] Clear UI indicators such as lock icons or labels
+- [ ] Clean separation between authentication layer, note-locking logic, and UI components
+- [ ] Reusable TypeScript and React Native implementation that can be extended later
 
-#### Submission Rules
+#### Design Reference
 
-1. The implementation must follow the design reference provided
-2. Code must be original or properly licensed
-3. All functionality must be tested across supported platforms
-4. The solution must be production-ready and secure
+[Adobe XD Prototype](https://xd.adobe.com/view/b74cd4eb-ec51-400e-bdb2-5041a123510c-e21f/)
 
-#### Resources
+#### How to Claim
 
-[Full Bounty Specification](https://warpspeedopen.org/bounties)
+1. Visit [warpSpeed OPEN Bounties](https://warpspeedopen.org/bounties)
+2. Sign up as a developer
+3. Return to the [GitHub issue](https://github.com/warpspeedopen-source/warpspeed-bounties/issues) and comment:
+
+> "I have signed up and would like to claim this bounty."
+
+4. Wait for maintainer confirmation before starting work
+
+#### Important Rules
+
+- Do not start work until a maintainer confirms your claim
+- Maximum 3 submission attempts
+- Minimum 90% specification match required for consideration
+- Payment is made only at 100% completion
+- Payment is processed only after the pull request is approved and merged
+- First code commit is required at the halfway mark between bounty start and bounty expiration
+- Code must be original or properly licensed
+- The official bounty page is the source of truth for full requirements, rules, and deadlines
+
+---
+
+## Completed Bounties
+
+*No completed bounties yet.*
+
+---
+
+## Bounty Status Legend
+
+| Symbol | Meaning |
+|--------|---------|
+| 🟢 | Open for claims |
+| 🟡 | Claimed, in progress |
+| 🔴 | Closed / Completed |
+
+---
+
+*Last updated: 2024*
 Payment happens after the PR is approved and merged.
