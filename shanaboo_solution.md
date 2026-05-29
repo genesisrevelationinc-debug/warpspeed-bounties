@@ -10,13 +10,15 @@
 +  StyleSheet,
 +  Animated,
 +  PanResponder,
-+  GestureResponderEvent,
++  Dimensions,
 +} from 'react-native';
-+import Slider from '@react-native-community/slider';
 +import { Audio } from 'expo-av';
-+import { useAudioStore } from '../../store/audioStore';
-+import { formatDuration } from '../../utils/timeUtils';
++import { Ionicons } from '@expo/vector-icons';
 +import { AudioPlayerProps, PlaybackSpeed } from '../../types/audio';
++import { formatDuration } from '../../utils/time';
++import { useAudioStore } from '../../store/audioStore';
++
++const { width: screenWidth } = Dimensions.get('window');
 +
 +const PLAYBACK_SPEEDS: PlaybackSpeed[] = [0.5, 1, 1.5, 2];
 +
@@ -34,9 +36,23 @@
 +  const [playbackSpeed, setPlaybackSpeed] = useState<PlaybackSpeed>(1);
 +  const [isLoading, setIsLoading] = useState(true);
 +  const progressAnim = useRef(new Animated.Value(0)).current;
-+  const { updateLastPosition, getLastPosition } = useAudioStore();
++  const { savePlaybackPosition } = useAudioStore();
 +
-+  const loadAudio = useCallback(async () => {
++  useEffect(() => {
++    loadAudio();
++    return () => {
++      cleanup();
++    };
++  }, [audioUri]);
++
++  const cleanup = async () => {
++    if (sound) {
++      await sound.stopAsync();
++      await sound.unloadAsync();
++    }
++  };
++
++  const loadAudio = async () => {
 +    try {
 +      setIsLoading(true);
 +      const { sound: newSound } = await Audio.Sound.createAsync(
@@ -49,37 +65,37 @@
 +        onPlaybackStatusUpdate
 +      );
 +      setSound(newSound);
++      const status = await newSound.getStatusAsync();
++      if (status.isLoaded) {
++        setDuration(status.durationMillis || 0);
++        setPosition(status.positionMillis || 0);
++      }
 +      setIsLoading(false);
 +    } catch (error) {
 +      console.error('Error loading audio:', error);
 +      setIsLoading(false);
 +    }
-+  }, [audioUri, initialPosition, playbackSpeed]);
++  };
 +
-+  useEffect(() => {
-+    loadAudio();
-+    return () => {
-+      sound?.unloadAsync();
-+    };
-+  }, [loadAudio]);
++  const onPlaybackStatusUpdate = useCallback(
++    (status: Audio.PlaybackStatus) => {
++      if (!status.isLoaded) return;
 +
-+  const onPlaybackStatusUpdate = (status: Audio.PlaybackStatus) => {
-+    if (status.isLoaded) {
 +      setPosition(status.positionMillis);
-+      setDuration(status.durationMillis || 0);
 +      setIsPlaying(status.isPlaying);
-+      
++
 +      if (status.durationMillis) {
 +        const progress = status.positionMillis / status.durationMillis;
 +        progressAnim.setValue(progress);
 +      }
 +
 +      if (status.didJustFinish) {
-+        updateLastPosition(noteId, 0);
-+        setPosition(0);
++        savePlaybackPosition(noteId, 0);
++        progressAnim.setValue(0);
 +      }
-+    }
-+  };
++    },
++    [noteId, progressAnim, savePlaybackPosition]
++  );
 +
 +  const togglePlayPause = async () => {
 +    if (!sound) return;
@@ -87,17 +103,14 @@
 +    if (isPlaying) {
 +      await sound.pauseAsync();
 +    } else {
-+      const lastPosition = getLastPosition(noteId);
-+      if (lastPosition > 0 && position === 0) {
-+        await sound.setPositionAsync(lastPosition);
-+      }
 +      await sound.playAsync();
 +    }
 +  };
 +
-+  const seekTo = async (value: number) => {
++  const seekTo = async (percentage: number) => {
 +    if (!sound || !duration) return;
-+    const newPosition = Math.floor(value * duration);
++
++    const newPosition = Math.max(0, Math.min(duration * percentage, duration));
 +    await sound.setPositionAsync(newPosition);
 +    setPosition(newPosition);
 +  };
@@ -115,61 +128,57 @@
 +  };
 +
 +  const changePlaybackSpeed = async () => {
-+    if (!sound) return;
 +    const currentIndex = PLAYBACK_SPEEDS.indexOf(playbackSpeed);
 +    const nextIndex = (currentIndex + 1) % PLAYBACK_SPEEDS.length;
 +    const newSpeed = PLAYBACK_SPEEDS[nextIndex];
-+    await sound.setRateAsync(newSpeed, true);
 +    setPlaybackSpeed(newSpeed);
++
++    if (sound) {
++      await sound.setRateAsync(newSpeed, true);
++    }
 +  };
 +
 +  const handleDelete = () => {
-+    sound?.unloadAsync();
++    cleanup();
 +    onDelete?.();
 +  };
 +
-+  const progressPercent = duration > 0 ? (position / duration) * 100 : 0;
++  const progressBarWidth = screenWidth - 120;
++  const panResponder = useRef(
++    PanResponder.create({
++      onStartShouldSetPanResponder: () => true,
++      onMoveShouldSetPanResponder: () => true,
++      onPanResponderMove: (_, gestureState) => {
++        const percentage = Math.max(
++          0,
++          Math.min(gestureState.moveX / progressBarWidth, 1)
++        );
++        progressAnim.setValue(percentage);
++      },
++      onPanResponderRelease: (_, gestureState) => {
++        const percentage = Math.max(
++          0,
++          Math.min(gestureState.moveX / progressBarWidth, 1)
++        );
++        seekTo(percentage);
++      },
++    })
++  ).current;
++
++  const progressWidth = progressAnim.interpolate({
++    inputRange: [0, 1],
++    outputRange: ['0%', '100%'],
++  });
 +
 +  return (
 +    <View style={styles.container}>
 +      <View style={styles.waveformContainer}>
-+        <View style={styles.waveform}>
-+          {Array.from({ length: 40 }).map((_, i) => (
-+            <Animated.View
-+              key={i}
-+              style={[
-+                styles.waveformBar,
-+                {
-+                  height: Math.random() * 30 + 5,
-+                  backgroundColor:
-+                    i < progressPercent / 2.5
-+                      ? '#4A90D9'
-+                      : '#E0E0E0',
-+                },
-+              ]}
-+            />
-+          ))}
-+        </View>
-+      </View>
-+
-+      <View style={styles.progressContainer}>
-+        <Text style={styles.timeText}>{formatDuration(position)}</Text>
-+        <Slider
-+          style={styles.progressBar}
-+          value={position}
-+          minimumValue={0}
-+          maximumValue={duration || 1}
-+          onSlidingComplete={(value) => seekTo(value / (duration || 1))}
-+          minimumTrackTintColor="#4A90D9"
-+          maximumTrackTintColor="#E0E0E0"
-+          thumbTintColor="#4A90D9"
-+        />
-+        <Text style={styles.timeText}>{formatDuration(duration)}</Text>
++        <AudioWaveform isPlaying={isPlaying} />
 +      </View>
 +
 +      <View style={styles.controlsContainer}>
 +        <TouchableOpacity onPress={skipBackward} style={styles.controlButton}>
-+          <Text style={styles.controlText}>⏪ 15s</Text>
++          <Ionicons name="play-back" size={20} color="#666" />
 +        </TouchableOpacity>
 +
 +        <TouchableOpacity
@@ -177,7 +186,11 @@
 +          style={styles.playButton}
 +          disabled={isLoading}
 +        >
-+          <Text style={styles.playButtonText}>
-+            {isPlaying ? '⏸' : '▶️'}
-+          </Text>
-+        </
++          <Ionicons
++            name={isPlaying ? 'pause' : 'play'}
++            size={28}
++            color="#fff"
++          />
++        </TouchableOpacity>
++
++        <TouchableOpacity onPress
