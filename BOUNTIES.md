@@ -1,49 +1,3 @@
-# warpSpeed Attachment Summarizer Service
-
-## Overview
-
-This document outlines the requirements for building a Node.js attachment summarizer service that:
-
-- Consumes email attachment events from AWS SQS
-- Downloads attachments from Google Cloud Storage
-- Extracts content from common file types (PDFs, Word docs, etc.)
-- Generates natural-language summaries using a self-hosted LLM
-- Stores results in a database using Prisma
-
-## Technical Requirements
-
-### Core Functionality
-
-- **SQS Queue Consumption**: The service must connect to an AWS SQS queue to receive attachment processing events.
-- **GCS Download**: Upon receiving an SQS message, the service downloads the corresponding file from Google Cloud Storage.
-- **Content Extraction**: Extract content from:
-  - PDF files (via `pdf-parse` or similar)
-  - DOCX files (via `mammoth` or similar)
-  - Plain text files
-  - HTML content
-  - Images (OCR via `tesseract` or similar)
-- **Summarization**:
-  - Use a self-hosted LLM (e.g., Llama 2 via Ollama) to generate concise, natural-language summaries.
-  - Summaries should be returned in English, max 3-5 sentences.
-- **Storage**:
-  - Use Prisma ORM to store summary results in a PostgreSQL or MySQL database.
-  - Include fields: `id`, `emailId`, `summary`, `attachmentName`, `processedAt`
-
-## Setup Instructions
-
-### Prerequisites
-
-- Node.js >= 18.x
-- Docker & Docker Compose
-- Google Cloud SDK configured
-- AWS CLI configured with SQS access
-- PostgreSQL (or compatible DB) instance
-
-### Environment Variables
-
-The service requires the following environment variables:
-
-
 # Open Bounties
 
 This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty page.
@@ -68,4 +22,19 @@ This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty 
 
 ## Payment condition
 
+# warpSpeed Bounties
+
+This document provides an overview of the available bounties in the warpSpeed OPEN programme.
+
+## Available Bounties
+
+- [PAID BOUNTY - $960] Attachment Summarizer Service
+  - Build a Node.js service to process email attachments, generate summaries using a self-hosted LLM
+  - Consume events from AWS SQS, download from GCS, and store results in database
+  - [View full bounty details](https://warpspeedopen.org/bounties/attachment-summarizer)
+
+## Claiming a Bounty
+
+1. Sign up at [warpspeedopen.org](https://warpspeedopen.org)
+2. Comment on the corresponding GitHub issue: "I have signed up and would like to claim this bounty."
 Payment happens after the PR is approved and merged.
