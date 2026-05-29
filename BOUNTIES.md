@@ -1,4 +1,3 @@
-
 # Open Bounties
 
 This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty page.
