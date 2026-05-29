@@ -34,12 +34,14 @@ Thank you for your interest in contributing to warpSpeed OPEN! This document out
 
 ## Getting Started
 
+### For Bounty Participants
+
 1. **Browse Available Bounties**
    - Visit [warpspeedopen.org/bounties](https://warpspeedopen.org/bounties)
-   - Review open issues on GitHub with the `bounty` and `paid` labels
+   - Review open issues with the `bounty` and `paid` labels
 
-2. **Sign Up as a Developer**
-   - Complete the developer registration at [warpspeedopen.org/signup](https://warpspeedopen.org/signup)
+2. **Sign Up**
+   - Complete developer registration at [warpspeedopen.org/signup](https://warpspeedopen.org/signup)
 
 3. **Claim a Bounty**
    - Comment on the GitHub issue: *"I have signed up and would like to claim this bounty."*
@@ -49,7 +51,7 @@ Thank you for your interest in contributing to warpSpeed OPEN! This document out
 
 ### Branch Naming
 
-Use the following format for your branches:
+Use the following format for bounty branches:
 
 
 - and the PR is merged.
