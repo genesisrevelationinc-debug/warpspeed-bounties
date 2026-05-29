@@ -22,17 +22,80 @@ This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty 
 
 ## Payment condition
 
-# warpSpeed Bounties Implementation Guide
+# warpSpeed Bounties
 
-## Note Locking - Biometrics/PIN Implementation
+Paid open-source bounty tasks for developers contributing to **warpSpeed OPEN**.
 
-### Overview
+## Available Bounties
 
-This document outlines the implementation approach for the Note Locking feature using biometrics, device authentication, or user-defined PIN.
+### [PAID BOUNTY - $660] Note Locking - Biometrics/PIN
 
-### Core Components
+**Difficulty:** Medium
 
-#### 1. Authentication Service
+**Main Skills:**
+* React Native
+* TypeScript
+* Biometric Authentication
+* Secure UI States
+* Notes Feature Development
+* Mobile Security UX
+* Reusable Component Architecture
+
+**Bounty Overview:**
+
+Build note-level locking for the warpSpeed Notes experience using biometrics, device authentication, or a user-defined PIN.
+
+This bounty gives users a private vault inside Notes. Users should be able to lock new or existing notes, clearly see which notes are locked, and unlock them only after successful authentication.
+
+Locked notes must stay hidden or obscured until unlocked, and the app should require re-authentication after app restart or after a configurable timeout.
+
+**High-Level Scope:**
+
+The implementation should include:
+
+* Ability to lock a new note
+* Ability to lock an existing note
+* Authentication using Face ID, Touch ID, fingerprint, device PIN, or user-defined PIN where supported
+* Clear locked-note state in the UI
+* Locked notes hidden or obscured until authentication succeeds
+* Secure lock screen for unauthenticated access attempts
+* No note content revealed before successful unlock
+* Re-authentication after app restart
+* Re-authentication after a configurable timeout period
+* Ability to remove a note lock through note settings
+* Ability to change lock settings through note settings
+* Authentication required before removing or changing a lock
+* Clear UI indicators such as lock icons or labels
+* Clean separation between authentication layer, note-locking logic, and UI components
+* Reusable TypeScript and React Native implementation that can be extended later
+
+**Technical Requirements:**
+
+1. **Authentication Service**
+   - Biometric authentication (Face ID, Touch ID, fingerprint)
+   - Fallback to device PIN/passcode
+   - Custom PIN creation and validation
+   - Secure storage of authentication preferences
+
+2. **Note Locking Logic**
+   - Lock/unlock individual notes
+   - Store lock status per note
+   - Encryption of note content when locked
+   - Timeout mechanism for re-authentication
+
+3. **UI Components**
+   - Lock indicator icons
+   - Authentication prompt screens
+   - Note preview obfuscation
+   - Settings interface for lock management
+
+4. **Security Considerations**
+   - Secure keychain storage for encryption keys
+   - No plaintext storage of sensitive content
+   - Proper session management
+   - Timeout handling
+
+**Implementation Plan:**
 
 
 Payment happens after the PR is approved and merged.
