@@ -24,73 +24,41 @@ This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty 
 
 # warpSpeed Bounties
 
-This document outlines the available bounties in the warpSpeed ecosystem.
+Paid open-source bounty tasks for developers contributing to **warpSpeed OPEN**.
 
-## Available Bounties
+## Active Bounties
 
-### Email Threads API (PAID - $750)
+### [PAID BOUNTY - $750] Email Threads API
+
+Build a thread-first Email Threads API for the warpSpeed app.
+
+**Reward**: $750
 
 **Difficulty**: Hard
 
 **Main Skills Required**:
-- Node.js
-- TypeScript
-- Prisma
-- API Development
-- Email Systems
-- Jest Testing
-- Swagger / API Documentation
+* Node.js
+* TypeScript  
+* Prisma
+* API Development
+* Email Systems
+* Jest Testing
+* Swagger / API Documentation
 
-**Bounty Overview**:
+## Technical Implementation Requirements:
 
-Build a thread-first Email Threads API for the warpSpeed app.
+1. **Thread Listing API** - Create an endpoint to list email threads for authenticated user
+2. **Thread Detail API** - Create an endpoint to open a single thread and return thread metadata with related messages  
+3. **Thread Grouping** - Group filtered/search results by thread
+4. **Access Control** - Preserve ownership and access control rules
+5. **Draft Handling** - Include drafts in the correct conversation thread
+6. **Thread Recency** - Update thread recency when drafts are created/updated/sent
+7. **Email Sync** - Ensure synced Gmail, Outlook, IMAP emails update thread ordering
+8. **Search/Filter** - Maintain consistent search/filter behaviour with existing messages endpoint
+9. **Documentation** - Add Swagger/API documentation
+10. **Testing** - Add Jest tests for auth, ordering, filters, drafts and thread detail behaviour
 
-This bounty introduces a new threaded email experience so users can work with conversations instead of isolated messages. Developers will create API support for listing email threads, opening a thread to view related messages, preserving draft activity inside the correct conversation, and ensuring search/filter behaviour remains consistent with the existing message API.
+## Database Schema Changes Required:
 
-**High-Level Scope**:
 
-The selected developer will build a thread-first email API that supports:
-
-- Listing email threads for the authenticated user
-- Opening a single thread and returning thread metadata with related messages
-- Grouping filtered/search results by thread
-- Preserving ownership and access control rules
-- Including drafts in the correct conversation thread
-- Excluding archived and deleted messages where required
-- Updating thread recency when drafts are created, updated, or sent
-- Ensuring synced Gmail, Outlook, and IMAP emails update thread ordering correctly
-- Maintaining consistent search and filtering behaviour with the existing messages endpoint
-- Adding Swagger/API documentation
-- Adding Jest tests for auth, ordering, filters, drafts, and thread detail behaviour
-
-**Technical Requirements**:
-
-1. **Thread Listing Endpoint**
-   - GET `/api/v1/threads`
-   - Support pagination, sorting, and filtering
-   - Return thread metadata including subject, participants, message count, and timestamps
-
-2. **Thread Detail Endpoint**
-   - GET `/api/v1/threads/{threadId}`
-   - Return thread metadata with all related messages
-   - Include drafts in the conversation thread
-
-3. **Search and Filter Integration**
-   - Ensure thread grouping works with existing search functionality
-   - Maintain consistent filtering behavior with messages API
-
-4. **Draft Handling**
-   - Drafts should be associated with the correct conversation thread
-   - Thread recency should update when drafts are created/updated/sent
-
-5. **Access Control**
-   - Maintain existing ownership and permission rules
-   - Exclude archived and deleted messages from thread views
-
-**Acceptance Criteria**:
-- All endpoints properly documented with Swagger
-- Comprehensive test coverage (minimum 85%)
-- Code follows existing warpSpeed code style and patterns
-- Proper error handling and validation
-- Backward compatibility with existing message API
 Payment happens after the PR is approved and merged.
