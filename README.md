@@ -1,6 +1,7 @@
 # warpSpeed Bounties
 
-Paid open-source bounty tasks for developers contributing to **warpSpeed OPEN**.
+ 
+
 
 Developers can browse open bounties, sign up on the website, claim a GitHub issue, submit a pull request, and receive payment after the PR is approved and merged.
 
