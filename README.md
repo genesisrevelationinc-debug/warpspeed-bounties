@@ -1,8 +1,8 @@
 # warpSpeed Bounties
 
-# Paid open-source bounty tasks for developers contributing to **warpSpeed OPEN**.
+# warpSpeed Bounties
 
-Developers can browse open bounties, sign up on the website, claim a GitHub issue, submit a pull request, and receive payment after the PR is approved and merged.
+Paid open-source bounty tasks for developers contributing to **warpSpeed OPEN**.
 
 Developers can browse open bounties, sign up on the website, claim a GitHub issue, submit a pull request, and receive payment after the PR is approved and merged.
 
@@ -29,12 +29,14 @@ Developers can browse open bounties, sign up on the website, claim a GitHub issu
 
 - Frontend UI
 - React Native
+
+## Bounty categories
+
+- Security/Authentication
+- Mobile Features
+- Frontend UI
+- React Native
 - Node.js API
-- Prisma / database work
-- TypeScript
-- AI productivity features
-- Documentation
-- Integrations
 
 ## Important payment rule
 
