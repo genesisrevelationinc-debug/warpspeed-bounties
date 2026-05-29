@@ -1,51 +1,70 @@
 ```diff
 --- /dev/null
-+++ b/b/services/attachment-summarizer/.dockerignore
-@@ -0,0 +1,6 @@
++++ b/services/attachment-summarizer/.dockerignore
+@@ -0,0 +1,15 @@
 +node_modules
 +dist
 +.env
-+*.log
++.env.local
 +coverage
++.nyc_output
++*.log
 +.git
-\ No newline at end of file
++.gitignore
++README.md
++Dockerfile
++docker-compose.yml
++.docker
++*.test.ts
++*.spec.ts
 --- /dev/null
-+++ b/b/services/attachment-summarizer/.env.example
-@@ -0,0 +1,21 @@
-+# AWS SQS Configuration
++++ services/attachment-summarizer/.env.example
+@@ -0,0 +1,23 @@
++# Server
++PORT=3000
++NODE_ENV=development
++
++# AWS SQS
 +AWS_REGION=us-east-1
-+AWS_ACCESS_KEY_ID=your-access-key
-+AWS_SECRET_ACCESS_KEY=your-secret-key
-+SQS_QUEUE_URL=https://sqs.us-east-1.amazonaws.com/123456789012/attachment-events
++AWS_ACCESS_KEY_ID=
++AWS_SECRET_ACCESS_KEY=
++SQS_QUEUE_URL=
++SQS_VISIBILITY_TIMEOUT=300
++SQS_WAIT_TIME_SECONDS=20
 +
 +# Google Cloud Storage
-+GCS_PROJECT_ID=your-gcs-project-id
-+GCS_BUCKET_NAME=your-attachment-bucket
-+GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account-key.json
++GCS_BUCKET_NAME=
++GCS_PROJECT_ID=
++GCS_KEY_FILENAME=
++GCS_TEMP_DIR=/tmp/attachments
 +
-+# Ollama / LLM Configuration
++# Ollama LLM
 +OLLAMA_BASE_URL=http://localhost:11434
 +OLLAMA_MODEL=llama3.2
 +SUMMARY_MAX_TOKENS=500
-+
-+# Application
-+NODE_ENV=development
-+LOG_LEVEL=info
-+MAX_FILE_SIZE_MB=50
-+SUPPORTED_MIME_TYPES=application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/plain,text/html,image/jpeg,image/png,image/gif
-\ No newline at end of file
++SUMMARY_TEMPERATURE=0.3
 --- /dev/null
-+++ 	b/services/attachment-summarizer/.gitignore
-@@ -0,0 +1,5 @@
++++ services/attachment-summarizer/.gitignore
+@@ -0,0 +1,15 @@
 +node_modules
 +dist
 +.env
-+*.log
++.env.local
 +coverage
-\ No newline at end of file
++.nyc_output
++*.log
++*.tmp
++*.temp
++/tmp/attachments/*
++!/tmp/attachments/.gitkeep
++/uploads
++.DS_Store
++*.swp
++*.swo
++*~
 --- /dev/null
-+++ 	b/services/attachment-summarizer/Dockerfile
-@@ -0,0 +1,48 @@
++++ services/attachment-summarizer/Dockerfile
+@@ -0,0 +1,52 @@
 +# Build stage
 +FROM node:20-alpine AS builder
 +
@@ -55,7 +74,7 @@
 +RUN apk add --no-cache python3 make g++
 +
 +COPY package*.json ./
-+COPY prisma ./prisma/
++COPY tsconfig.json ./
 +
 +RUN npm ci
 +
@@ -68,112 +87,107 @@
 +
 +WORKDIR /app
 +
-+# Install dependencies for file processing
++# Install runtime dependencies for file processing
 +RUN apk add --no-cache \
 +    python3 \
-+    make \
-+    g++ \
 +    libreoffice \
 +    poppler-utils \
 +    tesseract-ocr \
-+    tesseract-ocr-data-eng
++    tesseract-ocr-data-eng \
++    && ln -sf python3 /usr/bin/python
++
++# Create temp directory for attachments
++RUN mkdir -p /tmp/attachments && chmod 777 /tmp/attachments
++
++# Copy built application
++COPY --from=builder /app/dist ./dist
++COPY --from=builder /app/node_modules ./node_modules
++COPY --from=builder /app/package*.json ./
 +
 +# Create non-root user
 +RUN addgroup -g 1001 -S nodejs && \
 +    adduser -S nodejs -u 1001
 +
-+COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
-+COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
-+COPY --from=builder --chown=nodejs:nodejs /app/package*.json ./
-+COPY --from=builder --chown=nodejs:nodejs /app/prisma ./prisma
-+
 +USER nodejs
 +
 +EXPOSE 3000
 +
-+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
++ENV NODE_ENV=production
++ENV GCS_TEMP_DIR=/tmp/attachments
++
++HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 +    CMD node -e "require('http').get('http://localhost:3000/health', (r) => r.statusCode === 200 ? process.exit(0) : process.exit(1))"
 +
 +CMD ["node", "dist/index.js"]
-\ No newline at end of file
 --- /dev/null
-+++ 	b/services/attachment-summarizer/docker-compose.yml
++++ services/attachment-summarizer/docker-compose.yml
 @@ -0,0 +1,56 @@
 +version: '3.8'
 +
 +services:
-+  ollama:
-+    image: ollama/ollama:latest
-+    container_name: ollama
-+    volumes:
-+      - ollama-data:/root/.ollama
-+    ports:
-+      - "11434:11434"
-+    healthcheck:
-+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
-+      interval: 30s
-+      timeout: 10s
-+      retries: 5
-+
-+  attachment-summarizer:
++  app:
 +    build:
 +      context: .
 +      dockerfile: Dockerfile
-+    container_name: attachment-summarizer
-+    env_file:
-+      - .env
++    ports:
++      - "3000:3000"
 +    environment:
++      - NODE_ENV=production
++      - AWS_REGION=${AWS_REGION}
++      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
++      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
++      - SQS_QUEUE_URL=${SQS_QUEUE_URL}
++      - GCS_BUCKET_NAME=${GCS_BUCKET_NAME}
++      - GCS_PROJECT_ID=${GCS_PROJECT_ID}
 +      - OLLAMA_BASE_URL=http://ollama:11434
++      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3.2}
++    volumes:
++      - ${GCS_KEY_FILENAME:-/dev/null}:/secrets/gcs-key.json:ro
++      - attachment-temp:/tmp/attachments
 +    depends_on:
-+      ollama:
-+        condition: service_healthy
-+    volumes:
-+      - ./tmp:/app/tmp
-+    healthcheck:
-+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (r) => r.statusCode === 200 ? process.exit(0) : process.exit(1))"]
-+      interval: 30s
-+      timeout: 10s
-+      retries: 3
++      - ollama
++      - redis
++    networks:
++      - attachment-summarizer
 +
-+  # Optional: LocalStack for SQS testing
-+  localstack:
-+    image: localstack/localstack:latest
-+    container_name: localstack
++  ollama:
++    image: ollama/ollama:latest
 +    ports:
-+      - "4566:4566"
-+    environment:
-+      - SERVICES=sqs
-+      - DEFAULT_REGION=us-east-1
++      - "11434:11434"
 +    volumes:
-+      - localstack-data:/var/lib/localstack
++      - ollama-data:/root/.ollama
++    networks:
++      - attachment-summarizer
++    # Pull model on first start
++    entrypoint: >
++      sh -c "ollama serve & sleep 5 && ollama pull ${OLLAMA_MODEL:-llama3.2} && wait"
 +
-+  # Optional: PostgreSQL for Prisma
-+  postgres:
-+    image: postgres:15-alpine
-+    container_name: postgres
-+    environment:
-+      POSTGRES_USER: summarizer
-+      POSTGRES_PASSWORD: summarizer
-+      POSTGRES_DB: attachments
-+    volumes:
-+      - postgres-data:/var/lib/postgresql/data
++  redis:
++    image: redis:7-alpine
 +    ports:
-+      - "5432:5432"
++      - "6379:6379"
++    volumes:
++      - redis-data:/data
++    networks:
++      - attachment-summarizer
++
++networks:
++  attachment-summarizer:
++    driver: bridge
 +
 +volumes:
 +  ollama-data:
-+  localstack-data:
-+  postgres-data:
-\ No newline at end of file
++  redis-data:
++  attachment-temp:
 --- /dev/null
-+++ 	b/services/attachment-summarizer/jest.config.js
++++ services/attachment-summarizer/jest.config.js
 @@ -0,0 +1,18 @@
-+/** @type {import('jest').Config} */
++/** @type {import('ts-jest').JestConfigWithTsJest} */
 +module.exports = {
 +  preset: 'ts-jest',
 +  testEnvironment: 'node',
 +  roots: ['<rootDir>/src'],
-+  testMatch: ['**/__tests__/**/*.test.ts'],
++  testMatch: ['**/__tests__/**/*.test.ts', '**/?(*.)+(spec|test).ts'],
 +  transform: {
 +    '^.+\\.ts$': 'ts-jest',
 +  },
@@ -184,4 +198,12 @@
 +  ],
 +  coverageDirectory: 'coverage',
 +  coverageReporters: ['text', 'lcov', 'html'],
-+  setupFilesAfterEnv: ['<
++  setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],
++  testTimeout: 30000,
++};
+--- /dev/null
++++ services/attachment-summarizer/package.json
+@@ -0,0 +1,62 @@
++{
++  "name": "attachment-summarizer",
++
