@@ -22,23 +22,27 @@ This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty 
 
 ## Payment condition
 
-# warpSpeed Bounties
+## warpSpeed Bounties
 
-This repository contains bounty tasks for the warpSpeed platform.
+This repository contains paid bounty tasks for developers contributing to **warpSpeed OPEN**.
 
 ## Available Bounties
 
-- **[PAID BOUNTY - $660] Inline Image Editing** - Build an inline image editing feature for the warpSpeed app that allows users to make quick, lightweight image edits directly inside the app.
+- **[PAID BOUNTY - $660] Inline Image Editing** - Build an inline image editor that supports quick image modifications inside the app with crop, rotate, adjust basic image settings, and add simple annotations.
 
-## Bounty Process
+## Getting Started
 
-1. Browse and claim bounties at https://warpspeedopen.org/bounties
-2. Read specifications and requirements carefully
-3. Fork the repository and begin work only after maintainer confirmation
-4. Submit a pull request following the contribution guidelines
-5. Wait for review and approval
-6. Get paid after the PR is approved and merged
+1. Browse available bounty tasks in this file
+2. Each task is worth $660 upon completion
+3. Sign up on the warpSpeed OPEN website to claim a bounty
+4. Follow the contribution guidelines for submitting work
 
-For general questions about the bounty programme, visit: https://warpspeedopen.org
-For technical issues, contact: support@warpspeedopen.org
+## Claiming a Bounty
+
+1. Open the bounty page and sign up as a developer
+2. Comment on the GitHub bounty issue to request assignment
+3. Wait for maintainer confirmation before starting paid work
+4. Fork the repository and create your branch
+5. Submit your pull request for review
+6. Get paid after the pull request is approved and merged
 Payment happens after the PR is approved and merged.
