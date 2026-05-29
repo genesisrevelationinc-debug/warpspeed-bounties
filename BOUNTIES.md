@@ -24,32 +24,33 @@ This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty 
 
 # warpSpeed Bounties
 
-This document outlines the available bounties in the warpSpeed OPEN programme.
+This repository contains open bounties for the warpSpeed OPEN developer programme.
 
-## Active Bounties
+## Available Bounties
 
-### Attachment Summarizer Service
-
-**Status**: Open  
-**Reward**: $960  
-**Difficulty**: Expert  
-**Main Skills**: Node.js, TypeScript, Prisma, AWS SQS, Google Cloud Storage, Docker, Ollama / Open-source LLMs  
-
-#### Description
+### [PAID BOUNTY - $960] Attachment Summarizer Service
 
 Build a Node.js attachment summarizer service that consumes email attachment events from AWS SQS, downloads attachments from Google Cloud Storage, extracts content from supported file types, and generates natural-language summaries using a self-hosted open-source LLM.
 
-#### Requirements
+**Reward**: $960
 
+**Difficulty**: Expert
+
+**Main Skills**:
+- Node.js
+- TypeScript
+- Prisma
+- AWS SQS
+- Google Cloud Storage
+- Docker
+- Ollama / Open-source LLMs
+
+**Requirements**:
 - Consume attachment events from SQS
 - Download attachments from GCS
-- Handle common attachment types (PDFs, Word docs, spreadsheets, text files, HTML, images)
-- Generate short factual summaries using a locally hosted LLM
+- Handle common attachment types (PDF, Word, Excel, etc.)
+- Generate summaries using a locally hosted LLM
 - Include error handling, logging, Docker setup, and tests
 
-#### How to Claim
-
-1. Visit [warpSpeed OPEN Bounties](https://warpspeedopen.org/bounties)
-2. Sign up as a developer
-3. Comment on the GitHub issue: "I have signed up and would like to claim this bounty."
+Full technical requirements are available on the official bounty page at https://warpspeedopen.org/bounties
 Payment happens after the PR is approved and merged.
