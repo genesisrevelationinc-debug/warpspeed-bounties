@@ -1,31 +1,25 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { View, Text, Alert } from 'react-native';
-import { NoteLock, NoteLockSettings } from '../types/note-locking';
+import { authenticate } from '../utils/biometricAuth';
 
 interface NoteLockManagerProps {
-  note: NoteLock;
-  onLockChange: (locked: boolean) => void;
+  noteId: string;
+  onUnlock: (unlocked: boolean) => void;
 }
 
-export const NoteLockManager: React.FC<NoteLockManagerProps> = ({ note, onLockChange }) => {
-  const [isLocked, setIsLocked] = useState(note.isLocked);
-  const [pin, setPin] = useState('');
-  
-  const handleLockToggle = useCallback(() => {
-    const newLockState = !isLocked;
-    setIsLocked(newLockState);
-    onLockChange(newLockState);
-  }, [isLocked, onLockChange]);
+export const NoteLockManager: React.FC = () => {
+  const [isLocked, setIsLocked] = useState(true);
 
-  const handlePinSubmit = useCallback((enteredPin: string) => {
-    setPin(enteredPin);
-    // Validate and set PIN
-  }, []);
+  const unlockNote = async () => {
+    try {
+      const success = await authenticate();
+      if (success) {
+        setIsLocked(false);
+      }
+    } catch (error) {
+      console.error('Authentication failed:', error);
+    }
+  };
 
-  return (
-    <View>
-      <Text>Lock Manager</Text>
-      {/* Implementation would include lock controls */}
-    </View>
-  );
+  return null; // This is a manager component
 };
