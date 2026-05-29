@@ -1,35 +1,45 @@
 import React, { useState, useRef, useEffect } from 'react';
+import {
+  View,
+  Image,
+  StyleSheet,
+  Modal,
+  ActivityIndicator,
+  Text,
+  Alert
+} from 'react-native';
+import { PinchGestureHandler, PanGestureHandler, State } from 'react-native-gesture-handler';
+import { SharedElement } from 'react-native-shared-element';
+import { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 
-interface ImageSource {
-  uri: string;
-  id: string;
-  type: string;
+interface EnhancedImagePreviewProps {
+  imageUris: string[];
+  initialIndex: number;
+  onClose: () => void;
+  onDownload?: () => void;
+  onShare?: () => void;
+  onDelete?: (uri: string) => void;
+  initialImageIndex: number;
 }
 
-interface ImagePreviewProps {
-  images: ImageSource[];
-  currentIndex: number;
-  setCurrentIndex: (index: number) => void;
-}
-
-const ImagePreview: React.FC<{}> = ({ 
-  images, 
-  initialIndex,
-  visible, 
-  onRequestClose,
-  onImageIndexChange 
+const EnhancedImagePreview: React.FC<EnhancedImagePreviewProps> = ({ 
+  imageUris = [],
+  initialIndex = 0,
+  onClose = () => {},
+  onDownload = () => {},
+  onShare = () => {},
+  onDelete = () => {},
+  onDownload = () => {},
+  onShare = () => {},
+  onDelete = () => {}
 }) => {
+  const [currentImageIndex, setCurrentImageIndex] = useState(initialIndex);
+  
   return (
-    <div className="flex flex-col items-center">
-      <h2>Image Preview Component</h2>
-      {images.map((image, idx) => (
-        <img key={image.id} src={image.uri} alt="preview" 
-            style={currentImageIndex === idx ? { display: 'block' } : { display: 'none' }} 
-      />
-      ))}
-    </div>
+    <View style={styles.container}>
+      <Text>Enhanced Image Preview Component</Text>
+    </View>
   );
 };
 
-export default ImagePreview;
-export { default as ImagePreview } from './ImagePreview';
+export default EnhancedImage
