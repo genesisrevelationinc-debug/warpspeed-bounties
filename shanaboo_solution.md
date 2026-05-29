@@ -1,191 +1,187 @@
-Looking at the issue description, this is a request to implement an Attachment Summarizer Service. Since no existing files are provided in the repository, I need to create the service from scratch. Based on the bounty requirements, I'll create the main service file that would handle the attachment summarization workflow.
-
 ```diff
 --- /dev/null
-+++ b/src/attachment-summaries.ts
-@@ -0,0 +1,367 @@
-+import { SQSClient, ReceiveMessageCommand, DeleteMessageCommand } from "@aws-sdk/client-sqs";
-+import { Storage } from "@google-cloud/storage";
-+import { PDFLoader } from "pdf-parse";
-+import { Document } from "langchain/document";
-+import { Ollama } from "langchain/llms/ollama";
-+import { Ollama as OllamaClient } from "ollama";
-+import { Attachment } from "@prisma/client";
++++ b/b/services/attachment-summarizer/.dockerignore
+@@ -0,0 +1,6 @@
++node_modules
++dist
++.env
++*.log
++coverage
++.git
+\ No newline at end of file
+--- /dev/null
++++ b/b/services/attachment-summarizer/.env.example
+@@ -0,0 +1,21 @@
++# AWS SQS Configuration
++AWS_REGION=us-east-1
++AWS_ACCESS_KEY_ID=your-access-key
++AWS_SECRET_ACCESS_KEY=your-secret-key
++SQS_QUEUE_URL=https://sqs.us-east-1.amazonaws.com/123456789012/attachment-events
 +
-+interface SQSMessage {
-+  id: string;
-+  receiptHandle: string;
-+}
++# Google Cloud Storage
++GCS_PROJECT_ID=your-gcs-project-id
++GCS_BUCKET_NAME=your-attachment-bucket
++GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account-key.json
 +
-+interface AttachmentEvent {
-+  attachmentId: string;
-+  bucketName: string;
-+  fileName: string;
-+  eventType: string;
-+}
++# Ollama / LLM Configuration
++OLLAMA_BASE_URL=http://localhost:11434
++OLLAMA_MODEL=llama3.2
++SUMMARY_MAX_TOKENS=500
 +
-+interface FileSummary {
-+  id: string;
-+  content: string;
-+  summary: string;
-+  error?: string;
-+}
++# Application
++NODE_ENV=development
++LOG_LEVEL=info
++MAX_FILE_SIZE_MB=50
++SUPPORTED_MIME_TYPES=application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/plain,text/html,image/jpeg,image/png,image/gif
+\ No newline at end of file
+--- /dev/null
++++ 	b/services/attachment-summarizer/.gitignore
+@@ -0,0 +1,5 @@
++node_modules
++dist
++.env
++*.log
++coverage
+\ No newline at end of file
+--- /dev/null
++++ 	b/services/attachment-summarizer/Dockerfile
+@@ -0,0 +1,48 @@
++# Build stage
++FROM node:20-alpine AS builder
 +
-+class AttachmentSummarizerService {
-+  private sqsClient: SQSClient;
-+  private storage: Storage;
-+  private ollama: OllamaClient;
-+  private prisma: any;
-+  
-+  constructor() {
-+    this.sqsClient = new SQSClient({
-+      region: process.env.AWS_REGION || 'us-east-1',
-+      credentials: {
-+        accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
-+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
-+      },
-+    });
-+    
-+    this.storage = new Storage({
-+      projectId: process.env.GCP_PROJECT_ID,
-+      keyFilename: process.env.GCP_KEY_FILE,
-+    });
-+    
-+    this.ollama = new OllamaClient({
-+      host: process.env.OLLAMA_HOST || 'http://localhost:11434',
-+    });
-+  }
++WORKDIR /app
 +
-+  async processSQSMessages() {
-+    const queueUrl = process.env.SQS_QUEUE_URL;
-+    if (!queueUrl) {
-+      throw new Error('SQS queue URL not configured');
-+    }
++# Install dependencies for native modules
++RUN apk add --no-cache python3 make g++
 +
-+    const command = new ReceiveMessageCommand({
-+      QueueUrl: queueUrl,
-+      MaxNumberOfMessages: 10,
-+      WaitTimeSeconds: 20,
-+    });
++COPY package*.json ./
++COPY prisma ./prisma/
 +
-+    try {
-+      const data = await this.sqsClient.send(command);
-+      if (data.Messages && data.Messages.length > 0) {
-+        for (const message of data.Messages) {
-+          await this.processAttachmentEvent(message);
-+        }
-+      }
-+    } catch (error) {
-+      console.error('Error processing SQS messages:', error);
-+    }
-+  }
++RUN npm ci
 +
-+  async processAttachmentEvent(message: any) {
-+    try {
-+      const event: AttachmentEvent = JSON.parse(message.Body);
-+      const attachmentId = event.attachmentId;
-+      const bucketName = event.bucketName;
-+      const fileName = event.fileName;
-+      
-+      // Download attachment from GCS
-+      const fileContent = await this.downloadAttachment(bucketName, fileName);
-+      
-+      // Extract content based on file type
-+      const extractedContent = await this.extractContent(fileContent, fileName);
-+      
-+      // Generate summary using LLM
-+      const summary = await this.generateSummary(extractedContent);
-+      
-+      // Store the summary
-+      await this.storeSummary(attachmentId, extractedContent, summary);
-+      
-+      // Delete message from SQS
-+      await this.deleteSQSMessage(message.receiptHandle);
-+      
-+    } catch (error) {
-+      console.error('Error processing attachment event:', error);
-+      throw error;
-+    }
-+  }
++COPY . .
 +
-+  async downloadAttachment(bucketName: string, fileName: string): Promise<Buffer> {
-+    try {
-+      const bucket = this.storage.bucket(bucketName);
-+      const file = bucket.file(fileName);
-+      const [content] = await file.download();
-+      return content;
-+    } catch (error) {
-+      throw new Error(`Failed to download attachment: ${error}`);
-+    }
-+  }
++RUN npm run build
 +
-+  async extractContent(content: Buffer, fileName: string): Promise<string> {
-+    const fileExtension = fileName.split('.').pop()?.toLowerCase();
-+    
-+    switch (fileExtension) {
-+      case 'pdf':
-+        return await this.extractPDFContent(content);
-+      case 'doc':
-+      case 'docx':
-+        return await this.extractWordContent(content);
-+      case 'txt':
-+      case 'html':
-+        return content.toString('utf-8');
-+      case 'jpg':
-+      case 'png':
-+      case 'jpeg':
-+        return await this.extractImageContent(content);
-+      default:
-+        return content.toString('utf-8');
-+    }
-+  }
++# Production stage
++FROM node:20-alpine AS production
 +
-+  async extractPDFContent(content: Buffer): Promise<string> {
-+    // Implementation for PDF content extraction would go here
-+    // This would use a library like pdf-parse or similar
-+    return content.toString();
-+  }
++WORKDIR /app
 +
-+  async extractWordContent(content: Buffer): Promise<string> {
-+    // Implementation for Word document extraction
-+    return content.toString();
-+  }
++# Install dependencies for file processing
++RUN apk add --no-cache \
++    python3 \
++    make \
++    g++ \
++    libreoffice \
++    poppler-utils \
++    tesseract-ocr \
++    tesseract-ocr-data-eng
 +
-+  async extractImageContent(content: Buffer): Promise<string> {
-+    // For image files, we might want to use OCR
-+    return content.toString('base64'); // placeholder
-+  }
++# Create non-root user
++RUN addgroup -g 1001 -S nodejs && \
++    adduser -S nodejs -u 1001
 +
-+  async generateSummary(content: string): Promise<string> {
-+    try {
-+      const prompt = `
-+        Summarize the following content in a clear, concise manner. 
-+        Focus on the key points and main ideas.
-+        Content: ${content}
-+        
-+        Please provide a factual summary of no more than 3 sentences.
-+      `;
-+      
-+      const response = await this.ollama.generate(prompt);
-+      return response.response;
-+    } catch (error) {
-+      throw new Error(`Failed to generate summary: ${error}`);
-+    }
-+    return '';
-+  }
++COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
++COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
++COPY --from=builder --chown=nodejs:nodejs /app/package*.json ./
++COPY --from=builder --chown=nodejs:nodejs /app/prisma ./prisma
 +
-+  async storeSummary(attachmentId: string, content: string, summary: string) {
-+    try {
-+      // Store in database using Prisma
-+      // await prisma.attachment.update({
-+      //   where: { id: attachmentId },
-+      //   data: { summary: summary }
-+      // });
-+      console.log('Summary stored for attachment:', attachmentId);
-+    } catch (error) {
-+      console.error('Error storing summary:', error);
-+    }
-+  }
++USER nodejs
 +
-+  async deleteSQSMessage(receiptHandle: string) {
-+    const deleteCommand = new DeleteMessageCommand
++EXPOSE 3000
++
++HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
++    CMD node -e "require('http').get('http://localhost:3000/health', (r) => r.statusCode === 200 ? process.exit(0) : process.exit(1))"
++
++CMD ["node", "dist/index.js"]
+\ No newline at end of file
+--- /dev/null
++++ 	b/services/attachment-summarizer/docker-compose.yml
+@@ -0,0 +1,56 @@
++version: '3.8'
++
++services:
++  ollama:
++    image: ollama/ollama:latest
++    container_name: ollama
++    volumes:
++      - ollama-data:/root/.ollama
++    ports:
++      - "11434:11434"
++    healthcheck:
++      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
++      interval: 30s
++      timeout: 10s
++      retries: 5
++
++  attachment-summarizer:
++    build:
++      context: .
++      dockerfile: Dockerfile
++    container_name: attachment-summarizer
++    env_file:
++      - .env
++    environment:
++      - OLLAMA_BASE_URL=http://ollama:11434
++    depends_on:
++      ollama:
++        condition: service_healthy
++    volumes:
++      - ./tmp:/app/tmp
++    healthcheck:
++      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (r) => r.statusCode === 200 ? process.exit(0) : process.exit(1))"]
++      interval: 30s
++      timeout: 10s
++      retries: 3
++
++  # Optional: LocalStack for SQS testing
++  localstack:
++    image: localstack/localstack:latest
++    container_name: localstack
++    ports:
++      - "4566:4566"
++    environment:
++      - SERVICES=sqs
++      - DEFAULT_REGION=us-east-1
++    volumes:
++      - localstack-data:/var/lib/localstack
++
++  # Optional: PostgreSQL for Prisma
++  postgres:
++    image: postgres:15-alpine
++    container_name: postgres
++    environment:
++      POSTGRES_USER: summarizer
++      POSTGRES_PASSWORD: summarizer
++      POSTGRES_DB: attachments
++    volumes:
++      - postgres-data:/var/lib/postgresql/data
++    ports:
++      - "5432:5432"
++
++volumes:
++  ollama-data:
++  localstack-data:
++  postgres-data:
+\ No newline at end of file
+--- /dev/null
++++ 	b/services/attachment-summarizer/jest.config.js
+@@ -0,0 +1,18 @@
++/** @type {import('jest').Config} */
++module.exports = {
++  preset: 'ts-jest',
++  testEnvironment: 'node',
++  roots: ['<rootDir>/src'],
++  testMatch: ['**/__tests__/**/*.test.ts'],
++  transform: {
++    '^.+\\.ts$': 'ts-jest',
++  },
++  collectCoverageFrom: [
++    'src/**/*.ts',
++    '!src/**/*.d.ts',
++    '!src/**/__tests__/**',
++  ],
++  coverageDirectory: 'coverage',
++  coverageReporters: ['text', 'lcov', 'html'],
++  setupFilesAfterEnv: ['<
