@@ -1,54 +1,6 @@
-## PAID BOUNTY - $960: Attachment Summarizer Service
+# Open Bounties
 
-### Bounty Overview
-
-Build a Node.js attachment summarizer service that consumes email attachment events from AWS SQS, downloads attachments from Google Cloud Storage, extracts content from supported file types, and generates natural-language summaries using a self-hosted open-source LLM.
-
-### Reward
-
-$960
-
-### Difficulty
-
-Expert
-
-### Main Skills
-
-- Node.js
-- TypeScript
-- Prisma
-- AWS SQS
-- Google Cloud Storage
-- Docker
-- Ollama / Open-source LLMs
-
-## Technical Requirements
-
-The service must:
-
-- Consume attachment events from AWS SQS
-- Download attachments from Google Cloud Storage
-- Handle common attachment types (PDF, Word, spreadsheets, text files, HTML, images)
-- Generate summaries using a self-hosted open-source LLM
-- Include error handling, logging, and Docker setup
-- Include tests for all functionality
-
-## Architecture
-
-The service should follow a modular architecture with the following components:
-
-1. **SQS Consumer Service** - Polls AWS SQS for messages
-2. **GCS Download Service** - Downloads attachments from Google Cloud Storage
-3. **Document Processing Service** - Processes different file types
-4. **LLM Service** - Interfaces with the self-hosted LLM for summarization
-5. **Error Handling & Logging Service** - Handles errors and logs activities
-6. **Docker Service** - Containerizes the application
-7. **Test Service** - Implements tests for all core functionality
-
-## Implementation Plan
-
-### 1. Project Structure
-
+This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty page.
 
 | Bounty | Reward | Difficulty | Stack | Status | Signup Capacity | Timeline | Estimated Duration |
 |---|---:|---|---|---|---|---|---|
@@ -70,4 +22,7 @@ The service should follow a modular architecture with the following components:
 
 ## Payment condition
 
+# Bounties
+
+This directory contains bounty-related documentation and specifications.
 Payment happens after the PR is approved and merged.
