@@ -22,17 +22,51 @@ This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty 
 
 ## Payment condition
 
-# warpSpeed Bounties - Implementation Plan
+# Attachment Summarizer Service
 
-## Attachment Summarizer Service Implementation
+## Overview
 
-### Service Architecture
+This service processes email attachments by consuming events from AWS SQS, downloading from Google Cloud Storage, and generating AI-powered summaries using a self-hosted LLM.
 
-- **SQS Consumer**: Polls AWS SQS for attachment processing events
-- **GCS Integration**: Downloads attachments from Google Cloud Storage
-- **Content Extraction**: Processes file types (PDF, DOC, TXT, HTML, etc.)
-- **LLM Summarization**: Generates natural language summaries using Ollama/self-hosted models
-- **Docker Support**: Fully containerized service deployment
-- **Error Handling & Logging**: Comprehensive logging and failure recovery
-- **Testing**: Unit and integration tests included
+## Features
+
+- Real-time processing of SQS events
+- Support for multiple file types (PDF, DOCX, XLSX, TXT, HTML, images)
+- Secure GCS integration
+- Containerized with Docker
+- Comprehensive logging and error handling
+- Unit and integration tests included
+
+## Technical Requirements
+
+### 1. AWS SQS Integration
+- Consume messages from a dedicated SQS queue containing attachment metadata
+- Process messages with full error handling and retry logic
+
+### 2. Google Cloud Storage Support
+- Download files using GCS client library
+- Handle authentication via service account
+
+### 3. File Processing
+- Support the following file types:
+  - PDF
+  - DOC/DOCX
+  - XLS/XLSX
+  - Plain text
+  - HTML
+  - Images (PNG, JPG, GIF)
+
+### 4. Summary Generation
+- Use Ollama or Hugging Face Transformers
+- Summarize content in natural language
+- Support custom summarization prompts
+
+### 5. Output and Storage
+- Save summaries to database with Prisma
+- Log all operations with Winston
+- Handle failures gracefully
+
+## Architecture
+
+
 Payment happens after the PR is approved and merged.
