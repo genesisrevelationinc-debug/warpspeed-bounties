@@ -1,22 +1,3 @@
-# warpSpeed Bounties
-
-## Email Threads API Implementation
-
-This document outlines the implementation of the Email Threads API for the warpSpeed application.
-
-### API Endpoints
-
-#### List Email Threads
-`GET /api/threads`
-
-#### Get Thread Details
-GET /api/threads/{threadId}
-
-### Database Schema Updates
-
-The EmailThreads API requires a new model for storing thread information:
-
-
 # Open Bounties
 
 This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty page.
@@ -41,4 +22,27 @@ This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty 
 
 ## Payment condition
 
+# warpSpeed Bounties
+
+This document tracks all active bounties for the warpSpeed project.
+
+## Active Bounties
+
+### Email Threads API
+
+**Status**: OPEN
+**Reward**: $750
+**Difficulty**: Hard
+**Required Skills**: Node.js, TypeScript, Prisma, API Development, Email Systems
+
+#### Description
+
+Build a thread-first Email Threads API for the warpSpeed app. This bounty introduces a new threaded email experience so users can work with conversations instead of isolated messages.
+
+**Task**: Create API support for email thread management including:
+- Listing email threads for authenticated users
+- Viewing thread details with related messages
+- Grouping filtered/search results by thread
+- Preserving draft activity inside correct conversation threads
+- Maintaining search and filtering consistency with existing messages endpoint
 Payment happens after the PR is approved and merged.
