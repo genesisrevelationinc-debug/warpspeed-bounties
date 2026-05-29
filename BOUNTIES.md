@@ -22,14 +22,17 @@ This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty 
 
 ## Payment condition
 
-# warpSpeed Bounties
+# warpSpeed Bounties - Implementation Plan
 
-## Attachment Summarizer Service
+## Attachment Summarizer Service Implementation
 
-This service processes email attachments by:
+### Service Architecture
 
-- Consuming events from AWS SQS
-- Downloading from Google Cloud Storage
-- Summarizing with a local LLM
-- Storing results in database
+- **SQS Consumer**: Polls AWS SQS for attachment processing events
+- **GCS Integration**: Downloads attachments from Google Cloud Storage
+- **Content Extraction**: Processes file types (PDF, DOC, TXT, HTML, etc.)
+- **LLM Summarization**: Generates natural language summaries using Ollama/self-hosted models
+- **Docker Support**: Fully containerized service deployment
+- **Error Handling & Logging**: Comprehensive logging and failure recovery
+- **Testing**: Unit and integration tests included
 Payment happens after the PR is approved and merged.
