@@ -1,4 +1,3 @@
-// Implementation for enhanced image preview with gesture handling
 import React, { useState, useRef, useEffect } from 'react';
 
 interface ImageSource {
@@ -9,34 +8,17 @@ interface ImageSource {
 
 interface ImagePreviewProps {
   images: ImageSource[];
-  initialIndex: number;
-  visible: boolean;
-  onRequestClose: () => void;
-  onImageIndexChange: (index: number) => void;
-}
-
-const EnhancedImagePreview: React.FC<ImagePreviewProps> = ({ 
-  images, 
-  initialIndex,+  visible, 
-  onRequestClose,
-  onImageIndexChange 
-}) => {
-  return (
-    <div>
-      {/* Component implementation */}
-    </div>
-  );
-};
-
-interface ImagePreviewState {
-  images: ImageSource[];
   currentIndex: number;
   setCurrentIndex: (index: number) => void;
 }
 
-const ImagePreview: React.FC<ImagePreviewState> = ({ images, currentIndex, setCurrentIndex }) => {
-  const currentImage = images[currentIndex];
-  
+const ImagePreview: React.FC<{}> = ({ 
+  images, 
+  initialIndex,
+  visible, 
+  onRequestClose,
+  onImageIndexChange 
+}) => {
   return (
     <div className="flex flex-col items-center">
       <h2>Image Preview Component</h2>
@@ -48,3 +30,6 @@ const ImagePreview: React.FC<ImagePreviewState> = ({ images, currentIndex, setCu
     </div>
   );
 };
+
+export default ImagePreview;
+export { default as ImagePreview } from './ImagePreview';
