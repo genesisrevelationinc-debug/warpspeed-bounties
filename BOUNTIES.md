@@ -24,33 +24,43 @@ This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty 
 
 # warpSpeed Bounties
 
-This file tracks active and completed bounty tasks for the warpSpeed OPEN programme.
+This document describes the paid bounty program for warpSpeed platform development.
 
-## Active Bounties
+## Current Bounties
 
-| Bounty | Reward | Status | Claimed By |
-|--------|--------|--------|------------|
-| Email Threads API | $750 | Open | - |
+### Email Threads API [**$750**]
 
-## Completed Bounties
+**Status**: Open  
+**Category**: Backend / API Development  
+**Description**: Build a thread-first Email Threads API for the warpSpeed app that enables users to work with email conversations instead of isolated messages.
 
-_None yet._
+#### Requirements
 
-## How to Claim a Bounty
+- Create API endpoints for listing email threads
+- Implement thread detail endpoints with message grouping
+- Support for drafts within conversation threads
+- Preserve Gmail/Outlook/IMAP email thread ordering
+- Maintain search and filtering consistency
+- Add proper authentication and access control
+- Include comprehensive API documentation
+- Add unit and integration tests
 
-1. Browse available bounties on [warpspeedopen.org/bounties](https://warpspeedopen.org/bounties)
-2. Sign up as a developer on the website
-3. Comment on the GitHub issue: "I have signed up and would like to claim this bounty."
-4. Wait for maintainer confirmation before starting work
-5. Submit your pull request before the bounty deadline
+#### Technical Implementation
 
-## Bounty Rules
+The Email Threads API should:
+- Group related email messages into conversation threads
+- Maintain thread recency when drafts are created/updated/sent
+- Exclude archived and deleted messages appropriately
+- Keep search/filter behavior consistent with existing messages API
+- Support all major email providers (Gmail, Outlook, IMAP)
 
-- Do not start work until a maintainer confirms your claim
-- Maximum 3 submission attempts
-- Minimum 90% specification match required for consideration
-- Payment is made only at 100% completion
-- Payment is processed only after the pull request is approved and merged
-- First code commit is required at the halfway mark between bounty start and bounty expiration
-- Code must be original or properly licensed
+#### Acceptance Criteria
+
+- [ ] Thread listing endpoint returns proper thread groups
+- [ ] Thread detail endpoint returns all messages in thread
+- [ ] Drafts are properly associated with threads
+- [ ] Thread ordering respects recent activity
+- [ ] Search and filter functionality maintained
+- [ ] API documentation included
+- [ ] Comprehensive test coverage
 Payment happens after the PR is approved and merged.
