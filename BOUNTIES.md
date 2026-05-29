@@ -22,4 +22,7 @@ This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty 
 
 ## Payment condition
 
+# Audio Note Recording Implementation
+
+This bounty implements the audio recording feature for the warpSpeed Notes app.
 Payment happens after the PR is approved and merged.
