@@ -1,19 +1,21 @@
 # warpSpeed Bounties
 
+> **Note:** This repository contains bounty descriptions and documentation only. The actual application codebase is in a separate repository.
+
 Paid open-source bounty tasks for developers contributing to **warpSpeed OPEN**.
 
-Developers can browse open bounties, sign up on the website, claim a GitHub issue, and receive payment after the PR is approved and merged.
+Developers can browse open bounties, sign up on the website, claim a GitHub issue, submit a pull request, and receive payment after the PR is approved and merged.
 
 ## Quick Links
 
-1. Browse available bounty tasks.
-2. Sign up on the warpSpeed OPEN website.
-3. Comment on the GitHub bounty issue to request assignment.
-4. Wait for maintainer confirmation before starting paid work.
+- Website: https://warpspeedopen.org
+- Bounties: https://warpspeedopen.org/bounties
+- Developer Signup: https://warpspeedopen.org/signup
+- Discord: Add Discord invite link here
+- Community Repo: Add `warpspeed-community` repo link here
 
-## Bounty categories
+## How the bounty process works
 
--No newline at end of file
 1. Browse available bounty tasks.
 2. Sign up on the warpSpeed OPEN website.
 3. Comment on the GitHub bounty issue to request assignment.
