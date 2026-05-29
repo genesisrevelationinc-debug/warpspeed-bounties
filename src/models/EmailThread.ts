@@ -1,50 +1,59 @@
 export interface EmailThread {
   id: string;
+  userId: string;
   subject: string;
   snippet: string;
-  lastMessageAt: Date;
-  userId: string;
+  lastMessageDate: Date;
   messageCount: number;
-  unreadCount: number;
-  draftIds: string[];
-  historyId: string;
-  messages: EmailMessage[];
+  participants: string[];
+  isStarred: boolean;
+  isArchived: boolean;
+  isDeleted: boolean;
+  isDraft: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
 
-export interface EmailMessage {
+export interface EmailThreadMessage {
   id: string;
   threadId: string;
-  historyId: string;
-  userId: string;
-  from: EmailParticipant;
-  to: EmailParticipant[];
-  cc: EmailParticipant[];
-  bcc: EmailParticipant[];
   subject: string;
   snippet: string;
-  body: string;
-  createdAt: Date;
-  updatedAt: Date;
-  attachments: EmailAttachment[];
+  from: string;
+  to: string[];
+  cc: string[];
+  bcc: string[];
+  date: Date;
+  isDraft: boolean;
+  isSent: boolean;
+  isStarred: boolean;
+  isArchived: boolean;
+  isDeleted: boolean;
+  messageId: string;
+  userId: string;
+  accountId: string;
 }
 
-export interface EmailParticipant {
-  email: string;
-  name: string;
-}
-
-export interface EmailAttachment {
+export interface EmailAccount {
   id: string;
-  filename: string;
-  mimeType: string;
-  size: number;
+  userId: string;
+  provider: string;
+  emailAddress: string;
+  name: string;
+  label: string;
+  syncEnabled: boolean;
+  syncInterval: number;
+  lastSync: Date;
+  isActive: boolean;
 }
 
-export interface ThreadParticipant {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
+export interface EmailThreadFilter {
+  userId?: string;
+  hasAttachment?: boolean;
+  isStarred?: boolean;
+  isDraft?: boolean;
+  isSent?: boolean;
+  search?: string;
+  sort?: 'date' | 'from' | 'to' | 'subject';
+  order?: 'asc' | 'desc';
 }
