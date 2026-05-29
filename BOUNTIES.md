@@ -24,33 +24,73 @@ This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty 
 
 # warpSpeed Bounties
 
-This file tracks active and completed bounty tasks for the warpSpeed OPEN programme.
+This document outlines the available bounties in the warpSpeed ecosystem.
 
-## Active Bounties
+## Available Bounties
 
-| Bounty | Reward | Status | Claimed By |
-|--------|--------|--------|------------|
-| Email Threads API | $750 | Open | - |
+### Email Threads API (PAID - $750)
 
-## Completed Bounties
+**Difficulty**: Hard
 
-_None yet._
+**Main Skills Required**:
+- Node.js
+- TypeScript
+- Prisma
+- API Development
+- Email Systems
+- Jest Testing
+- Swagger / API Documentation
 
-## How to Claim a Bounty
+**Bounty Overview**:
 
-1. Browse available bounties on [warpspeedopen.org/bounties](https://warpspeedopen.org/bounties)
-2. Sign up as a developer on the website
-3. Comment on the GitHub issue: "I have signed up and would like to claim this bounty."
-4. Wait for maintainer confirmation before starting work
-5. Submit your pull request before the bounty deadline
+Build a thread-first Email Threads API for the warpSpeed app.
 
-## Bounty Rules
+This bounty introduces a new threaded email experience so users can work with conversations instead of isolated messages. Developers will create API support for listing email threads, opening a thread to view related messages, preserving draft activity inside the correct conversation, and ensuring search/filter behaviour remains consistent with the existing message API.
 
-- Do not start work until a maintainer confirms your claim
-- Maximum 3 submission attempts
-- Minimum 90% specification match required for consideration
-- Payment is made only at 100% completion
-- Payment is processed only after the pull request is approved and merged
-- First code commit is required at the halfway mark between bounty start and bounty expiration
-- Code must be original or properly licensed
+**High-Level Scope**:
+
+The selected developer will build a thread-first email API that supports:
+
+- Listing email threads for the authenticated user
+- Opening a single thread and returning thread metadata with related messages
+- Grouping filtered/search results by thread
+- Preserving ownership and access control rules
+- Including drafts in the correct conversation thread
+- Excluding archived and deleted messages where required
+- Updating thread recency when drafts are created, updated, or sent
+- Ensuring synced Gmail, Outlook, and IMAP emails update thread ordering correctly
+- Maintaining consistent search and filtering behaviour with the existing messages endpoint
+- Adding Swagger/API documentation
+- Adding Jest tests for auth, ordering, filters, drafts, and thread detail behaviour
+
+**Technical Requirements**:
+
+1. **Thread Listing Endpoint**
+   - GET `/api/v1/threads`
+   - Support pagination, sorting, and filtering
+   - Return thread metadata including subject, participants, message count, and timestamps
+
+2. **Thread Detail Endpoint**
+   - GET `/api/v1/threads/{threadId}`
+   - Return thread metadata with all related messages
+   - Include drafts in the conversation thread
+
+3. **Search and Filter Integration**
+   - Ensure thread grouping works with existing search functionality
+   - Maintain consistent filtering behavior with messages API
+
+4. **Draft Handling**
+   - Drafts should be associated with the correct conversation thread
+   - Thread recency should update when drafts are created/updated/sent
+
+5. **Access Control**
+   - Maintain existing ownership and permission rules
+   - Exclude archived and deleted messages from thread views
+
+**Acceptance Criteria**:
+- All endpoints properly documented with Swagger
+- Comprehensive test coverage (minimum 85%)
+- Code follows existing warpSpeed code style and patterns
+- Proper error handling and validation
+- Backward compatibility with existing message API
 Payment happens after the PR is approved and merged.
