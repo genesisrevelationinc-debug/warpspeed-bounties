@@ -24,22 +24,5 @@ This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty 
 
 # warpSpeed Bounties
 
-This repository contains paid open-source bounty tasks for developers contributing to **warpSpeed OPEN**.
-
-## Available Bounties
-
-- [PAID BOUNTY - $750] Audio Note Recording (Current)
-
-## How to Contribute
-
-1. Browse available bounty tasks in this file
-2. Sign up on the warpSpeed OPEN website
-3. Comment on the GitHub bounty issue to request assignment
-4. Wait for maintainer confirmation before starting paid work
-5. Fork the repository and create your branch
-6. Submit your pull request
-7. Respond to review comments
-8. Get paid after the PR is approved and merged
-
-*Note: Bounties are paid only after the work is approved and the pull request is merged.*
+This repository contains bounty tasks for developers contributing to **warpSpeed OPEN**.
 Payment happens after the PR is approved and merged.
