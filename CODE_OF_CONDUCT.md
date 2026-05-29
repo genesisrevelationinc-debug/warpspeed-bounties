@@ -16,4 +16,15 @@ warpSpeed OPEN is committed to creating a respectful, inclusive, and professiona
 - Sharing private information without permission.
 - Submitting copied or plagiarised work.
 
+# Code of Conduct
+
+## Our Pledge
+
+We pledge to make participation in our project a harassment-free experience for everyone.
+
+## Our Standards
+
+Examples of behavior that contributes to a positive environment:
+
+- Using welcoming and inclusive language
 Maintainers may remove comments, close issues, or block users who violate these standards.
