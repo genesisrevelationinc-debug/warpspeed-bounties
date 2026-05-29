@@ -1,10 +1,10 @@
-Looking at the issue, this is a request to create a Classic Inbox UI page for an email application. Since there are no existing files showing the actual codebase structure, I'll need to create the necessary React Native component files based on the bounty requirements.
+Looking at the issue, I need to create a React Native component for the Email Inbox Classic View Page UI. Since there are no existing component files shown, I'll create a new component file structure that would be typical for this type of React Native project.
 
-Let me create the main Classic Inbox view component and a Storybook story file for it.
+Based on the repository structure and the bounty requirements, I'll create a ClassicInboxView component with the specified UI elements.
 
 ```diff
 --- /dev/null
-+++ b/src/screens/ClassicInboxView.tsx
++++ b/src/components/ClassicInboxView.tsx
 @@ -0,0 +1,350 @@
 +import React, { useState, useRef } from 'react';
 +import {
@@ -16,7 +16,7 @@ Let me create the main Classic Inbox view component and a Storybook story file f
 +  TextInput,
 +  Animated,
 +  FlatList,
-+  RefreshControl,
++  Dimensions,
 +} from 'react-native';
 +
 +interface Email {
@@ -29,119 +29,109 @@ Let me create the main Classic Inbox view component and a Storybook story file f
 +  category: 'primary' | 'promotions' | 'updates' | 'social' | 'forums';
 +}
 +
-+const mockEmails: Email[] = [
-+  {
-+    id: '1',
-+    sender: 'John Doe',
-+    subject: 'Meeting Tomorrow',
-+    preview: 'Don\'t forget about our meeting tomorrow at 10am...',
-+    timestamp: '10:30 AM',
-+    isRead: false,
-+    category: 'primary',
-+  },
-+  {
-+    id: '2',
-+    sender: 'Amazon',
-+    subject: 'Your order has shipped',
-+    preview: 'Your recent order has been shipped and is on its way...',
-+    timestamp: '9:15 AM',
-+    isRead: true,
-+    category: 'promotions',
-+  },
-+  {
-+    id: '3',
-+    sender: 'Newsletter Team',
-+    subject: 'Weekly Digest',
-+    preview: 'Here are this week\'s top stories and updates...',
-+    timestamp: '8:45 AM',
-+    isRead: false,
-+    category: 'updates',
-+  },
-+  {
-+    id: '4',
-+    sender: 'Sarah Johnson',
-+    subject: 'Project Update',
-+    preview: 'The project is moving along nicely. Here are the latest updates...',
-+    timestamp: 'Yesterday',
-+    isRead: true,
-+    category: 'primary',
-+  },
-+  {
-+    id: '5',
-+    sender: 'GitHub',
-+    subject: 'New security alert',
-+    preview: 'A new security vulnerability was detected in one of your repositories...',
-+    timestamp: 'Yesterday',
-+    isRead: true,
-+    category: 'social',
-+  },
-+];
++interface Category {
++  id: string;
++  name: string;
++  icon: string;
++}
 +
-+const categoryIcons = {
-+  primary: '📧',
-+  promotions: '📢',
-+  updates: '🔄',
-+  social: '👥',
-+  forums: '💬',
-+};
++const { width } = Dimensions.get('window');
 +
-+const ClassicInboxView = () => {
-+  const [emails, setEmails] = useState<Email[]>(mockEmails);
-+  const [activeCategory, setActiveCategory] = useState('primary');
-+  const [searchQuery, setSearchQuery] = useState('');
-+  const [refreshing, setRefreshing] = useState(false);
++const ClassicInboxView: React.FC = () => {
++  const [activeCategory, setActiveCategory] = useState<string>('inbox');
++  const [activeEmailCategory, setActiveEmailCategory] = useState<string>('primary');
++  const [searchQuery, setSearchQuery] = useState<string>('');
 +  const scrollY = useRef(new Animated.Value(0)).current;
-+  const headerHeight = 180;
++  const headerHeight = 120;
 +  
-+  const categories = [
-+    { id: 'primary', name: 'Primary', icon: categoryIcons.primary },
-+    { id: 'promotions', name: 'Promotions', icon: categoryIcons.promotions },
-+    { id: 'updates', name: 'Updates', icon: categoryIcons.updates },
-+    { id: 'social', name: 'Social', icon: categoryIcons.social },
-+    { id: 'forums', name: 'Forums', icon: categoryIcons.forums },
++  // Mock data - in a real app this would come from an API
++  const emails: Email[] = [
++    {
++      id: '1',
++      sender: 'John Doe',
++      subject: 'Meeting Tomorrow',
++      preview: 'Hi there, just confirming our meeting scheduled for tomorrow...',
++      timestamp: '10:30 AM',
++      isRead: false,
++      category: 'primary'
++    },
++    {
++      id: '2',
++      sender: 'Amazon',
++      subject: 'Your order has shipped',
++      preview: 'Your recent order #12345 has been shipped and is on its way...',
++      timestamp: '9:15 AM',
++      isRead: true,
++      category: 'promotions'
++    },
++    {
++      id: '3',
++      sender: 'Newsletter Team',
++      subject: 'Weekly Digest - June 2023',
++      preview: 'Check out the latest updates and news in our weekly digest...',
++      timestamp: 'Yesterday',
++      isRead: false,
++      category: 'updates'
++    },
++    {
++      id: '4',
++      sender: 'Sarah Johnson',
++      subject: 'Project Update',
++      preview: 'Here\'s the progress report for the current sprint...',
++      timestamp: 'Jun 12',
++      isRead: true,
++      category: 'primary'
++    },
++    {
++      id: '5',
++      sender: 'GitHub',
++      subject: 'Repository activity',
++      preview: 'There have been 5 new commits to your repository...',
++      timestamp: 'Jun 11',
++      isRead: false,
++      category: 'forums'
++    },
 +  ];
 +
-+  const onRefresh = () => {
-+    setRefreshing(true);
-+    // Simulate refresh
-+    setTimeout(() => {
-+      setRefreshing(false);
-+    }, 1000);
-+  };
++  const categories: Category[] = [
++    { id: 'primary', name: 'Primary', icon: '📧' },
++    { id: 'promotions', name: 'Promotions', icon: '📢' },
++    { id: 'updates', name: 'Updates', icon: '🔄' },
++    { id: 'social', name: 'Social', icon: '👥' },
++    { id: 'forums', name: 'Forums', icon: '💬' },
++  ];
 +
-+  const toggleEmailReadStatus = (id: string) => {
-+    setEmails(prevEmails =>
-+      prevEmails.map(email =>
-+        email.id === id ? { ...email, isRead: !email.isRead } : email
-+      )
-+    );
-+  };
++  const inboxViews = [
++    { id: 'inbox', name: 'Inbox' },
++    { id: 'sent', name: 'Sent' },
++    { id: 'drafts', name: 'Drafts' },
++    { id: 'all', name: 'All Mail' },
++  ];
++
++  const filteredEmails = emails.filter(email => 
++    email.category === activeEmailCategory && 
++    (email.sender.toLowerCase().includes(searchQuery.toLowerCase()) ||
++    email.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
++    email.preview.toLowerCase().includes(searchQuery.toLowerCase()))
++  );
 +
 +  const renderEmailItem = ({ item }: { item: Email }) => (
-+    <TouchableOpacity
++    <TouchableOpacity 
 +      style={[styles.emailItem, !item.isRead && styles.unreadEmail]}
-+      onPress={() => toggleEmailReadStatus(item.id)}
++      onPress={() => console.log('Opening email:', item.id)}
 +    >
-+      <View style={styles.emailSenderContainer}>
-+        <Text style={styles.senderInitial}>{item.sender.charAt(0)}</Text>
++      <View style={styles.emailHeader}>
++      <Text style={[styles.sender, !item.isRead && styles.unreadSender]}>
++        {item.sender}
++      </Text>
++      <Text style={styles.timestamp}>{item.timestamp}</Text>
 +      </View>
-+      <View style={styles.emailContent}>
-+        <View style={styles.emailHeader}>
-+          <Text style={[styles.senderName, !item.isRead && styles.unreadText]}>
-+            {item.sender}
-+          </Text>
-+          <Text style={styles.timestamp}>{item.timestamp}</Text>
-+        </View>
-+        <Text
-+          style={[styles.subject, !item.isRead && styles.unreadText]}
-+          numberOfLines={1}
-+        >
-+          {item.subject}
-+        </Text>
-+        <Text style={styles.preview} numberOfLines={1}>
-+          {item.preview}
-+        </Text>
-+      </View>
++      <Text style={[styles.subject, !item.isRead && styles.unreadSubject]}>
++        {item.subject}
++      </Text>
++      <Text style={styles.preview} numberOfLines={1}>
++        {item.preview}
++      </Text>
 +    </TouchableOpacity>
 +  );
 +
@@ -153,19 +143,20 @@ Let me create the main Classic Inbox view component and a Storybook story file f
 +
 +  return (
 +    <View style={styles.container}>
-+      <Animated.View
++      {/* Animated Header */}
++      <Animated.View 
 +        style={[
-+          styles.header,
-+          {
-+            transform: [{ translateY: headerTranslateY }],
-+          },
++          styles.header, 
++          { transform: [{ translateY: headerTranslateY }] }
 +        ]}
 +      >
-+        <View style={styles.topNavigation}>
++        {/* Top Navigation Row */}
++        <View style={styles.topNav}>
 +          <TouchableOpacity style={styles.accountSelector}>
 +            <Text style={styles.accountText}>Account ▼</Text>
 +          </TouchableOpacity>
-+          <View style={styles.navigationButtons}>
++          
++          <View style={styles.navButtons}>
 +            <TouchableOpacity style={styles.navButton}>
 +              <Text style={styles.navButtonText}>Flow</Text>
 +            </TouchableOpacity>
@@ -173,7 +164,7 @@ Let me create the main Classic Inbox view component and a Storybook story file f
 +              <Text style={styles.navButtonText}>Dashboard</Text>
 +            </TouchableOpacity>
 +            <TouchableOpacity style={[styles.navButton, styles.activeNavButton]}>
-+              <Text style={styles.activeNavButtonText}>Classic</Text>
++              <Text style={styles.navButtonText}>Classic</Text>
 +            </TouchableOpacity>
 +            <TouchableOpacity style={styles.navButton}>
 +              <Text style={styles.navButtonText}>Compose</Text>
@@ -181,6 +172,8 @@ Let me create the main Classic Inbox view component and a Storybook story file f
 +          </View>
 +        </View>
 +
-+        <View style={styles.categoryContainer}>
-+          <ScrollView
-+            horizontal
++        {/* Inbox Views */}
++        <ScrollView 
++          horizontal 
++          showsHorizontalScrollIndicator={false}
++          style={styles.in
