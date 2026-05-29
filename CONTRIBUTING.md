@@ -28,4 +28,38 @@ Payment is processed only after:
 
 - the submitted PR meets the acceptance criteria,
 - maintainers approve it,
+# Contributing to warpSpeed Bounties
+
+Thank you for your interest in contributing to warpSpeed OPEN! This guide covers how to participate in our bounty programme.
+
+## Getting Started
+
+### 1. Browse Available Bounties
+
+Visit [warpspeedopen.org/bounties](https://warpspeedopen.org/bounties) to see all active bounties.
+
+### 2. Sign Up
+
+Complete the developer signup at [warpspeedopen.org/signup](https://warpspeedopen.org/signup).
+
+### 3. Claim a Bounty
+
+1. Find a bounty issue on GitHub
+2. Comment: **"I have signed up and would like to claim this bounty."**
+3. Wait for maintainer confirmation before starting work
+
+## Development Workflow
+
+### Branch Naming
+
+Use the format: `bounty/<bounty-id>-<short-description>`
+
+Examples:
+- `bounty/BNT-001-note-locking`
+- `bounty/BNT-002-biometric-auth`
+
+### Commit Messages
+
+Follow conventional commits:
+
 - and the PR is merged.
