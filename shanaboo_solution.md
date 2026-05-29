@@ -1,196 +1,208 @@
+Looking at the bounty requirements, I need to create a solution for audio note recording functionality. Since no specific file paths were provided in the repo listing, I'll need to infer the file structure based on the issue description and create the necessary implementation.
+
 ```diff
 --- /dev/null
-+++ b/src/components/audio/AudioPlayer.tsx
-@@ -0,0 +1,268 @@
-+import React, { useState, useEffect, useRef, useCallback } from 'react';
-+import {
-+  View,
-+  Text,
-+  TouchableOpacity,
-+  StyleSheet,
-+  Animated,
-+  PanResponder,
-+  Dimensions,
-+} from 'react-native';
-+import { Audio } from 'expo-av';
-+import { Ionicons } from '@expo/vector-icons';
-+import { AudioPlayerProps, PlaybackSpeed } from '../../types/audio';
-+import { formatDuration } from '../../utils/time';
-+import { useAudioStore } from '../../store/audioStore';
++++ b/src/components/audio/AudioRecorder.tsx
+@@ -0,0 +1,200 @@
++import React, { useState, useEffect, useRef } from 'react';
++import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
++import { Audio (from 'expo-av').Audio }
++import { RecordingOptions, Audio, req} from 'expo-av';
++import { Colors } from '../../constants/Colors';
 +
-+const { width: screenWidth } = Dimensions.get('window');
++interface AudioRecorderProps {
++  onRecordingComplete: (uri: string) => void;
++  onRecordingCancelled: () => void;
++}
 +
-+const PLAYBACK_SPEEDS: PlaybackSpeed[] = [0.5, 1, 1.5, 2];
-+
-+export const AudioPlayer: React.FC<AudioPlayerProps> = ({
-+  audioUri,
-+  noteId,
-+  initialPosition = 0,
-+  onDelete,
-+  onTranscribe,
++export const AudioRecorder: React.FC<AudioRecorderProps> = ({ 
++  onRecordingComplete, 
++  onRecordingCancelled 
 +}) => {
-+  const [sound, setSound] = useState<Audio.Sound | null>(null);
-+  const [isPlaying, setIsPlaying] = useState(false);
-+  const [position, setPosition] = useState(initialPosition);
-+  const [duration, setDuration] = useState(0);
-+  const [playbackSpeed, setPlaybackSpeed] = useState<PlaybackSpeed>(1);
-+  const [isLoading, setIsLoading] = useState(true);
++  const [isRecording, setIsRecording] = useState(false);
++  const [recordingUri, setRecordingUri] = useState<string | null>(null);
++  const [recording, setRecording] = useState<Audio.RecordingStatus | null>(null);
++  const [progress, setProgress] = useState(0);
++  const [recordingTime, setRecordingTime] = useState(0);
 +  const progressAnim = useRef(new Animated.Value(0)).current;
-+  const { savePlaybackPosition } = useAudioStore();
-+
-+  useEffect(() => {
-+    loadAudio();
-+    return () => {
-+      cleanup();
-+    };
-+  }, [audioUri]);
-+
-+  const cleanup = async () => {
-+    if (sound) {
-+      await sound.stopAsync();
-+      await sound.unloadAsync();
-+    }
-+  };
-+
-+  const loadAudio = async () => {
++  
++  const startRecording = async () => {
 +    try {
-+      setIsLoading(true);
-+      const { sound: newSound } = await Audio.Sound.createAsync(
-+        { uri: audioUri },
-+        {
-+          shouldPlay: false,
-+          positionMillis: initialPosition,
-+          rate: playbackSpeed,
-+        },
-+        onPlaybackStatusUpdate
-+      );
-+      setSound(newSound);
-+      const status = await newSound.getStatusAsync();
-+      if (status.isLoaded) {
-+        setDuration(status.durationMillis || 0);
-+        setPosition(status.positionMillis || 0);
++      if (recording) {
++        await recording.stopAndUnload();
 +      }
-+      setIsLoading(false);
++      
++      const newRecording = new Audio.Recording();
++      await newRecording.prepareToRecordAsync(RecordingOptionsPresets.HIGH_QUALITY);
++      setRecording(newRecording);
++      await newRecording.startAsync();
++      setIsRecording(true);
 +    } catch (error) {
-+      console.error('Error loading audio:', error);
-+      setIsLoading(false);
++      console.error('Failed to start recording', error);
 +    }
 +  };
-+
-+  const onPlaybackStatusUpdate = useCallback(
-+    (status: Audio.PlaybackStatus) => {
-+      if (!status.isLoaded) return;
-+
-+      setPosition(status.positionMillis);
-+      setIsPlaying(status.isPlaying);
-+
-+      if (status.durationMillis) {
-+        const progress = status.positionMillis / status.durationMillis;
-+        progressAnim.setValue(progress);
++  
++  const stopRecording = async () => {
++    if (recording) {
++      try {
++        await recording.stopAndUnload();
++        const uri = recording.getURI();
++        setRecordingUri(uri);
++        setIsRecording(false);
++        setRecording(null);
++        onRecordingComplete(uri);
++      } catch (error) {
++        console.error('Failed to stop recording', error);
 +      }
-+
-+      if (status.didJustFinish) {
-+        savePlaybackPosition(noteId, 0);
-+        progressAnim.setValue(0);
++    }
++  };
++  
++  const cancelRecording = async () => {
++    if (recording) {
++      try {
++        await recording.stopAndUnload();
++        setRecording(null);
++        onRecordingCancelled();
++      } catch (error) {
++        console.error('Failed to cancel recording', error);
 +      }
-+    },
-+    [noteId, progressAnim, savePlaybackPosition]
-+  );
-+
-+  const togglePlayPause = async () => {
-+    if (!sound) return;
-+
-+    if (isPlaying) {
-+      await sound.pauseAsync();
++    }
++  };
++  
++  // Timer effect for recording
++  useEffect(() => {
++    let interval: NodeJS.Timeout | null = null;
++    
++    if (isRecording) {
++      interval = setInterval(() => {
++        setRecordingTime(prev => prev + 1);
++      }, 1000);
 +    } else {
-+      await sound.playAsync();
++      if (interval) clearInterval(interval);
++    }
++    
++    return () => {
++      if (interval) clearInterval(interval);
++    };
++  }, [isRecording]);
++  
++  // Recording control handlers
++  const handleStartRecording = () => {
++    if (!isRecording) {
++      startRecording();
 +    }
 +  };
-+
-+  const seekTo = async (percentage: number) => {
-+    if (!sound || !duration) return;
-+
-+    const newPosition = Math.max(0, Math.min(duration * percentage, duration));
-+    await sound.setPositionAsync(newPosition);
-+    setPosition(newPosition);
-+  };
-+
-+  const skipForward = async () => {
-+    if (!sound) return;
-+    const newPosition = Math.min(position + 15000, duration);
-+    await sound.setPositionAsync(newPosition);
-+  };
-+
-+  const skipBackward = async () => {
-+    if (!sound) return;
-+    const newPosition = Math.max(position - 15000, 0);
-+    await sound.setPositionAsync(newPosition);
-+  };
-+
-+  const changePlaybackSpeed = async () => {
-+    const currentIndex = PLAYBACK_SPEEDS.indexOf(playbackSpeed);
-+    const nextIndex = (currentIndex + 1) % PLAYBACK_SPEEDS.length;
-+    const newSpeed = PLAYBACK_SPEEDS[nextIndex];
-+    setPlaybackSpeed(newSpeed);
-+
-+    if (sound) {
-+      await sound.setRateAsync(newSpeed, true);
++  
++  const handleStopRecording = () => {
++    if (isRecording) {
++      stopRecording();
 +    }
 +  };
-+
-+  const handleDelete = () => {
-+    cleanup();
-+    onDelete?.();
++  
++  const handleCancelRecording = () => {
++    cancelRecording();
 +  };
-+
-+  const progressBarWidth = screenWidth - 120;
-+  const panResponder = useRef(
-+    PanResponder.create({
-+      onStartShouldSetPanResponder: () => true,
-+      onMoveShouldSetPanResponder: () => true,
-+      onPanResponderMove: (_, gestureState) => {
-+        const percentage = Math.max(
-+          0,
-+          Math.min(gestureState.moveX / progressBarWidth, 1)
-+        );
-+        progressAnim.setValue(percentage);
-+      },
-+      onPanResponderRelease: (_, gestureState) => {
-+        const percentage = Math.max(
-+          0,
-+          Math.min(gestureState.moveX / progressBarWidth, 1)
-+        );
-+        seekTo(percentage);
-+      },
-+    })
-+  ).current;
-+
-+  const progressWidth = progressAnim.interpolate({
-+    inputRange: [0, 1],
-+    outputRange: ['0%', '100%'],
-+  });
-+
++  
++  // Animation for recording progress
++  useEffect(() => {
++    Animated.timing(progressAnim, {
++      toValue: 100,
++      duration: 1000,
++      useNativeDriver: false
++    }).start();
++  }, [recordingTime]);
++  
 +  return (
 +    <View style={styles.container}>
-+      <View style={styles.waveformContainer}>
-+        <AudioWaveform isPlaying={isPlaying} />
++      <View style={styles.recorderContainer}>
++        <View style={styles.controls}>
++          {!isRecording ? (
++            <TouchableOpacity 
++              style={styles.recordButton}
++              onPress={handleStartRecording}
++            >
++              <Text style={styles.buttonText}>Start Recording</Text>
++            </TouchableOpacity>
++          ) : (
++            <View style={styles.recordingControls}>
++              <TouchableOpacity 
++                style={styles.stopButton}
++                onPress={handleStopRecording}
++              >
++                <Text style={styles.buttonText}>Stop</Text>
++              </TouchableOpacity>
++              <TouchableOpacity 
++                style={styles.cancelButton}
++                onPress={handleCancelRecording}
++              >
++                <Text style={styles.buttonText}>Cancel</Text>
++              </TouchableOpacity>
++            </View>
++          )}
++        </View>
++        
++        <View style={styles.timerContainer}>
++          <Text style={styles.timerText}>
++            {new Date(recordingTime * 1000).toISOString().substr(11, 8)}
++          </Text>
++        </View>
++        
++        <View style={styles.waveformContainer}>
++          <Animated.View style={[styles.waveform, { width: progressAnim }]} />
++        </View>
 +      </View>
++    </View>
++  );
++};
 +
-+      <View style={styles.controlsContainer}>
-+        <TouchableOpacity onPress={skipBackward} style={styles.controlButton}>
-+          <Ionicons name="play-back" size={20} color="#666" />
-+        </TouchableOpacity>
-+
-+        <TouchableOpacity
-+          onPress={togglePlayPause}
-+          style={styles.playButton}
-+          disabled={isLoading}
-+        >
-+          <Ionicons
-+            name={isPlaying ? 'pause' : 'play'}
-+            size={28}
-+            color="#fff"
-+          />
-+        </TouchableOpacity>
-+
-+        <TouchableOpacity onPress
++const styles = StyleSheet.create({
++  container: {
++    flex: 1,
++    padding: 20,
++  },
++  recorderContainer: {
++    flexDirection: 'row',
++    justifyContent: 'space-between',
++    alignItems: 'center',
++  },
++  controls: {
++    flexDirection: 'row',
++    justifyContent: 'space-between',
++    width: '100%',
++  },
++  recordButton: {
++    backgroundColor: Colors.red,
++    padding: 10,
++    borderRadius: 5,
++    alignItems: 'center',
++  },
++  stopButton: {
++    backgroundColor: Colors.gray,
++    padding: 10,
++    borderRadius: 5,
++    alignItems: 'center',
++  },
++  cancelButton: {
++    backgroundColor: Colors.lightGray,
++    padding: 10,
++    borderRadius: 5,
++    alignItems: 'center',
++  },
++  buttonText: {
++    color: 'white',
++    fontWeight: 'bold',
++  },
++  timerContainer: {
++    alignItems: 'center',
++    marginVertical: 10,
++    flexDirection: 'row',
++  },
++  timerText: {
++    fontSize: 16,
++    fontWeight: 'bold',
++  },
++  waveformContainer: {
++    height: 50,
++    width: '100%',
++    backgroundColor: Colors.lightGray,
++   
