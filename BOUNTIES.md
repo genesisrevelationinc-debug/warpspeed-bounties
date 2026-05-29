@@ -24,33 +24,49 @@ This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty 
 
 # warpSpeed Bounties
 
-This file tracks active and completed bounty tasks for the warpSpeed OPEN programme.
+## Available Bounties
 
-## Active Bounties
+### Email Threads API (PAID BOUNTY - $750)
 
-| Bounty | Reward | Status | Claimed By |
-|--------|--------|--------|------------|
-| Email Threads API | $750 | Open | - |
+**Bounty Status**: In Progress
+**Assigned Developer**: 
+**Started**: 2024
 
-## Completed Bounties
+### Overview
 
-_None yet._
+Build a thread-first Email Threads API for the warpSpeed app.
 
-## How to Claim a Bounty
+### Requirements
 
-1. Browse available bounties on [warpspeedopen.org/bounties](https://warpspeedopen.org/bounties).
-2. Sign up as a developer on the website.
-3. Comment on the GitHub issue: "I have signed up and would like to claim this bounty."
-4. Wait for maintainer confirmation before starting work.
-5. Submit your pull request before the bounty deadline.
+- Create API endpoints for listing email threads
+- Implement thread grouping and conversation management
+- Support for drafts within conversation threads
+- Maintain search and filter consistency
+- Handle access control and ownership rules
+- Sync thread ordering across email providers
+- Comprehensive API documentation
+- Complete test coverage
 
-## Rules
+### Technical Implementation
 
-- Do not start work until a maintainer confirms your claim.
-- Maximum 3 submission attempts.
-- Minimum 90% specification match required for consideration.
-- Payment is made only at 100% completion.
-- Payment is processed only after the pull request is approved and merged.
-- First code commit is required at the halfway mark between bounty start and bounty expiration.
-- Code must be original or properly licensed.
+#### Core API Endpoints
+
+1. **List Email Threads** - `GET /api/threads`
+   - Returns paginated list of email threads for authenticated user
+   - Supports filtering and search parameters
+   - Includes thread metadata and message counts
+
+2. **Get Thread Detail** - `GET /api/threads/{threadId}`
+   - Returns complete thread with all related messages
+   - Maintains chronological ordering
+   - Preserves draft message associations
+
+3. **Thread Metadata Management**
+   - Automatic thread creation from message subject threading
+   - Message grouping by conversation references
+   - Draft state preservation in threads
+
+#### Database Schema
+
+
 Payment happens after the PR is approved and merged.
