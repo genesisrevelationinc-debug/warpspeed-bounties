@@ -1,58 +1,46 @@
-Looking at the repository structure and the bounty description, I need to implement audio note recording functionality. Since there are no existing source files provided in the repository listing, I'll create a new component file that would typically be part of a React Native audio recording feature.
+Looking at the issue, this is a bounty for implementing audio note recording functionality in a React Native app. Since there are no actual source files provided in the repository listing, I'll create the necessary files based on the bounty requirements.
+
+Let me create the main files needed for audio note recording functionality:
 
 ```diff
 --- /dev/null
-+++ b/src/components/audio/AudioNoteRecorder.tsx
-@@ -0,0 +1,337 @@
-+import React, { useState, useRef, useEffect } from 'react';
-+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react';
++++ b/src/components/AudioRecorder.tsx
+@@ -0,0 +1,200 @@
++import React, { useState, useEffect, useRef } from 'react';
++import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
 +import { Audio } from 'expo-av';
-+import { Audio as AudioType } from 'expo-av/src/Audio';
-+import { Recording } from 'expo-av/src/Audio';
-+import { Colors } from '../../constants/Colors';
-+import { format } from 'time';
-+import { 
-+  requestPermissionsAsync,
-+  Audio as AudioPermission 
-+} from 'expo-av/src/Audio';
++import { MaterialIcons } from '@expo/vector-icons';
 +
-+interface AudioNoteRecorderProps {
-+  onRecordingComplete: (uri: string) => void;
++interface AudioRecorderProps {
++  onSave: (uri: string, duration: number) => void;
 +  onCancel: () => void;
 +}
 +
-+const AudioNoteRecorder: React.FC<AudioNoteRecorderProps> = ({ onRecordingComplete, onCancel }) => {
-+  const [recording, setRecording] = useState<Recording | null>(null);
++const AudioRecorder: React.FC<AudioRecorderProps> = ({ onSave, onCancel }) => {
 +  const [isRecording, setIsRecording] = useState(false);
 +  const [isPaused, setIsPaused] = useState(false);
-+  const [recordingTime, setRecordingTime] = useState(0);
-+  const [isRecordingActive, setIsRecordingActive] = useState(false);
++  const [recording, setRecording] = useState<Audio.Recording | null>(null);
++  const [duration, setDuration] = useState(0);
++  const [waveformAnimation] = useState(new Animated.Value(0));
 +  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 +
-+  const [audioPermission, requestAudioPermission] = useState(false);
-+
 +  useEffect(() => {
-+    const getAudioPermissions = async () => {
-+      const { status } = await requestAudioPermission();
-+      if (status !== 'granted') {
-+        const { status: newStatus } = await requestAudioPermission();
-+        if (newStatus !== 'granted') {
-+          Alert.alert('Microphone permission is required to record audio notes');
-+        }
++    return () => {
++      if (intervalRef.current) {
++        clearInterval(intervalRef.current);
++      }
++      if (recording) {
++        recording.stopAndUnloadAsync();
 +      }
 +    };
-+
-+    getAudioPermissions();
-+  }, []);
++  }, [recording]);
 +
 +  const startRecording = async () => {
 +    try {
-+      if (!audioPermission) {
-+        const { status } = await AudioPermission.requestPermissionsAsync();
-+        if (status !== 'granted') {
-+          Alert.alert('Microphone permission is required to record audio notes');
-+          return;
-+        }
++      const { granted } = await Audio.requestPermissionsAsync();
++      if (!granted) {
++        console.error('Permission to access microphone was denied');
++        return;
 +      }
 +
 +      await Audio.setAudioModeAsync({
@@ -60,142 +48,162 @@ Looking at the repository structure and the bounty description, I need to implem
 +        playsInSilentModeIOS: true,
 +      });
 +
-+      const newRecording = new Audio.Recording();
-+      const recordingStatus = await newRecording.getStatusAsync();
-+      
-+      if (recordingStatus.canRecord === false) {
-+        throw Error('Cannot record audio');
-+      }
-+      
-+      await newRecording.prepareToRecordAsync(
-+        Audio.RECORDING_OPTIONS_PRESET_HIGH_QUALITY
++      const { recording: newRecording } = await Audio.Recording.createAsync(
++        Audio.RecordingOptionsPresets.HIGH_QUALITY
 +      );
-+      newRecording.setOnRecordingStatusUpdate(onRecordingStatusUpdate);
-+      
++
 +      setRecording(newRecording);
 +      setIsRecording(true);
-+      setIsRecordingActive(true);
-+      
-+      // Start the timer
-+      intervalRef.current = setInterval(() => {
-+        setRecordingTime(prev => prev + 1);
-+      }, 1000);
-+    } catch (error) {
-+      console.error('Failed to start recording:', error);
-+      Alert.alert('Failed to start recording', error.message);
-+    }
-+  };
++      setIsPaused(false);
++      setDuration(0);
 +
-+  const onRecordingStatusUpdate = (status: any) => {
-+    console.log('Recording status updated:', status);
++      // Start timer
++      intervalRef.current = setInterval(() => {
++        setDuration(prev => prev + 1);
++      }, 1000);
++
++      // Start waveform animation
++      Animated.loop(
++        Animated.sequence([
++          Animated.timing(waveformAnimation, {
++            toValue: 1,
++            duration: 500,
++            useNativeDriver: true,
++          }),
++          Animated.timing(waveformAnimation, {
++            toValue: 0,
++            duration: 500,
++            useNativeDriver: true,
++          }),
++        ])
++      ).start();
++    } catch (error) {
++      console.error('Failed to start recording', error);
++    }
 +  };
 +
 +  const stopRecording = async () => {
++    if (intervalRef.current) {
++      clearInterval(intervalRef.current);
++    }
++
 +    if (recording) {
-+      const { sound } = await recording.stopAndUnloadAsync();
-+      const uri = await recording.getURI();
-+      if (intervalRef.current) {
-+        clearInterval(intervalRef.current);
++      try {
++        await recording.stopAndUnloadAsync();
++        const uri = recording.getURI();
++        if (uri) {
++          onSave(uri, duration);
++        }
++      } catch (error) {
++        console.error('Failed to stop recording', error);
 +      }
-+      setRecordingTime(0);
-+      setIsRecording(false);
-+      setIsPaused(false);
-+      setIsRecordingActive(false);
-+      return uri;
 +    }
-+    return null;
++    setIsRecording(false);
++    setIsPaused(false);
 +  };
 +
-+  const pauseRecording = () => {
-+    if (recording) {
-+      recording.pauseAsync();
-+      setIsPaused(true);
++  const pauseRecording = async () => {
++    if (recording && isRecording) {
++      try {
++        await recording.pauseAsync();
++        setIsPaused(true);
++        if (intervalRef.current) {
++          clearInterval(intervalRef.current);
++        }
++      } catch (error) {
++        console.error('Failed to pause recording', error);
++      }
 +    }
 +  };
 +
-+  const resumeRecording = () => {
-+    if (recording) {
-+      recording.startAsync();
-+      setIsPaused(false);
++  const resumeRecording = async () => {
++    if (recording && isPaused) {
++      try {
++        await recording.startAsync();
++        setIsPaused(false);
++        intervalRef.current = setInterval(() => {
++          setDuration(prev => prev + 1);
++        }, 1000);
++      } catch (error) {
++        console.error('Failed to resume recording', error);
++      }
 +    }
++  };
++
++  const cancelRecording = () => {
++    if (intervalRef.current) {
++      clearInterval(intervalRef.current);
++    }
++    if (recording) {
++      recording.stopAndUnloadAsync();
++    }
++    setIsRecording(false);
++    setIsPaused(false);
++    onCancel();
 +  };
 +
 +  const formatTime = (seconds: number) => {
-+    return new Date(seconds * 1000).toISOString().substr(11, 8);
++    const mins = Math.floor(seconds / 60);
++    const secs = seconds % 60;
++    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 +  };
-+
-+  const formatTimeForDisplay = (seconds: number) => {
-+    const date = new Date(seconds * 1000);
-+    return date.toISOString().substr(11, 8);
-+  };
-+
-+  const RecordingTimer: React.FC = () => {
-+    return (
-+      <Text style={styles.timer}>
-+        {formatTimeForDisplay(recordingTime)}
-+      </Text>
-+    );
-+  };
-+
-+  const RecordingControls: React.FC = () => {
-+    return (
-+      <View style={styles.recordingControls}>
-+        <TouchableOpacity 
-+          style={styles.recordButton}
-+          onPress={isRecordingActive ? stopRecording : startRecording}
-+          disabled={!audioPermission}
-+        >
-+          <Text>
-+            {isRecording ? 'Stop' : 'Start'}
-+          </Text>
-+        </TouchableOpacity>
-+        <RecordingTimer />
-+      </View>
-+    );
-+  };
-+
-+  const styles = StyleSheet.create({
-+    timer: {
-+      fontSize: 18,
-+      fontWeight: 'bold',
-+      textAlign: 'center',
-+      marginVertical: 10
-+    },
-+    recordButton: {
-+      backgroundColor: Colors.primary,
-+      padding: 10,
-+      borderRadius: 5,
-+      margin: 10
-+    },
-+    recordingControls: {
-+      padding: 20,
-+      flexDirection: 'row',
-+      alignItems: 'center',
-+      justifyContent: 'space-between'
-+    }
-+  });
 +
 +  return (
-+    <View>
-+      <RecordingTimer />
-+      {isRecording ? (
-+        <TouchableOpacity 
-+          style={styles.recordButton}
-+          onPress={stopRecording}
-+        >
-+          <Text>Stop</Text>
++    <View style={styles.container}>
++      <View style={styles.header}>
++        <Text style={styles.title}>Record Audio Note</Text>
++        <TouchableOpacity onPress={cancelRecording}>
++          <MaterialIcons name="close" size={24} color="#666" />
 +        </TouchableOpacity>
-+      ) : (
-+        <TouchableOpacity 
-+          style={styles.recordButton}
-+          onPress={startRecording}
-+          disabled={!audioPermission}
-+        >
-+          <Text>Start Recording</Text>
-+        </TouchableOpacity>
-+      )}
-+      {isRecording && (
-+        <TouchableOpacity 
-+          style={styles.recordButton}
-+          onPress={pauseRecording}
-+        >
++      </View>
++
++      <View style={styles.timerContainer}>
++        <Text style={styles.timer}>{formatTime(duration)}</Text>
++      </View>
++
++      <View style={styles.waveformContainer}>
++        <Animated.View 
++          style={[
++            styles.waveformBar, 
++            {
++              transform: [{
++                scaleY: waveformAnimation.interpolate({
++                  inputRange: [0, 1],
++                  outputRange: [0.5, 1.5]
++                })
++              }]
++            }
++          ]} 
++        />
++        <Animated.View 
++          style={[
++            styles.waveformBar, 
++            {
++              transform: [{
++                scaleY: waveformAnimation.interpolate({
++                  inputRange: [0, 1],
++                  outputRange: [1, 2]
++                })
++              }]
++            }
++          ]} 
++        />
++        <Animated.View 
++          style={[
++            styles.waveformBar, 
++            {
++              transform: [{
++                scaleY: waveformAnimation.interpolate({
++                  inputRange: [0, 1],
++                  outputRange: [0.8, 1.8]
++                })
++              }]
++            }
++          ]} 
++        />
++      </View>
++
++      <View style={styles.controlsContainer}>
++        {!isRecording ? (
++          <TouchableOpacity style={styles.recordButton} onPress={startRecording}>
++            <MaterialIcons
