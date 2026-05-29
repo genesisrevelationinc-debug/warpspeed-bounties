@@ -24,120 +24,60 @@ This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty 
 
 # warpSpeed Bounties
 
-Paid open-source bounty tasks for developers contributing to **wpspeed OPEN**.
-
-## Available Bounties
+## Active Bounties
 
 ### [PAID BOUNTY - $960] Attachment Summarizer Service
 
-#### Bounty Overview
+- **Status**: Open
+- **Reward**: $960
+- **Difficulty**: Expert
+- **Labels**: `help wanted`, `bounty`, `expert`, `paid`, `open`, `nodejs`, `prisma`, `typescript`, `backend`
+
+#### Overview
 
 Build a Node.js attachment summarizer service that consumes email attachment events from AWS SQS, downloads attachments from Google Cloud Storage, extracts content from supported file types, and generates natural-language summaries using a self-hosted open-source LLM.
 
-This bounty is part of the warpSpeed OPEN developer bounty programme.
-
-#### Reward
-
-$960
-
-#### Difficulty
-
-Expert
-
-#### Main Skills
-
-- Node.js
-- TypeScript
-- Prisma
-- AWS SQS
-- Google Cloud Storage
-- Docker
-- Ollama / Open-source LLMs
-
-#### High-Level Scope
-
-The selected developer will build a service that:
-
-- Consumes attachment events from SQS
-- Downloads attachments from GCS
-- Handles common attachment types such as PDFs, Word documents, spreadsheets, text files, HTML, and images
-- Generates short factual summaries using a locally hosted LLM
-- Includes error handling, logging, Docker setup, and tests
-
 #### Technical Requirements
 
-1. **Service Architecture**
-   - Build a Node.js service using TypeScript
-   - Use Prisma for any database interactions
-   - Dockerize the service for easy deployment
+- **Runtime**: Node.js with TypeScript
+- **Database**: Prisma ORM
+- **Queue**: AWS SQS for event consumption
+- **Storage**: Google Cloud Storage for attachment downloads
+- **LLM**: Self-hosted open-source model via Ollama
+- **Containerization**: Docker
+- **Testing**: Comprehensive test suite
 
-2. **SQS Integration**
-   - Consume messages from AWS SQS queue
-   - Handle message deletion after successful processing
-   - Implement proper error handling for failed messages
+#### Supported File Types
 
-3. **GCS Integration**
-   - Download attachments from Google Cloud Storage
-   - Handle authentication with service account credentials
-   - Implement retry logic for failed downloads
+- PDF documents
+- Microsoft Word (.doc, .docx)
+- Spreadsheets (.xls, .xlsx, .csv)
+- Plain text files (.txt)
+- HTML files
+- Images (with OCR capability)
 
-4. **Content Extraction**
-   - Support for PDF files
-   - Support for Microsoft Word documents (.doc, .docx)
-   - Support for Microsoft Excel spreadsheets (.xls, .xlsx)
-   - Support for plain text files (.txt)
-   - Support for HTML files (.html, .htm)
-   - Support for image files (.jpg, .png, .gif) with OCR capabilities
+#### Core Functionality
 
-5. **LLM Integration**
-   - Use a self-hosted open-source LLM (e.g., LLaMA, Mistral)
-   - Integrate with Ollama or similar local LLM service
-   - Generate concise, factual summaries (50-100 words)
-   - Handle LLM API failures gracefully
+1. **SQS Consumer**: Poll AWS SQS queue for attachment events
+2. **GCS Downloader**: Download attachments from Google Cloud Storage
+3. **Content Extraction**: Extract text content from supported file types
+4. **Summary Generation**: Generate factual summaries using local LLM
+5. **Error Handling**: Robust error handling and retry logic
+6. **Logging**: Structured logging throughout the pipeline
+7. **Persistence**: Store summary results via Prisma ORM
 
-6. **Error Handling & Logging**
-   - Comprehensive error handling for all components
-   - Structured logging for debugging and monitoring
-   - Dead letter queue implementation for failed messages
+#### Infrastructure
 
-7. **Testing**
-   - Unit tests for core functionality
-   - Integration tests for SQS and GCS integrations
-   - Mock LLM responses for testing
-
-8. **Documentation**
-   - README with setup instructions
-   - Configuration documentation
-   - Deployment guide
-
-#### Submission Rules
-
-1. Fork the repository and create your branch
-2. Implement the solution following the technical requirements
-3. Include comprehensive tests
-4. Document the setup and usage
-5. Submit a pull request with your implementation
-
-#### Acceptance Criteria
-
-- Service successfully consumes SQS messages
-- Attachments are downloaded from GCS
-- Content is extracted from all supported file types
-- Summaries are generated using the LLM
-- Error handling is implemented throughout
-- Code is well-documented and tested
-- Docker setup is provided
-- All technical requirements are met
+- Docker and docker-compose setup
+- Ollama service for LLM inference
+- Health checks and monitoring endpoints
 
 #### How to Claim
 
-1. Open the bounty page at https://warpspeedopen.org/bounties
+1. Visit [warpSpeed OPEN Bounties](https://warpspeedopen.org/bounties)
 2. Sign up as a developer
-3. Return to this GitHub issue and comment:
-
-   "I have signed up and would like to claim this bounty."
-
-4. A maintainer must confirm before work begins
+3. Comment on the GitHub issue: *"I have signed up and would like to claim this bounty."*
+4. Wait for maintainer confirmation before starting work
 
 #### Important Rules
 
@@ -147,9 +87,7 @@ The selected developer will build a service that:
 - Code must be original or properly licensed
 - The full bounty page is the source of truth for technical requirements and deadlines
 
-#### View Full Bounty Details & Sign Up
+---
 
-To see the full bounty specification and apply, visit:
-
-https://warpspeedopen.org/bounties
+*For questions, join our [Discord](https://warpspeedopen.org/discord) or email bounties@warpspeedopen.org*
 Payment happens after the PR is approved and merged.
