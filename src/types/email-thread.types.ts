@@ -1,20 +1,27 @@
-export interface EmailThread {
-  id: string;
-  subject: string;
-  snippet: string;
-  messageIds: string[];
-  createdAt: Date;
-  updatedAt: Date;
-  lastMessageTimestamp: Date;
-  messageCount: number;
-  unreadCount: number;
-  hasUnread: boolean;
-  participants: Array<{
-    name: string;
-    email: string;
-    avatar?: string;
-  }>;
+export interface EmailThreadListResponse {
+  threads: EmailThread[];
+  pagination: {
+    currentPage: number;
+    perPage: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export interface EmailThreadDetailResponse {
+  thread: EmailThread;
   messages: EmailMessage[];
-  isStarred: boolean;
-  isArchived: boolean;
+}
+
+export interface EmailThreadQueryParams {
+  limit?: number;
+  offset?: number;
+  sortBy?: 'recent' | 'unread' | 'starred';
+  filterBy?: 'all' | 'unread' | 'starred' | 'inbox';
+}
+
+export interface EmailThreadCreateRequest {
+  subject: string;
+  messageIds: string[];
+  participants: Array<{ email: string; name?: string }>;
 }
