@@ -1,192 +1,170 @@
-Looking at the issue description, this is about implementing an inline image editing feature for a React Native app. Since there are no existing source files shown in the repository structure, I need to create the core implementation files for this feature.
+Looking at the issue, this is about implementing an inline image editing feature for a React Native app. Since there are no existing source files shown in the repository listing, I need to create the core implementation files for this feature.
 
-Based on the bounty requirements, I'll create the main image editor component and related files that would be needed for this feature.
+Based on the bounty requirements, I'll create the main image editor component and supporting files. I'll structure this as a reusable React Native component that can be integrated into the existing app.
 
 ```diff
 --- /dev/null
 +++ b/src/components/ImageEditor/ImageEditor.tsx
 @@ -0,0 +1,350 @@
-+import React, { useState, useRef } from 'react';
++import React, { useState, useRef, useEffect } from 'react';
 +import {
 +  View,
 +  StyleSheet,
 +  TouchableOpacity,
 +  Text,
-+  Modal,
-+  Image,
 +  Slider,
-+  Button,
++  Modal,
++  Dimensions,
 +  Alert,
 +} from 'react-native';
-+import { ImageEditorProps, EditMode, ImageAdjustments } from '../../types/imageEditor';
++import { Image as RNImage } from 'react-native';
++import { ImageEditorProps, ToolType, ImageAdjustments } from './types';
++
++const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 +
 +const ImageEditor: React.FC<ImageEditorProps> = ({
 +  isVisible,
-+  imageUrl,
++  imageUri,
 +  onSave,
 +  onCancel,
++  originalMessageTime,
 +}) => {
-+  const [editMode, setEditMode] = useState<EditMode>('crop');
++  const [tool, setTool] = useState<ToolType>('crop');
 +  const [adjustments, setAdjustments] = useState<ImageAdjustments>({
 +    brightness: 0,
 +    contrast: 0,
++    saturation: 0,
 +  });
 +  const [rotation, setRotation] = useState(0);
-+  const [annotations, setAnnotations] = useState<any[]>([]);
++  const [cropArea, setCropArea] = useState({ x: 0, y: 0, width: 0, height: 0 });
 +  const [history, setHistory] = useState<any[]>([]);
 +  const [historyIndex, setHistoryIndex] = useState(-1);
-+  
-+  const imageRef = useRef<any>(null);
++  const canvasRef = useRef<any>(null);
 +
-+  const handleSave = () => {
-+    // Save edited image as new version
-+    const editedImageData = {
-+      originalUrl: imageUrl,
-+      editedUrl: imageUrl, // In real implementation, this would be the processed image
-+      adjustments,
-+      rotation,
-+      annotations,
-+    };
-+    onSave(editedImageData);
-+  };
++  // Save initial state to history
++  useEffect(() => {
++    if (isVisible && imageUri) {
++      const initialState = {
++        tool,
++        adjustments,
++        rotation,
++        cropArea,
++      };
++      setHistory([initialState]);
++      setHistoryIndex(0);
++    }
++  }, [isVisible, imageUri]);
 +
-+  const handleAdjustmentChange = (key: keyof ImageAdjustments, value: number) => {
-+    setAdjustments(prev => ({
-+      ...prev,
-+      [key]: value,
-+    }));
-+  };
-+
-+  const handleRotate = () => {
-+    setRotation(prev => (prev + 90) % 360);
++  const saveToHistory = (newState: any) => {
++    const newHistory = history.slice(0, historyIndex + 1);
++    newHistory.push(newState);
++    setHistory(newHistory);
++    setHistoryIndex(newHistory.length - 1);
 +  };
 +
 +  const handleUndo = () => {
 +    if (historyIndex > 0) {
-+      setHistoryIndex(prev => prev - 1);
-+      // Restore from history
++      const prevState = history[historyIndex - 1];
++      setTool(prevState.tool);
++      setAdjustments(prevState.adjustments);
++      setRotation(prevState.rotation);
++      setCropArea(prevState.cropArea);
++      setHistoryIndex(historyIndex - 1);
 +    }
 +  };
 +
 +  const handleRedo = () => {
 +    if (historyIndex < history.length - 1) {
-+      setHistoryIndex(prev => prev + 1);
-+      // Restore from history
++      const nextState = history[historyIndex + 1];
++      setTool(nextState.tool);
++      setAdjustments(nextState.adjustments);
++      setRotation(nextState.rotation);
++      setCropArea(nextState.cropArea);
++      setHistoryIndex(historyIndex + 1);
 +    }
 +  };
 +
-+  const addAnnotation = (type: string) => {
-+    const newAnnotation = {
-+      id: Date.now(),
-+      type,
-+      // In real implementation, would include position, size, etc.
-+    };
-+    setAnnotations(prev => [...prev, newAnnotation]);
++  const handleAdjustmentChange = (key: keyof ImageAdjustments, value: number) => {
++    const newAdjustments = { ...adjustments, [key]: value };
++    setAdjustments(newAdjustments);
++    saveToHistory({ ...history[historyIndex], adjustments: newAdjustments });
 +  };
 +
-+  const renderToolbar = () => (
-+    <View style={styles.toolbar}>
-+      <TouchableOpacity
-+        style={[styles.toolButton, editMode === 'crop' && styles.activeTool]}
-+        onPress={() => setEditMode('crop')}
-+      >
-+        <Text>Crop</Text>
-+      </TouchableOpacity>
-+      <TouchableOpacity
-+        style={[styles.toolButton, editMode === 'rotate' && styles.activeTool]}
-+        onPress={() => setEditMode('rotate')}
-+      >
-+        <Text>Rotate</Text>
-+      </TouchableOpacity>
-+      <TouchableOpacity
-+        style={[styles.toolButton, editMode === 'adjust' && styles.activeTool]}
-+        onPress={() => setEditMode('adjust')}
-+      >
-+        <Text>Adjust</Text>
-+      </TouchableOpacity>
-+      <TouchableOpacity
-+        style={[styles.toolButton, editMode === 'annotate' && styles.activeTool]}
-+        onPress={() => setEditMode('annotate')}
-+      >
-+        <Text>Annotate</Text>
-+      </TouchableOpacity>
-+    </View>
-+  );
++  const handleRotationChange = (direction: 'clockwise' | 'counterclockwise') => {
++    const newRotation = direction === 'clockwise' 
++      ? (rotation + 90) % 360 
++      : (rotation - 90 + 360) % 360;
++    setRotation(newRotation);
++    saveToHistory({ ...history[historyIndex], rotation: newRotation });
++  };
 +
-+  const renderAdjustmentControls = () => {
-+    if (editMode !== 'adjust') return null;
++  const handleSave = () => {
++    // In a real implementation, this would process the image
++    // For now, we'll just return the original URI with adjustments data
++    const isEditedWithin15Minutes = originalMessageTime 
++      ? (Date.now() - originalMessageTime) < 15 * 60 * 1000 
++      : false;
 +    
-+    return (
-+      <View style={styles.adjustmentPanel}>
-+        <View style={styles.adjustmentRow}>
-+          <Text>Brightness</Text>
-+          <Slider
-+            style={styles.slider}
-+            minimumValue={-100}
-+            maximumValue={100}
-+            value={adjustments.brightness}
-+            onValueChange={(value) => handleAdjustmentChange('brightness', value)}
-+          />
-+        </View>
-+        <View style={styles.adjustmentRow}>
-+          <Text>Contrast</Text>
-+          <Slider
-+            style={styles.slider}
-+            minimumValue={-100}
-+            maximumValue={100}
-+            value={adjustments.contrast}
-+            onValueChange={(value) => handleAdjustmentChange('contrast', value)}
-+          />
-+        </View>
-+        <View style={styles.adjustmentRow}>
-+          <Text>Saturation</Text>
-+          <Slider
-+            style={styles.slider}
-+            minimumValue={-100}
-+            maximumValue={100}
-+            value={adjustments.saturation || 0}
-+            onValueChange={(value) => handleAdjustmentChange('saturation', value)}
-+          />
-+        </View>
-+      </View>
-+    );
++    onSave({
++      originalUri: imageUri,
++      editedUri: imageUri, // In real implementation, this would be processed image
++      adjustments,
++      rotation,
++      cropArea,
++      isEditedWithin15Minutes,
++    });
 +  };
 +
-+  const renderAnnotationTools = () => {
-+    if (editMode !== 'annotate') return null;
-+    
-+    return (
-+      <View style={styles.annotationPanel}>
-+        <TouchableOpacity style={styles.annotationButton} onPress={() => addAnnotation('pen')}>
-+          <Text>Pen</Text>
-+        </TouchableOpacity>
-+        <TouchableOpacity style={styles.annotationButton} onPress={() => addAnnotation('text')}>
-+          <Text>Text</Text>
-+        </TouchableOpacity>
-+        <TouchableOpacity style={styles.annotationButton} onPress={() => addAnnotation('arrow')}>
-+          <Text>Arrow</Text>
-+        </TouchableOpacity>
-+        <TouchableOpacity style={styles.annotationButton} onPress={() => addAnnotation('highlight')}>
-+          <Text>Highlight</Text>
-+        </TouchableOpacity>
-+      </View>
-+    );
-+  };
-+
-+  const renderImagePreview = () => (
-+    <View style={styles.imageContainer}>
-+      <Image
-+        source={{ uri: imageUrl }}
-+        style={[
-+          styles.image,
-+          {
-+            transform: [{ rotate: `${rotation}deg` }],
-+          },
-+        ]}
-+        resizeMode="contain"
-+      />
-+      {annotations.map(annotation => (
-+        <View key={annotation.id} style={styles.annotationOverlay}>
-+          <Text>{annotation.type}</Text>
-+        </View>
-+     
++  const renderToolOptions = () => {
++    switch (tool) {
++      case 'adjust':
++        return (
++          <View style={styles.adjustmentPanel}>
++            <View style={styles.adjustmentRow}>
++              <Text>Brightness</Text>
++              <Slider
++                style={styles.slider}
++                minimumValue={-100}
++                maximumValue={100}
++                value={adjustments.brightness}
++                onValueChange={(value) => handleAdjustmentChange('brightness', value)}
++                minimumTrackTintColor="#1976D2"
++                maximumTrackTintColor="#d3d3d3"
++              />
++            </View>
++            <View style={styles.adjustmentRow}>
++              <Text>Contrast</Text>
++              <Slider
++                style={styles.slider}
++                minimumValue={-100}
++                maximumValue={100}
++                value={adjustments.contrast}
++                onValueChange={(value) => handleAdjustmentChange('contrast', value)}
++                minimumTrackTintColor="#1976D2"
++                maximumTrackTintColor="#d3d3d3"
++              />
++            </View>
++            <View style={styles.adjustmentRow}>
++              <Text>Saturation</Text>
++              <Slider
++                style={styles.slider}
++                minimumValue={-100}
++                maximumValue={100}
++                value={adjustments.saturation}
++                onValueChange={(value) => handleAdjustmentChange('saturation', value)}
++                minimumTrackTintColor="#1976D2"
++                maximumTrackTintColor="#d3d3d3"
++              />
++            </View>
++          </View>
++        );
++      case 'crop':
++        return (
++          <View style={styles.cropPanel}>
++            <Text>Crop mode active</Text>
++            <Text>Drag to select crop area</Text>
++          </View>
++        );
++      case 'pen':
++        return (
++          <View style
