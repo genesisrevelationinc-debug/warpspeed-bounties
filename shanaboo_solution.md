@@ -1,179 +1,191 @@
-Looking at the issue, I need to create a React Native component for the Email Inbox Classic View Page UI. Since there are no existing component files shown, I'll create a new component file structure that would be typical for this type of React Native project.
-
-Based on the repository structure and the bounty requirements, I'll create a ClassicInboxView component with the specified UI elements.
+Looking at the issue, I need to create a new file for the Classic Inbox UI component. Since this is a new implementation, I'll create a React Native component file that implements the email inbox classic view page UI as described in the bounty.
 
 ```diff
 --- /dev/null
-+++ b/src/components/ClassicInboxView.tsx
-@@ -0,0 +1,350 @@
-+import React, { useState, useRef } from 'react';
-+import {
-+  View,
-+  Text,
-+  StyleSheet,
-+  ScrollView,
-+  TouchableOpacity,
-+  TextInput,
-+  Animated,
-+  FlatList,
-+  Dimensions,
-+} from 'react-native';
++++ b/src/components/EmailInboxClassicView.tsx
+@@ -0,0 +1,250 @@
++import React, { useState, useEffect, useRef } from 'react';
++import { View, Text, StyleSheet, FlatList, TouchableOpacity, Animated } from 'react-native';
++import { SearchBar, Button, Icon } from 'react-native-elements';
 +
 +interface Email {
 +  id: string;
-+  sender: string;
 +  subject: string;
++  sender: string;
 +  preview: string;
 +  timestamp: string;
 +  isRead: boolean;
-+  category: 'primary' | 'promotions' | 'updates' | 'social' | 'forums';
++  isStarred: boolean;
 +}
 +
-+interface Category {
-+  id: string;
-+  name: string;
-+  icon: string;
++interface EmailInboxClassicViewProps {
++  onSearch?: (query: string) => void;
++  onEmailSelect?: (email: Email) => void;
++  emails: Email[];
 +}
 +
-+const { width } = Dimensions.get('window');
-+
-+const ClassicInboxView: React.FC = () => {
-+  const [activeCategory, setActiveCategory] = useState<string>('inbox');
-+  const [activeEmailCategory, setActiveEmailCategory] = useState<string>('primary');
-+  const [searchQuery, setSearchQuery] = useState<string>('');
++const EmailInboxClassicView: React.FC<EmailInboxClassicViewProps> = ({ 
++  onSearch, 
++  onEmailSelect, 
++  emails = [] 
++}) => {
++  const [searchQuery, setSearchQuery] = useState('');
++  const [selectedEmails, setSelectedEmails] = useState<Email[]>([]);
++  const [visibleEmails, setVisibleEmails] = useState<Email[]>(emails);
 +  const scrollY = useRef(new Animated.Value(0)).current;
-+  const headerHeight = 120;
++  const [headerVisible, setHeaderVisible] = useState(true);
 +  
-+  // Mock data - in a real app this would come from an API
-+  const emails: Email[] = [
-+    {
-+      id: '1',
-+      sender: 'John Doe',
-+      subject: 'Meeting Tomorrow',
-+      preview: 'Hi there, just confirming our meeting scheduled for tomorrow...',
-+      timestamp: '10:30 AM',
-+      isRead: false,
-+      category: 'primary'
-+    },
-+    {
-+      id: '2',
-+      sender: 'Amazon',
-+      subject: 'Your order has shipped',
-+      preview: 'Your recent order #12345 has been shipped and is on its way...',
-+      timestamp: '9:15 AM',
-+      isRead: true,
-+      category: 'promotions'
-+    },
-+    {
-+      id: '3',
-+      sender: 'Newsletter Team',
-+      subject: 'Weekly Digest - June 2023',
-+      preview: 'Check out the latest updates and news in our weekly digest...',
-+      timestamp: 'Yesterday',
-+      isRead: false,
-+      category: 'updates'
-+    },
-+    {
-+      id: '4',
-+      sender: 'Sarah Johnson',
-+      subject: 'Project Update',
-+      preview: 'Here\'s the progress report for the current sprint...',
-+      timestamp: 'Jun 12',
-+      isRead: true,
-+      category: 'primary'
-+    },
-+    {
-+      id: '5',
-+      sender: 'GitHub',
-+      subject: 'Repository activity',
-+      preview: 'There have been 5 new commits to your repository...',
-+      timestamp: 'Jun 11',
-+      isRead: false,
-+      category: 'forums'
-+    },
-+  ];
++  // Filter emails based on search
++  useEffect(() => {
++    if (searchQuery) {
++      const filtered = emails.filter(email => 
++        email.sender.toLowerCase().includes(searchQuery.toLowerCase()) ||
++        email.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
++        email.preview.toLowerCase().includes(searchQuery.toLowerCase())
++      );
++      setVisibleEmails(filtered);
++    } else {
++      setVisibleEmails(emails);
++    }
++  }, [searchQuery]);
 +
-+  const categories: Category[] = [
-+    { id: 'primary', name: 'Primary', icon: '📧' },
-+    { id: 'promotions', name: 'Promotions', icon: '📢' },
-+    { id: 'updates', name: 'Updates', icon: '🔄' },
-+    { id: 'social', name: 'Social', icon: '👥' },
-+    { id: 'forums', name: 'Forums', icon: '💬' },
-+  ];
++  // Handle email selection
++  const handleEmailPress = (email: Email) => {
++    if (onEmailSelect) {
++      onEmailSelect(email);
++    }
++    // Mark email as read when opened
++    if (!email.isRead) {
++      email.isRead = true;
++    }
++  };
 +
-+  const inboxViews = [
-+    { id: 'inbox', name: 'Inbox' },
-+    { id: 'sent', name: 'Sent' },
-+    { id: 'drafts', name: 'Drafts' },
-+    { id: 'all', name: 'All Mail' },
-+  ];
-+
-+  const filteredEmails = emails.filter(email => 
-+    email.category === activeEmailCategory && 
-+    (email.sender.toLowerCase().includes(searchQuery.toLowerCase()) ||
-+    email.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
-+    email.preview.toLowerCase().includes(searchQuery.toLowerCase()))
-+  );
-+
++  // Render email item
 +  const renderEmailItem = ({ item }: { item: Email }) => (
 +    <TouchableOpacity 
-+      style={[styles.emailItem, !item.isRead && styles.unreadEmail]}
-+      onPress={() => console.log('Opening email:', item.id)}
++      style={styles.emailItem}
++      onPress={() => handleEmailPress(item)}
 +    >
 +      <View style={styles.emailHeader}>
-+      <Text style={[styles.sender, !item.isRead && styles.unreadSender]}>
-+        {item.sender}
-+      </Text>
-+      <Text style={styles.timestamp}>{item.timestamp}</Text>
++        <Text style={styles.sender}>{item.sender}</Text>
++        <Text style={styles.timestamp}>{item.timestamp}</Text>
 +      </View>
-+      <Text style={[styles.subject, !item.isRead && styles.unreadSubject]}>
-+        {item.subject}
-+      </Text>
-+      <Text style={styles.preview} numberOfLines={1}>
-+        {item.preview}
-+      </Text>
++      <View style={styles.emailContent}>
++        <Text style={styles.subject}>{item.subject}</Text>
++        <Text style={styles.preview} numberOfLines={2}>
++          {item.preview}
++        </-preview>
++      </View>
++      <View style={styles.emailFooter}>
++        {item.isRead ? (
++          <Icon name="email-open" color="#888" />
++        ) : (
++          <Icon name="email" color="#000" />
++        )}
++      </View>
 +    </TouchableOpacity>
 +  );
 +
-+  const headerTranslateY = scrollY.interpolate({
-+    inputRange: [0, headerHeight],
-+    outputRange: [0, -headerHeight],
-+    extrapolate: 'clamp',
-+  });
++  // Search handler
++  const handleSearch = (text: string) => {
++    setSearchQuery(text);
++    if (onSearch) {
++      onSearch(text);
++    }
++  };
 +
++  // Category buttons
++  const categories = [
++    { name: 'Primary', icon: 'inbox' },
++    { name: 'Social', icon: 'people' },
++    { name: 'Promotions', icon: 'local-offer' },
++    { name: 'Updates', icon: 'update' },
++    { name: 'Forums', icon: 'forum' }
++  ];
++  
++  // Navigation buttons
++    { name: 'Flow', icon: 'swap-horiz' },
++    { name: 'Dashboard', icon: 'dashboard' },
++    { name: 'Classic', icon: 'view-list' },
++    { name: 'Compose', icon: 'edit' }
++  ];
++  
 +  return (
 +    <View style={styles.container}>
-+      {/* Animated Header */}
-+      <Animated.View 
-+        style={[
-+          styles.header, 
-+          { transform: [{ translateY: headerTranslateY }] }
-+        ]}
-+      >
-+        {/* Top Navigation Row */}
++      {/* Header with navigation and search */}
++      <View style={styles.header}>
 +        <View style={styles.topNav}>
-+          <TouchableOpacity style={styles.accountSelector}>
-+            <Text style={styles.accountText}>Account ▼</Text>
-+          </TouchableOpacity>
-+          
-+          <View style={styles.navButtons}>
-+            <TouchableOpacity style={styles.navButton}>
-+              <Text style={styles.navButtonText}>Flow</Text>
-+            </TouchableOpacity>
-+            <TouchableOpacity style={styles.navButton}>
-+              <Text style={styles.navButtonText}>Dashboard</Text>
-+            </TouchableOpacity>
-+            <TouchableOpacity style={[styles.navButton, styles.activeNavButton]}>
-+              <Text style={styles.navButtonText}>Classic</Text>
-+            </TouchableOpacity>
-+            <TouchableOpacity style={styles.navButton}>
-+              <Text style={styles.navButtonText}>Compose</Text>
-+            </TouchableOpacity>
-+          </View>
++          {navigationButtons.map((button) => (
++            <Button
++              key={button.name}
++              title={button.name}
++              icon={{ name: button.icon }}
++            />
++          ))}
 +        </View>
++        <View style={styles.categoryBar}>
++          {categories.map((category) => (
++            <Button
++              key={category.name}
++              title={category.name}
++              icon={{ name: category.icon }}
++              onPress={() => console.log(`Switched to ${category.name}`)}
++            />
++          ))}
++        </View>
++        <SearchBar
++          placeholder="Search emails..."
++          onChangeText={handleSearch}
++          value={searchQuery}
++        />
++      </View>
++      
++      {/* Email List */}
++      <FlatList
++        data={visibleEmails}
++        keyExtractor={(item) => item.id}
++        renderItem={renderEmailItem}
++        onScroll={Animated.event(
++          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
++          { useNativeDriver: true }
++        )}
++      />
++    </View>
++  );
++};
 +
-+        {/* Inbox Views */}
-+        <ScrollView 
-+          horizontal 
-+          showsHorizontalScrollIndicator={false}
-+          style={styles.in
++const styles = StyleSheet.create({
++  container: {
++    flex: 1,
++    backgroundColor: '#f5f5f5'
++  },
++  header: {
++    flexDirection: 'row',
++    justifyContent: 'space-between',
++    alignItems: 'center',
++    padding: 16,
++    backgroundColor: '#fff',
++    elevation: 3,
++    shadowColor: '#000',
++    shadowOffset: { width: 0, height: 2 },
++    shadowOpacity: 0.1,
++    shadowRadius: 8,
++  },
++  topNav: {
++    flexDirection: 'row',
++    justifyContent: 'space-between',
++    marginBottom: 16
++  },
++  categoryBar: {
++    flexDirection: 'row',
++    flexWrap: 'wrap',
++    marginBottom: 8
++  },
++  emailItem: {
++    flexDirection: 'row',
++    padding: 16,
++    borderBottomWidth: 1,
++    borderBottomColor: '#e0e0e0'
++  },
++  emailHeader: {
++
