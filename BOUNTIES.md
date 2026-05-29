@@ -24,70 +24,32 @@ This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty 
 
 # warpSpeed Bounties
 
+This document outlines the available bounties in the warpSpeed OPEN programme.
+
 ## Active Bounties
 
-### [PAID BOUNTY - $960] Attachment Summarizer Service
+### Attachment Summarizer Service
 
-- **Status**: Open
-- **Reward**: $960
-- **Difficulty**: Expert
-- **Labels**: `help wanted`, `bounty`, `expert`, `paid`, `open`, `nodejs`, `prisma`, `typescript`, `backend`
+**Status**: Open  
+**Reward**: $960  
+**Difficulty**: Expert  
+**Main Skills**: Node.js, TypeScript, Prisma, AWS SQS, Google Cloud Storage, Docker, Ollama / Open-source LLMs  
 
-#### Overview
+#### Description
 
 Build a Node.js attachment summarizer service that consumes email attachment events from AWS SQS, downloads attachments from Google Cloud Storage, extracts content from supported file types, and generates natural-language summaries using a self-hosted open-source LLM.
 
-#### Technical Requirements
+#### Requirements
 
-- **Runtime**: Node.js with TypeScript
-- **Database**: Prisma ORM
-- **Queue**: AWS SQS for event consumption
-- **Storage**: Google Cloud Storage for attachment downloads
-- **LLM**: Self-hosted open-source model via Ollama
-- **Containerization**: Docker
-- **Testing**: Comprehensive test suite
-
-#### Supported File Types
-
-- PDF documents
-- Microsoft Word (.doc, .docx)
-- Spreadsheets (.xls, .xlsx, .csv)
-- Plain text files (.txt)
-- HTML files
-- Images (with OCR capability)
-
-#### Core Functionality
-
-1. **SQS Consumer**: Poll AWS SQS queue for attachment events
-2. **GCS Downloader**: Download attachments from Google Cloud Storage
-3. **Content Extraction**: Extract text content from supported file types
-4. **Summary Generation**: Generate factual summaries using local LLM
-5. **Error Handling**: Robust error handling and retry logic
-6. **Logging**: Structured logging throughout the pipeline
-7. **Persistence**: Store summary results via Prisma ORM
-
-#### Infrastructure
-
-- Docker and docker-compose setup
-- Ollama service for LLM inference
-- Health checks and monitoring endpoints
+- Consume attachment events from SQS
+- Download attachments from GCS
+- Handle common attachment types (PDFs, Word docs, spreadsheets, text files, HTML, images)
+- Generate short factual summaries using a locally hosted LLM
+- Include error handling, logging, Docker setup, and tests
 
 #### How to Claim
 
 1. Visit [warpSpeed OPEN Bounties](https://warpspeedopen.org/bounties)
 2. Sign up as a developer
-3. Comment on the GitHub issue: *"I have signed up and would like to claim this bounty."*
-4. Wait for maintainer confirmation before starting work
-
-#### Important Rules
-
-- Do not start work until a maintainer confirms your claim
-- Maximum 3 submission attempts
-- Payment is made only after the pull request is approved and merged
-- Code must be original or properly licensed
-- The full bounty page is the source of truth for technical requirements and deadlines
-
----
-
-*For questions, join our [Discord](https://warpspeedopen.org/discord) or email bounties@warpspeedopen.org*
+3. Comment on the GitHub issue: "I have signed up and would like to claim this bounty."
 Payment happens after the PR is approved and merged.
