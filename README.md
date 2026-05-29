@@ -1,4 +1,6 @@
+# warpSpeed Bounties
 
+Paid open-source bounty tasks for developers contributing to **warpSpeed OPEN**.
 
 Developers can browse open bounties, sign up on the website, claim a GitHub issue, submit a pull request, and receive payment after the PR is approved and merged.
 
@@ -35,4 +37,14 @@ Developers can browse open bounties, sign up on the website, claim a GitHub issu
 ## Important payment rule
 
 Bounties are paid only after the work is approved and the pull request is merged.
+# Attachment Summarizer Service
+
+This service processes email attachments and generates summaries using a local LUNK service.
+
+## Features
+- Consumes email attachment events from SQS
+- Downloads attachments from GCS
+- Extracts content from supported file types
+- Generates natural language summaries
+- Self-hosted open source LLM integration
 
