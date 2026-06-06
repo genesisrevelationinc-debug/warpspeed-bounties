@@ -8,10 +8,18 @@ Security contact: Add security email here
 
 # Security Policy
 
-## Reporting Vulnerabilities
+## Supported Versions
 
-Please report security vulnerabilities to security@warpspeedopen.org.
+Security updates are applied to the active development branch.
 
-## Bounty Security Requirements
+## Reporting a Vulnerability
 
+Please report security vulnerabilities to security@warpspeedopen.org
+
+Do not open public issues for security vulnerabilities.
+
+## Bounty Security Considerations
+
+When contributing bounty work, ensure:
+- No hardcoded credentials or secrets
 Do not include API keys, private credentials, tokens, or user data in pull requests or screenshots.
