@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: attachment-summarizer
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/attachment_summarizer
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - SQS_QUEUE_URL=${SQS_QUEUE_URL}
+      - AWS_REGION=${AWS_REGION}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - GCS_PROJECT_ID=${GCS_PROJECT_ID}
+      - GCS_BUCKET_NAME=${GCS_BUCKET_NAME}
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/credentials/gcs-key.json
+    volumes:
+      - ./gcs-key.json:/app/credentials/gcs-key.json:ro
+    depends_on:
+      - db
+      - ollama
+    networks:
+      - app-network
+
+  db:
+    image: postgres:15-alpine
+    container_name: attachment-summarizer-db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=attachment_summarizer
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - app-network
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: attachment-summarizer-ollama
+    volumes:
+      - ollama-data:/root/.ollama
+    ports:
+      - "11434:11434"
+    networks:
+      - app-network
+
+volumes:
+  postgres-data:
+  ollama-data:
+
+networks:
+  app-network:
+    driver: bridge
