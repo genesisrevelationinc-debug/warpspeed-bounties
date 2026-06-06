@@ -1,80 +1,166 @@
-import express from 'express';
+import { Router, Request, Response } from 'express';
 import { authenticateToken } from '../middleware/auth';
-import { PrismaClient } from '@prisma/client';
+import { EmailThreadService } from '../services/emailThreadService';
+import { asyncHandler } from '../utils/asyncHandler';
 
-const router = express.Router();
-const prisma = new PrismaClient();
+const router = Router();
+const emailThreadService = new EmailThreadService();
 
-// List email threads for authenticated user
-router.get('/', authenticateToken, async (req, res) => {
-  try {
-    const { userId } = req.user as any;
-    const threads = await prisma.emailThread.findMany({
-      where: {
-        userId: userId,
-      },
-      include: {
-        messages: true,
-        participants: true,
-      },
-      orderBy: {
-        lastMessageAt: 'desc',
-      },
-    });
-    res.json(threads);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch email threads' });
+/**
+ * @swagger
+ * /api/email-threads:
+ *   get:
+ *     summary: List email threads for the authenticated user
+ *     tags: [Email Threads]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *         description: Number of threads to return
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *           minimum: 0
+ *         description: Offset for pagination
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search term to filter threads
+ *       - in: query
+ *         name: includeArchived
+ *         schema:
+ *           type: boolean
+ *         description: Include archived threads
+ *     responses:
+ *       200:
+ *         description: List of email threads
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 threads:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/EmailThread'
+ *                 totalCount:
+ *                   type: integer
+ *       401:
+ *         description: Unauthorized
+ */
+router.get('/', authenticateToken, asyncHandler(async (req: Request, res: Response) => {
+  const userId = req.user.id;
+  const { limit = 20, offset = 0, search, includeArchived = false } = req.query;
+  
+  const result = await emailThreadService.listThreads(
+    userId,
+    parseInt(limit as string),
+    parseInt(offset as string),
+    search as string,
+    includeArchived as boolean
+  );
+  
+  res.json(result);
+}));
+
+/**
+ * @swagger
+ * /api/email-threads/{threadId}:
+ *   get:
+ *     summary: Get a specific email thread with all related messages
+ *     tags: [Email Threads]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: threadId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Email thread with messages
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/EmailThreadDetail'
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Thread not found
+ */
+router.get('/:threadId', authenticateToken, asyncHandler(async (req: Request, res: Response) => {
+  const userId = req.user.id;
+  const { threadId } = req.params;
+  
+  const thread = await emailThreadService.getThreadById(userId, threadId);
+  
+  if (!thread) {
+    return res.status(404).json({ error: 'Thread not found' });
   }
-});
+  
+  res.json(thread);
+}));
 
-// Get thread details with messages
-router.get('/:threadId', authenticateToken, async (req, res) => {
-  try {
-    const { threadId } = req.params;
-    const thread = await prisma.emailThread.findUnique({
-      where: {
-        id: threadId,
-      },
-      include: {
-        messages: {
-          include: {
-            attachments: true,
-          },
-          orderBy: {
-            createdAt: 'asc',
-          },
-        },
-      },
-    });
-    res.json(thread);
-  } catch (error) {
-    res.status(500).json({ error: 'Thread not found' });
-  }
-});
-
-// Create thread (for draft messages)
-router.post('/', async (req, res) => {
-  try {
-    const { subject, messageId, userId } = req.body;
-    
-    const newThread = await prisma.emailThread.create({
-      data: {
-        subject,
-        lastMessageAt: new Date(),
-        userId: (req.user as any).userId,
-        messages: {
-          connect: { id: messageId }
-        }
-      },
-      include: {
-        messages: true
-      }
-    });
-    
-    res.status(201).json(newThread);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to create thread' });
-  }
-});
+/**
+ * @swagger
+ * /api/email-threads/{threadId}/messages:
+ *   get:
+ *     summary: Get messages for a specific thread
+ *     tags: [Email Threads]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: threadId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Messages in the thread
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 messages:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/EmailMessage'
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Thread not found
+ */
+router.get('/:threadId/messages', authenticateToken, asyncHandler(async (req: Request, res: Response) => {
+  const userId = req.user.id;
+  const { threadId } = req.params;
+  const { limit = 50, offset = 0 } = req.query;
+  
+  const messages = await emailThreadService.getThreadMessages(
+    userId, 
+    threadId, 
+    parseInt(limit as string), 
+    parseInt(offset as string)
+  );
+  
+  res.json({ messages });
+}));
 
 export default router;
