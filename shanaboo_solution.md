@@ -1,203 +1,229 @@
- ```diff
+Looking at the issue, this is a bounty announcement for building an Email Threads API. The issue is asking for the creation of API endpoints and functionality for email threading. Since there are no existing API files shown in the repository structure, I'll need to create the necessary files for the email threads API.
+
+Based on the repository structure and the nature of the bounty, I'll create the main API implementation file for email threads functionality.
+
+```diff
 --- /dev/null
-+++ b/src/routes/emailThreads.ts
-@@ -0,0 +1,245 @@
-+import { Router } from 'express';
-+import { PrismaClient } from '@prisma/client';
-+import { authenticateUser } from '../middleware/auth';
-+import { validateQuery } from '../middleware/validation';
-+import { z } from 'zod';
-+
-+const router = Router();
-+const prisma = new PrismaClient();
-+
-+const listThreadsQuerySchema = z.object({
-+  page: z.coerce.number().int().min(1).default(1),
-+  limit: z.coerce.number().int().min(1).max(100).default(20),
-+  search: z.string().optional(),
-+  folder: z.string().optional(),
-+  isRead: z.coerce.boolean().optional(),
-+  isStarred: z.coerce.boolean().optional(),
-+  hasAttachments: z.coerce.boolean().optional(),
-+  accountId: z.string().optional(),
-+  sortBy: z.enum(['lastActivityAt', 'createdAt']).default('lastActivityAt'),
-+  sortOrder: z.enum(['asc', 'desc']).default('desc'),
-+});
-+
-+const threadIdSchema = z.object({
-+  threadId: z.string().uuid(),
-+});
++++ b/src/api/emailThreads.ts
+@@ -0,0 +1,300 @@
++import { Request, Response, NextFunction } from 'express';
++import { prisma } from '../utils/database';
++import { authenticateToken } from '../middleware/auth';
 +
 +/**
-+ * @swagger
-+ * /api/email-threads:
-+ *   get:
-+ *     summary: List email threads for the authenticated user
-+ *     tags: [Email Threads]
-+ *     security:
-+ *       - bearerAuth: []
-+ *     parameters:
-+ *       - in: query
-+ *         name: page
-+ *         schema: { type: integer, default: 1 }
-+ *       - in: query
-+ *         name: limit
-+ *         schema: { type: integer, default: 20, maximum: 100 }
-+ *       - in: query
-+ *         name: search
-+ *         schema: { type: string }
-+ *       - in: query
-+ *         name: folder
-+ *         schema: { type: string }
-+ *       - in: query
-+ *         name: isRead
-+ *         schema: { type: boolean }
-+ *       - in: query
-+ *         name: isStarred
-+ *         schema: { type: boolean }
-+ *       - in: query
-+ *         name: hasAttachments
-+ *         schema: { type: boolean }
-+ *       - in: query
-+ *         name: accountId
-+ *         schema: { type: string }
-+ *       - in: query
-+ *         name: sortBy
-+ *         schema: { type: string, enum: [lastActivityAt, createdAt], default: lastActivityAt }
-+ *       - in: query
-+ *         name: sortOrder
-+ *         schema: { type: string, enum: [asc, desc], default: desc }
-+ *     responses:
-+ *       200:
-+ *         description: List of email threads
++ * Get all email threads for the authenticated user
++ * @route GET /api/threads
++ * @access Private
 + */
-+router.get(
-+  '/',
-+  authenticateUser,
-+  validateQuery(listThreadsQuerySchema),
-+  async (req, res, next) => {
-+    try {
-+      const userId = req.user!.id;
-+      const {
-+        page,
-+        limit,
-+        search,
-+        folder,
-+        isRead,
-+        isStarred,
-+        hasAttachments,
-+        accountId,
-+        sortBy,
-+        sortOrder,
-+      } = req.query as z.infer<typeof listThreadsQuerySchema>;
-+
-+      const skip = (page - 1) * limit;
-+
-+      const where: any = {
-+        userId,
-+        isArchived: false,
-+        isDeleted: false,
-+      };
-+
-+      if (accountId) {
-+        where.accountId = accountId;
-+      }
-+
-+      // Build message-level filters for thread aggregation
-+      const messageWhere: any = {
-+        isArchived: false,
-+        isDeleted: false,
-+      };
-+
-+      if (folder) {
-+        messageWhere.folder = folder;
-+      }
-+      if (isRead !== undefined) {
-+        messageWhere.isRead = isRead;
-+      }
-+      if (isStarred !== undefined) {
-+        messageWhere.isStarred = isStarred;
-+      }
-+      if (hasAttachments !== undefined) {
-+        messageWhere.hasAttachments = hasAttachments;
-+      }
-+
-+      // Search across subject, body, sender, recipients
-+      if (search) {
-+        messageWhere.OR = [
-+          { subject: { contains: search, mode: 'insensitive' } },
-+          { body: { contains: search, mode: 'insensitive' } },
-+          { from: { contains: search, mode: 'insensitive' } },
-+          { to: { contains: search, mode: 'insensitive' } },
-+        ];
-+      }
-+
-+      const threads = await prisma.emailThread.findMany({
-+        where,
-+        include: {
-+          messages: {
-+            where: messageWhere,
-+            orderBy: { sentAt: 'asc' },
-+            select: {
-+              id: true,
-+              subject: true,
-+              from: true,
-+              to: true,
-+              isRead: true,
-+              isStarred: true,
-+              isDraft: true,
-+              sentAt: true,
-+              folder: true,
-+              hasAttachments: true,
-+              preview: true,
-+            },
-+          },
-+          _count: {
-+            select: { messages: true },
-+          },
-+        },
-+        orderBy: {
-+          [sortBy]: sortOrder,
-+        },
-+        skip,
-+        take: limit,
-+      });
-+
-+      // Filter out threads with no visible messages after filters
-+      const filteredThreads = threads.filter((t) => t.messages.length > 0);
-+
-+      // Calculate total for pagination
-+      const totalResult = await prisma.emailThread.count({
-+        where: {
-+          ...where,
-+          messages: {
-+            some: messageWhere,
-+          },
-+        },
-+      });
-+
-+      res.json({
-+        data: filteredThreads.map((thread) => ({
-+          ...thread,
-+          messageCount: thread._count.messages,
-+          _count: undefined,
-+        })),
-+        pagination: {
-+          page,
-+          limit,
-+          total: totalResult,
-+          totalPages: Math.ceil(totalResult / limit),
-+        },
-+      });
-+    } catch (error) {
-+      next(error);
++export const getThreads = async (req: Request, res: Response, next: NextFunction) => {
++  try {
++    const { page = 1, limit = 20, search, filter } = req.query;
++    const userId = (req as any).user.id;
++    
++    // Calculate pagination
++    const offset = (Number(page) - 1) * Number(limit);
++    
++    // Build where clause based on filters
++    const whereClause: any = {
++      participants: {
++        some: {
++          userId: userId
++        }
++      },
++      isArchived: false,
++      isDeleted: false
++    };
++    
++    // Add search filter if provided
++    if (search) {
++      whereClause.OR = [
++        { subject: { contains: search as string, mode: 'insensitive' } },
++        { messages: { some: { body: { contains: search as string, mode: 'insensitive' } } } }
++      ];
 +    }
++    
++    // Apply custom filters
++    if (filter) {
++      // Implementation depends on specific filter requirements
++    }
++    
++    const threads = await prisma.thread.findMany({
++      where: whereClause,
++      include: {
++        messages: {
++          where: {
++            isDeleted: false,
++            isArchived: false
++          },
++          orderBy: {
++            createdAt: 'desc'
++          },
++          take: 1 // Get the most recent message for thread preview
++        },
++        participants: {
++          include: {
++            user: {
++              select: {
++                id: true,
++                email: true,
++                name: true
++              }
++            }
++          }
++        }
++      },
++      orderBy: {
++        lastActivityAt: 'desc'
++      },
++      skip: offset,
++      take: Number(limit)
++    });
++    
++    const total = await prisma.thread.count({ where: whereClause });
++    
++    res.json({
++      threads,
++      pagination: {
++        currentPage: Number(page),
++        totalPages: Math.ceil(total / Number(limit)),
++        totalItems: total,
++        itemsPerPage: Number(limit)
++      }
++    });
++  } catch (error) {
++    next(error);
 +  }
-+);
++};
 +
 +/**
-+ * @swagger
-+ * /api/email-threads/{threadId}:
-+ *   get:
-+ *     summary: Open a single email thread with all related messages
-+ *     tags: [Email
++ * Get a specific email thread with all its messages
++ * @route GET /api/threads/:threadId
++ * @access Private
++ */
++export const getThreadById = async (req: Request, res: Response, next: NextFunction) => {
++  try {
++    const { threadId } = req.params;
++    const userId = (req as any).user.id;
++    
++    const thread = await prisma.thread.findFirst({
++      where: {
++        id: threadId,
++        participants: {
++          some: {
++            userId: userId
++          }
++        }
++      },
++      include: {
++        messages: {
++          where: {
++            OR: [
++              { isDeleted: false },
++              { isDeleted: null }
++            ]
++          },
++          orderBy: {
++            createdAt: 'asc'
++          }
++        },
++        participants: {
++          include: {
++            user: {
++              select: {
++                id: true,
++                email: true,
++                name: true
++              }
++            }
++          }
++        }
++      }
++    });
++    
++    if (!thread) {
++      return res.status(404).json({ error: 'Thread not found' });
++    }
++    
++    // Mark thread as read if it contains unread messages
++    const hasUnread = thread.messages.some(msg => !msg.isRead);
++    if (hasUnread) {
++      await prisma.message.updateMany({
++        where: {
++          threadId: thread.id,
++          participants: {
++            some: {
++              userId: userId
++            }
++          }
++        },
++        data: {
++          isRead: true
++        }
++      });
++    }
++    
++    res.json(thread);
++  } catch (error) {
++    next(error);
++  }
++};
++
++/**
++ * Create a new email thread (for drafts)
++ * @route POST /api/threads
++ * @access Private
++ */
++export const createThread = async (req: Request, res: Response, next: NextFunction) => {
++  try {
++    const userId = (req as any).user.id;
++    const { subject, body, recipients, draft = true } = req.body;
++    
++    // Create the thread
++    const thread = await prisma.thread.create({
++      data: {
++        subject: subject || 'No Subject',
++        lastActivityAt: new Date(),
++        participants: {
++          create: [
++            {
++              userId: userId,
++              role: 'OWNER'
++            },
++            ...recipients.map((email: string) => ({
++              user: {
++                connect: {
++                  email: email
++                }
++              },
++              role: 'PARTICIPANT'
++            }))
++          ]
++        },
++        messages: {
++          create: {
++            subject: subject || 'No Subject',
++            body: body,
++            sender: {
++              connect: {
++                id: userId
++              }
++            },
++            recipients: {
++              create: recipients.map((email: string) => ({
++                email: email
++              }))
++            },
++            isDraft: draft,
++            isRead: true,
++            sentAt: draft ? null : new Date()
++          }
++        }
++      },
++      include: {
++        messages: true,
++        participants: true
++      }
++    });
++    
++    res.status(201).json(thread);
++  } catch (error) {
