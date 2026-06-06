@@ -22,34 +22,11 @@ This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty 
 
 ## Payment condition
 
-# warpSpeed Bounties
+# warpSpeed Bounties - Email Threads API Implementation
 
-This file tracks active and completed bounty programs for the warpSpeed OPEN project.
+## Implementation Plan
 
-## Active Bounties
+### 1. Database Schema Updates
 
-| Bounty | Reward | Status | Claimed By |
-|--------|--------|--------|------------|
-| Email Threads API | $750 | Open | Unclaimed |
 
-## Completed Bounties
-
-None yet.
-
-## How to Claim a Bounty
-
-1. Visit https://warpspeedopen.org/bounties
-2. Sign up as a developer
-3. Comment on the GitHub issue: "I have signed up and would like to claim this bounty."
-4. Wait for maintainer confirmation before starting work
-
-## Bounty Rules
-
-- Do not start work until a maintainer confirms your claim
-- Maximum 3 submission attempts
-- Minimum 90% specification match required for consideration
-- Payment is made only at 100% completion
-- Payment is processed only after the pull request is approved and merged
-- First code commit is required at the halfway mark between bounty start and bounty expiration
-- Code must be original or properly licensed
 Payment happens after the PR is approved and merged.
