@@ -22,63 +22,51 @@ This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty 
 
 ## Payment condition
 
-# Active Bounties
+# warpSpeed Bounties
 
-## [PAID BOUNTY - $750] Email Threads API
+This document tracks active and completed bounty tasks for the warpSpeed OPEN developer programme.
 
-- **Status**: Open
-- **Reward**: $750
-- **Difficulty**: Hard
-- **Labels**: help wanted, bounty, expert, paid, open, nodejs, prisma, typescript, backend, API
+## Active Bounties
 
-### Description
+### Email Threads API — $750
 
-Build a thread-first Email Threads API for the warpSpeed app.
+| Field | Details |
+|-------|---------|
+| **Status** | Open — accepting claims |
+| **Difficulty** | Hard |
+| **Skills** | Node.js, TypeScript, Prisma, API Development, Email Systems, Jest, Swagger |
+| **Issue** | [#1](https://github.com/warpspeedopen-source/warpspeed-bounties/issues/1) |
 
-This bounty introduces a new threaded email experience so users can work with conversations instead of isolated messages. Developers will create API support for listing email threads, opening a thread to view related messages, preserving draft activity inside the correct conversation, and ensuring search/filter behaviour remains consistent with the existing message API.
+#### Description
 
-### Requirements
+Build a thread-first Email Threads API for the warpSpeed app. This bounty introduces a new threaded email experience so users can work with conversations instead of isolated messages.
 
-- Listing email threads for the authenticated user
-- Opening a single thread and returning thread metadata with related messages
-- Grouping filtered/search results by thread
-- Preserving ownership and access control rules
-- Including drafts in the correct conversation thread
-- Excluding archived and deleted messages where required
-- Updating thread recency when drafts are created, updated, or sent
-- Ensuring synced Gmail, Outlook, and IMAP emails update thread ordering correctly
-- Maintaining consistent search and filtering behaviour with the existing messages endpoint
-- Adding Swagger/API documentation
-- Adding Jest tests for auth, ordering, filters, drafts, and thread detail behaviour
+#### Technical Requirements
 
-### Skills Required
+##### Core Endpoints
 
-- Node.js
-- TypeScript
-- Prisma
-- API Development
-- Email Systems
-- Jest Testing
-- Swagger / API Documentation
+- `GET /api/v1/email-threads` — List email threads for the authenticated user
+  - Support pagination (`page`, `limit`)
+  - Support filtering by `accountId`, `label`, `isRead`, `isStarred`
+  - Support search by `q` (subject, participant names, preview text)
+  - Support sorting by `lastMessageAt` (default, desc) or `createdAt`
+  - Return thread metadata: id, subject, participants, messageCount, unreadCount, lastMessageAt, preview, isRead, isStarred, hasDrafts
 
-### How to Claim
+- `GET /api/v1/email-threads/:id` — Open a single thread
+  - Return thread metadata with all related messages ordered by `sentAt` ascending
+  - Include draft messages in their correct chronological position
+  - Exclude archived and deleted messages unless explicitly requested (`?includeArchived=true`, `?includeDeleted=true`)
+  - Mark thread as read for the requesting user (optional, controlled by `?markAsRead=true`)
 
-1. Visit [https://warpspeedopen.org/bounties](https://warpspeedopen.org/bounties)
-2. Sign up as a developer
-3. Review the full bounty details and rules
-4. Return to the GitHub issue and comment: "I have signed up and would like to claim this bounty."
+- `POST /api/v1/email-threads/:id/drafts` — Create or update a draft within a thread
+  - Update thread `lastMessageAt` to draft's `updatedAt`
+  - Ensure draft appears in thread message list
 
-### Important Rules
+- `POST /api/v1/email-threads/:id/send` — Send a draft from within a thread
+  - Move message from draft to sent status
+  - Update thread `lastMessageAt` to sent timestamp
 
-- Do not start work until a maintainer confirms your claim
-- Maximum 3 submission attempts
-- Minimum 90% specification match required for consideration
-- Payment is made only at 100% completion
-- Payment is processed only after the pull request is approved and merged
-- First code commit is required at the halfway mark between bounty start and bounty expiration
-- Code must be original or properly licensed
+##### Data Model (Prisma)
 
-### Full Details
 
-See the official bounty page for complete technical requirements, submission rules, acceptance criteria, and final implementation expectations.
 Payment happens after the PR is approved and merged.
