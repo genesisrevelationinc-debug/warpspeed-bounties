@@ -22,85 +22,47 @@ This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty 
 
 ## Payment condition
 
-# warpSpeed OPEN Bounties
+# warpSpeed Bounties
 
-This document lists all available bounties in the warpSpeed OPEN programme.
+## Attachment Summarizer Service - $960
 
-## Active Bounties
-
-### Attachment Summarizer Service - $960
-
-**Difficulty**: Expert  
-**Main Skills**: Node.js, TypeScript, Prisma, AWS SQS, Google Cloud Storage, Docker, Ollama / Open-source LLMs
+### Overview
 
 Build a Node.js attachment summarizer service that consumes email attachment events from AWS SQS, downloads attachments from Google Cloud Storage, extracts content from supported file types, and generates natural-language summaries using a self-hosted open-source LLM.
 
-#### Requirements
+### Technical Requirements
 
-1. **Service Architecture**
-   - Build as a standalone Node.js service
-   - Use TypeScript for type safety
-   - Containerize with Docker
-   - Follow 12-factor app principles
+1. Service must be implemented in Node.js with TypeScript
+2. Use Prisma for database operations if needed
+3. Consume messages from AWS SQS queue
+4. Download attachments from Google Cloud Storage
+5. Support file types:
+   - PDF files
+   - Microsoft Word documents (.doc, .docx)
+   - Text files (.txt)
+   - HTML files
+   - Image files with OCR capability
+6. Extract content from attachments using appropriate libraries
+7. Generate summaries using a locally hosted LLM (Ollama/LLMContainer)
+8. Implement proper error handling and logging
+9. Containerize service with Docker
+10. Include comprehensive test coverage
 
-2. **SQS Integration**
-   - Consume messages from AWS SQS queue
-   - Handle attachment event schema properly
-   - Implement proper error handling and retries
-   - Delete messages after successful processing
+### Acceptance Criteria
 
-3. **Google Cloud Storage Integration**
-   - Download attachments using provided GCS URLs
-   - Handle authentication with service account keys
-   - Support for common file types (PDF, DOCX, XLSX, TXT, HTML, images)
+- Service can successfully consume SQS messages with attachment metadata
+- Service can download files from GCS using provided credentials
+- Service can extract text content from supported file types
+- Service can successfully generate summaries using the LLM
+- Generated summaries are saved to the database
+- Errors are properly logged and handled
+- Dockerfile is provided for containerization
+- Service handles edge cases (network issues, file corruption, etc.)
+- 80%+ test coverage on business logic
 
-4. **Content Extraction**
-   - Extract text content from file types:
-     - PDF documents
-     - Microsoft Word (.docx)
-     - Microsoft Excel (.xlsx)
-     - Plain text files (.txt)
-     - HTML files
-     - Images (with OCR capability)
-   - Handle corrupted or password-protected files gracefully
+### Additional Notes
 
-5. **LLM Integration**
-   - Use a self-hosted open-source LLM (e.g., Llama)
-   - Integrate with Ollama or similar local LLM service
-   - Generate concise, factual summaries
-   - Handle LLM errors and timeouts
-
-6. **Data Persistence**
-   - Use Prisma ORM for database operations
-   - Store summary results with metadata
-   - Update original attachment records with summaries
-
-7. **Error Handling & Logging**
-   - Comprehensive error handling for all operations
-   - Structured logging (Winston or Pino)
-   - Dead letter queue pattern for failed messages
-   - Graceful degradation for partial failures
-
-8. **Testing**
-   - Unit tests for core logic
-   - Integration tests for external services
-   - Mock services for testing
-   - Test coverage >80%
-
-9. **Documentation**
-   - Inline code comments
-   - README with setup instructions
-   - Docker build and run instructions
-   - Environment variable documentation
-
-10. **Deployment**
-    - Docker Compose setup
-    - Environment-based configuration
-    - Health check endpoints
-    - Graceful shutdown handling
-
-#### Technical Specifications
-
-- **Environment Variables**
-  
+- All code must be properly typed with TypeScript
+- Follow clean code principles and separation of concerns
+- Document any external dependencies
 Payment happens after the PR is approved and merged.
