@@ -22,25 +22,57 @@ This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty 
 
 ## Payment condition
 
-# warpSpeed Bounties
+# Attachment Summarizer Service Bounty
 
-This document provides an overview of the bounty system for warpSpeed OPEN.
+## Overview
 
-## Available Bounties
+Build a Node.js attachment summarizer service that consumes email attachment events from AWS SQS, downloads attachments from Google Cloud Storage, extracts content from supported file types, and generates natural-language summaries using a self-hosted open-source LLM.
 
-- **Attachment Summarizer Service** - $960
-  - Build a Node.js service that consumes email attachment events from AWS SQS
-  - Download attachments from Google Cloud Storage
-  - Extract content from PDFs, Word docs, spreadsheets, text files, HTML, and images
-  - Generate natural-language summaries using a self-hosted open-source LLM
-  - Requirements: Node.js, TypeScript, Prisma, AWS SQS, Google Cloud Storage, Docker, Ollama
+## Requirements
 
-## How to Claim a Bounty
+1. Create a Node.js service that:
+   - Consumes messages from AWS SQS
+   - Downloads attachments from Google Cloud Storage
+   - Extracts content from common file types (PDF, DOCX, XLSX, TXT, HTML, PNG, JPG)
+   - Generates concise natural-language summaries using a locally hosted LLM
+   - Stores summaries in a database using Prisma
+   - Handles errors gracefully with proper logging
 
-1. Open the bounty page on [warpspeedopen.org](https://warpspeedopen.org)
-2. Sign up as a developer
-3. Review the full bounty details and rules
-4. Return to the GitHub issue and comment:
+2. Technical specifications:
+   - Use TypeScript
+   - Use Prisma ORM for database operations
+   - Containerize with Docker
+   - Include unit and integration tests
+   - Implement proper error handling and logging
+   - Follow clean code principles
 
-   
+## Deliverables
+
+- Complete source code with documentation
+- Docker configuration files
+- Setup instructions
+- Test suite with coverage report
+- Deployment guide
+
+## Evaluation Criteria
+
+- Code quality and architecture
+- Error handling and logging implementation
+- Test coverage and quality
+- Adherence to requirements
+- Documentation quality
+
+## Resources
+
+- AWS SDK for SQS integration
+- Google Cloud Storage client libraries
+- PDF.js for PDF processing
+- Mammoth for DOCX extraction
+- Puppeteer for HTML processing
+- Tesseract.js for image OCR
+- Ollama for LLM integration
+
+## Payment
+
+Upon successful review and merge of your pull request, you will receive $960.
 Payment happens after the PR is approved and merged.
