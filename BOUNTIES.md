@@ -24,137 +24,49 @@ This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty 
 
 # warpSpeed Bounties
 
-## Current Bounties
+## Email Threads API Implementation Specification
 
-### Email Threads API - $750
+### Overview
+The Email Threads API will provide a thread-first approach to email management, allowing users to work with email conversations rather than isolated messages. This document specifies the technical requirements for implementation.
 
-#### Overview
-Build a thread-first Email Threads API for the warpSpeed app.
+### Database Schema Changes
 
-This bounty introduces a new threaded email experience so users can work with conversations instead of isolated messages.
+#### EmailThread Model
+- id: UUID (Primary Key)
+- subject: String - The thread subject (derived from the first email's subject)
+- messageIds: EmailMessage[] - Array of message IDs in chronological order
+- participants: ThreadParticipant[] - Array of participants in the thread
+- firstMessageTimestamp: DateTime - Timestamp of the earliest message
+- lastMessageTimestamp: DateTime - Timestamp of the most recent message
+- messageCount: Integer - Total count of messages in thread
+- hasUnread: Boolean - Whether thread contains unread messages
+- isArchived: Boolean - Thread-level archive status
+- isDeleted: Boolean - Thread-level deletion status
+- draft: ThreadDraft - Associated draft (if any)
+- userId: UUID - Owner of the thread
+- createdAt: DateTime - When the thread was created
+- updatedAt: DateTime - When the thread was last updated
 
-#### Reward
-- $750
+#### ThreadParticipant Model
+- id: UUID
+- email: String - Participant email address
+- name: String - Participant display name
+- role: Enum - SENDER, RECEIVER, CC, BCC
+- threadId: UUID - Reference to parent thread
 
-#### Difficulty
-Hard
+#### ThreadDraft Model
+- id: UUID
+- threadId: UUID - Reference to the thread containing this draft
+- subject: String - Draft subject
+- body: String - Draft content
+- to: ThreadParticipant[] - Recipients
+- cc: ThreadParticipant[] - CC recipients
+- bcc: ThreadParticipant[] - BCC recipients
+- createdAt: DateTime - When draft was created
+- updatedAt: DateTime - When draft was last modified
 
-#### Main Skills
-- Node.js
-- TypeScript
-- Prisma
-- API Development
-- Email Systems
-- Jest Testing
-- Swagger / API Documentation
+### API Endpoints
 
-#### Requirements
+#### List Email Threads
 
-The selected developer will build a thread-first email API that supports:
-
-- Listing email threads for the authenticated user
-- Opening a single thread and returning thread metadata with related messages
-- Grouping filtered/search results by thread
-- Preserving ownership and access control rules
-- Including drafts in the correct conversation thread
-- Excluding archived and deleted messages where required
-- Updating thread recency when drafts are created, updated, or sent
-- Ensuring synced Gmail, Outlook, and IMAP emails update thread ordering correctly
-- Maintaining consistent search and filtering behaviour with the existing messages endpoint
-- Adding Swagger/API documentation
-- Adding Jest tests for auth, ordering, filters, drafts, and thread detail behaviour
-
-#### Technical Specifications
-
-1. **Thread Listing Endpoint**
-   - GET `/api/threads`
-   - Should support pagination
-   - Should support filtering by labels, read status, etc.
-   - Should exclude archived and deleted messages by default
-
-2. **Thread Detail Endpoint**  
-   - GET `/api/threads/{threadId}`
-   - Should return thread metadata and all related messages
-   - Should maintain proper ordering of messages within thread
-   - Should include draft messages in correct position
-
-3. **Data Models**
-   - Thread model should include metadata like subject, participants, timestamps
-   - Message model should reference thread associations
-   - Drafts should maintain thread context
-   
-4. **Search and Filtering**
-   - Search should work across all messages in threads
-   - Filters should respect thread boundaries
-   - Results should be grouped by thread
-
-5. **Draft Handling**
-   - Drafts should automatically associate with existing threads or create new ones
-   - Thread recency should update when drafts are modified
-   - Drafts should maintain proper position in thread
-
-6. **Sync Integration**
-   - Thread ordering should update based on IMAP, Gmail, Outlook sync events
-   - Thread associations should be preserved across email providers
-
-7. **Access Control**
-   - Threads should respect the same ownership rules as messages
-   - Users should only see threads they have access to
-
-8. **Documentation**
-   - All endpoints must be documented with Swagger/OpenAPI
-   - Clear examples of requests/responses required
-   - Error handling documentation
-
-9. **Testing**
-   - Unit tests for all API endpoints
-   - Integration tests for thread creation and management
-   - Authentication and authorization tests
-   - Search and filter tests
-   - Draft handling within threads tests
-
-#### Deliverables
-
-1. **API Endpoints**
-   - Thread listing endpoint with proper filtering
-   - Thread detail endpoint with messages
-   - Proper error handling and response codes
-
-2. **Database Schema Updates**
-   - Thread model definition
-   - Message-thread relationship handling
-   - Proper indexing for performance
-
-3. **Code Quality**
-   - TypeScript interfaces for all API responses
-   - Comprehensive test coverage (>90%)
-   - Proper error handling and validation
-   - Clean, documented code following project conventions
-
-4. **Documentation**
-   - Swagger/OpenAPI specification
-   - README updates if required
-   - Inline code documentation
-
-#### Acceptance Criteria
-
-The implementation must:
-- Match 90%+ of the specification
-- Pass all existing tests
-- Include comprehensive new tests
-- Maintain backward compatibility with existing message API
-- Handle edge cases around drafts and threading
-- Properly handle authentication and authorization
-- Include proper error responses
-- Follow existing codebase patterns and conventions
-
-#### Submission Process
-
-1. Fork the repository
-2. Create a branch for your implementation
-3. Implement all requirements
-4. Write comprehensive tests
-5. Update documentation
-6. Ensure all tests pass
-7. Submit pull request with detailed implementation notes
 Payment happens after the PR is approved and merged.
