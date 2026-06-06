@@ -6,24 +6,30 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: attachment-summarizer
+    ports:
+      - "3000:3000"
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/attachment_summarizer
-      - OLLAMA_BASE_URL=http://ollama:11434
-      - SQS_QUEUE_URL=${SQS_QUEUE_URL}
       - AWS_REGION=${AWS_REGION}
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - SQS_QUEUE_URL=${SQS_QUEUE_URL}
       - GCS_PROJECT_ID=${GCS_PROJECT_ID}
       - GCS_BUCKET_NAME=${GCS_BUCKET_NAME}
       - GOOGLE_APPLICATION_CREDENTIALS=/app/credentials/gcs-key.json
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3.2}
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/attachment_summarizer?schema=public
     volumes:
-      - ./gcs-key.json:/app/credentials/gcs-key.json:ro
+      - ${GOOGLE_APPLICATION_CREDENTIALS}:/app/credentials/gcs-key.json:ro
+      - uploads:/app/uploads
     depends_on:
-      - db
-      - ollama
+      db:
+        condition: service_healthy
+      ollama:
+        condition: service_started
     networks:
-      - app-network
+      - attachment-summarizer
 
   db:
     image: postgres:15-alpine
@@ -33,26 +39,30 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=attachment_summarizer
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     networks:
-      - app-network
+      - attachment-summarizer
 
   ollama:
     image: ollama/ollama:latest
     container_name: attachment-summarizer-ollama
     volumes:
-      - ollama-data:/root/.ollama
-    ports:
-      - "11434:11434"
+      - ollama_data:/root/.ollama
     networks:
-      - app-network
+      - attachment-summarizer
 
 volumes:
-  postgres-data:
-  ollama-data:
+  postgres_data:
+  ollama_data:
+  uploads:
 
 networks:
-  app-network:
+  attachment-summarizer:
     driver: bridge
