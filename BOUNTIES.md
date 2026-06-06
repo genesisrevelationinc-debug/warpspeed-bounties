@@ -22,58 +22,85 @@ This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty 
 
 ## Payment condition
 
-# warpSpeed Bounties
+# warpSpeed OPEN Bounties
 
-## Attachment Summarizer Service
+This document lists all available bounties in the warpSpeed OPEN programme.
 
-### Overview
+## Active Bounties
 
-This service consumes email attachment events from AWS SQS, downloads attachments from Google Cloud Storage, extracts content from supported file types, and generates natural-language summaries using a self-hosted open-source LLM.
+### Attachment Summarizer Service - $960
 
-### Features
+**Difficulty**: Expert  
+**Main Skills**: Node.js, TypeScript, Prisma, AWS SQS, Google Cloud Storage, Docker, Ollama / Open-source LLMs
 
-- Consume events from AWS SQS
-- Download attachments from Google Cloud Storage
-- Support for common file types:
-  - PDFs
-  - Word documents (.doc, .docx)
-  - Spreadsheets (.xls, .xlsx)
-  - Text files (.txt, .csv)
-  - HTML files (.html)
-  - Images (.jpg, .png, .gif)
-- Generate factual summaries using a locally hosted LLM
-- Error handling and logging
-- Dockerized deployment
-- Unit and integration tests
+Build a Node.js attachment summarizer service that consumes email attachment events from AWS SQS, downloads attachments from Google Cloud Storage, extracts content from supported file types, and generates natural-language summaries using a self-hosted open-source LLM.
 
-### Technical Requirements
+#### Requirements
 
-1. **Environment Setup**
-   - Node.js 18+
-   - TypeScript 5+
-   - Prisma ORM
-   - Docker and Docker Compose
+1. **Service Architecture**
+   - Build as a standalone Node.js service
+   - Use TypeScript for type safety
+   - Containerize with Docker
+   - Follow 12-factor app principles
 
-2. **Dependencies**
-   - AWS SDK v3 for SQS
-   - Google Cloud Storage client
-   - PDF parsing library (e.g., pdf-parse)
-   - Document parsing libraries (e.g., mammoth for .docx)
-   - Spreadsheet parsing libraries (e.g., xlsx)
-   - Image processing library (e.g., Tesseract.js for OCR)
-   - Ollama with Llama3 model for local LLM processing
+2. **SQS Integration**
+   - Consume messages from AWS SQS queue
+   - Handle attachment event schema properly
+   - Implement proper error handling and retries
+   - Delete messages after successful processing
 
-3. **Service Architecture**
-   - SQS message consumer
-   - GCS file downloader
-   - Content extraction module
-   - Summary generation module
-   - Database integration via Prisma
+3. **Google Cloud Storage Integration**
+   - Download attachments using provided GCS URLs
+   - Handle authentication with service account keys
+   - Support for common file types (PDF, DOCX, XLSX, TXT, HTML, images)
 
-### Deliverables
+4. **Content Extraction**
+   - Extract text content from file types:
+     - PDF documents
+     - Microsoft Word (.docx)
+     - Microsoft Excel (.xlsx)
+     - Plain text files (.txt)
+     - HTML files
+     - Images (with OCR capability)
+   - Handle corrupted or password-protected files gracefully
 
-- Fully functional Attachment Summarizer Service
-- Dockerized application
-- Comprehensive test suite
-- Documentation and deployment guide
+5. **LLM Integration**
+   - Use a self-hosted open-source LLM (e.g., Llama)
+   - Integrate with Ollama or similar local LLM service
+   - Generate concise, factual summaries
+   - Handle LLM errors and timeouts
+
+6. **Data Persistence**
+   - Use Prisma ORM for database operations
+   - Store summary results with metadata
+   - Update original attachment records with summaries
+
+7. **Error Handling & Logging**
+   - Comprehensive error handling for all operations
+   - Structured logging (Winston or Pino)
+   - Dead letter queue pattern for failed messages
+   - Graceful degradation for partial failures
+
+8. **Testing**
+   - Unit tests for core logic
+   - Integration tests for external services
+   - Mock services for testing
+   - Test coverage >80%
+
+9. **Documentation**
+   - Inline code comments
+   - README with setup instructions
+   - Docker build and run instructions
+   - Environment variable documentation
+
+10. **Deployment**
+    - Docker Compose setup
+    - Environment-based configuration
+    - Health check endpoints
+    - Graceful shutdown handling
+
+#### Technical Specifications
+
+- **Environment Variables**
+  
 Payment happens after the PR is approved and merged.
