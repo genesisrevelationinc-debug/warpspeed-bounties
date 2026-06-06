@@ -22,11 +22,46 @@ This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty 
 
 ## Payment condition
 
-# warpSpeed Bounties - Email Threads API Implementation
+# warpSpeed Bounties List
 
-## Implementation Plan
+## Active Bounties
 
-### 1. Database Schema Updates
+### Email Threads API — $750
 
+- **Status**: Open
+- **Difficulty**: Hard
+- **Skills**: Node.js, TypeScript, Prisma, API Development, Email Systems, Jest Testing, Swagger / API Documentation
+- **Issue**: [#1](https://github.com/warpspeedopen-source/warpspeed-bounties/issues/1)
+- **Description**: Build a thread-first Email Threads API for the warpSpeed app. Supports listing threads, opening threads with messages, grouping search/filter results by thread, preserving drafts in conversations, and maintaining consistent search/filter behaviour with the existing messages endpoint.
+- **Full Spec**: https://warpspeedopen.org/bounties
 
+## Claimed Bounties
+
+*None*
+
+## Completed Bounties
+
+*None*
+
+## How to Claim a Bounty
+
+1. Browse available bounty tasks on this page or the [website](https://warpspeedopen.org/bounties).
+2. Sign up as a developer on the [warpSpeed OPEN website](https://warpspeedopen.org/signup).
+3. Comment on the GitHub bounty issue to request assignment.
+4. Wait for maintainer confirmation before starting paid work.
+5. Fork the repository and create your branch.
+6. Submit your pull request.
+7. Respond to review comments.
+8. Get paid after the PR is approved and merged.
+
+## Payment Rules
+
+- Bounties are paid only after the work is approved and the pull request is merged.
+- Minimum 90% specification match required for consideration.
+- Payment is made only at 100% completion.
+- Maximum 3 submission attempts per bounty.
+
+---
+
+*Last updated: 2024*
 Payment happens after the PR is approved and merged.
