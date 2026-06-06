@@ -24,11 +24,13 @@ Developers can browse open bounties, sign up on the website, claim a GitHub issu
 8. Get paid after the PR is approved and merged.
 
 ## Bounty categories
+- Integrations
 
-- Frontend UI
-- React Native
-- Node.js API
-- Prisma / database work
+## Important payment rule
+Bounties are paid only after the work is approved and the pull request is merged.
+Bounties are paid only after the work is approved and the pull request is merged.
+
+Bounties are paid only after the work is approved and the pull request is merged.
 - TypeScript
 - AI productivity features
 - Documentation
