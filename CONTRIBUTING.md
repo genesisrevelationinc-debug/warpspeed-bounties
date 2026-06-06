@@ -34,10 +34,41 @@ Thank you for your interest in contributing to warpSpeed OPEN!
 
 ## Getting Started
 
-1. Fork the repository.
-2. Create a feature branch: `git checkout -b feature/your-feature-name`.
-3. Make your changes.
-4. Run tests and ensure everything passes.
-5. Submit a pull request with a clear description.
+1. Browse available bounties at https://warpspeedopen.org/bounties
+2. Sign up as a developer on the website
+3. Comment on the GitHub issue to request assignment
+4. Wait for maintainer confirmation before starting paid work
 
+## Development Workflow
+
+1. Fork the repository
+
+## Code Standards
+
+- TypeScript for all new code
+- Jest for testing (minimum 80% coverage for new features)
+- Prisma for database operations
+- Swagger/OpenAPI for API documentation
+- Follow existing code style and patterns
+
+## Bounty-Specific Requirements
+
+### Email Threads API Bounty
+
+When working on the Email Threads API bounty, ensure:
+
+- Thread-first email model is implemented
+- Drafts are preserved within correct conversation threads
+- Search/filter behavior is consistent with existing messages endpoint
+- Thread recency updates when drafts are created, updated, or sent
+- Synced emails (Gmail, Outlook, IMAP) update thread ordering correctly
+- Archived and deleted messages are excluded where required
+- Ownership and access control rules are preserved
+
+## Review Process
+
+
+## Questions?
+
+Join our Discord community or email developers@warpspeedopen.org
 - and the PR is merged.
