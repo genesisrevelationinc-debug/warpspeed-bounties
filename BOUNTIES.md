@@ -24,49 +24,32 @@ This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty 
 
 # warpSpeed Bounties
 
-This document tracks active and completed bounty tasks for the warpSpeed OPEN developer programme.
+This file tracks active and completed bounty programs for the warpSpeed OPEN project.
 
 ## Active Bounties
 
-### Email Threads API — $750
+| Bounty | Reward | Status | Claimed By |
+|--------|--------|--------|------------|
+| Email Threads API | $750 | Open | Unclaimed |
 
-| Field | Details |
-|-------|---------|
-| **Status** | Open — accepting claims |
-| **Difficulty** | Hard |
-| **Skills** | Node.js, TypeScript, Prisma, API Development, Email Systems, Jest, Swagger |
-| **Issue** | [#1](https://github.com/warpspeedopen-source/warpspeed-bounties/issues/1) |
+## Completed Bounties
 
-#### Description
+None yet.
 
-Build a thread-first Email Threads API for the warpSpeed app. This bounty introduces a new threaded email experience so users can work with conversations instead of isolated messages.
+## How to Claim a Bounty
 
-#### Technical Requirements
+1. Visit https://warpspeedopen.org/bounties
+2. Sign up as a developer
+3. Comment on the GitHub issue: "I have signed up and would like to claim this bounty."
+4. Wait for maintainer confirmation before starting work
 
-##### Core Endpoints
+## Bounty Rules
 
-- `GET /api/v1/email-threads` — List email threads for the authenticated user
-  - Support pagination (`page`, `limit`)
-  - Support filtering by `accountId`, `label`, `isRead`, `isStarred`
-  - Support search by `q` (subject, participant names, preview text)
-  - Support sorting by `lastMessageAt` (default, desc) or `createdAt`
-  - Return thread metadata: id, subject, participants, messageCount, unreadCount, lastMessageAt, preview, isRead, isStarred, hasDrafts
-
-- `GET /api/v1/email-threads/:id` — Open a single thread
-  - Return thread metadata with all related messages ordered by `sentAt` ascending
-  - Include draft messages in their correct chronological position
-  - Exclude archived and deleted messages unless explicitly requested (`?includeArchived=true`, `?includeDeleted=true`)
-  - Mark thread as read for the requesting user (optional, controlled by `?markAsRead=true`)
-
-- `POST /api/v1/email-threads/:id/drafts` — Create or update a draft within a thread
-  - Update thread `lastMessageAt` to draft's `updatedAt`
-  - Ensure draft appears in thread message list
-
-- `POST /api/v1/email-threads/:id/send` — Send a draft from within a thread
-  - Move message from draft to sent status
-  - Update thread `lastMessageAt` to sent timestamp
-
-##### Data Model (Prisma)
-
-
+- Do not start work until a maintainer confirms your claim
+- Maximum 3 submission attempts
+- Minimum 90% specification match required for consideration
+- Payment is made only at 100% completion
+- Payment is processed only after the pull request is approved and merged
+- First code commit is required at the halfway mark between bounty start and bounty expiration
+- Code must be original or properly licensed
 Payment happens after the PR is approved and merged.
