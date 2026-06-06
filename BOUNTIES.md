@@ -22,35 +22,33 @@ This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty 
 
 ## Payment condition
 
-# warpSpeed Bounties
+# Email Threads API Bounty
 
-This file tracks active and completed bounty tasks for the warpSpeed OPEN programme.
+## Overview
 
-## Active Bounties
+This document describes the technical requirements for implementing a thread-first email API for the warpSpeed application.
 
-| Bounty | Reward | Status | Claimed By |
-|--------|--------|--------|------------|
-| Email Threads API | $750 | Open | - |
+## Requirements
 
-## Completed Bounties
+### 1. List Email Threads
+- API endpoint to list email threads for authenticated user
+- Support pagination, sorting, and filtering
+- Exclude archived and deleted messages by default
+- Group messages by thread for display
 
-_None yet._
+### 2. Thread Detail Endpoint
+- Return thread metadata with related messages
+- Preserve draft activity in correct conversation thread
+- Maintain proper access control
 
-## How to Claim a Bounty
+### 3. Technical Implementation
+- Use existing Prisma models with necessary extensions
+- Maintain consistency with existing message API behavior
+- Proper Swagger/OpenAPI documentation
+- Comprehensive Jest tests
 
-1. Browse available bounties on [warpspeedopen.org/bounties](https://warpspeedopen.org/bounties)
-2. Sign up as a developer on the website
-3. Comment on the GitHub issue: "I have signed up and would like to claim this bounty."
-4. Wait for maintainer confirmation before starting work
-5. Submit your pull request before the bounty deadline
+## API Specification
 
-## Bounty Rules
+### Thread Model
 
-- Do not start work until a maintainer confirms your claim
-- Maximum 3 submission attempts
-- Minimum 90% specification match required for consideration
-- Payment is made only at 100% completion
-- Payment is processed only after the pull request is approved and merged
-- First code commit is required at the halfway mark between bounty start and bounty expiration
-- Code must be original or properly licensed
 Payment happens after the PR is approved and merged.
