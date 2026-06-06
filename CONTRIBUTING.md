@@ -30,45 +30,48 @@ Payment is processed only after:
 - maintainers approve it,
 # Contributing to warpSpeed Bounties
 
-Thank you for your interest in contributing to warpSpeed OPEN!
+## Bounty Development Guidelines
 
-## Getting Started
+### Email Threads API Implementation Standards
 
-1. Browse available bounties at https://warpspeedopen.org/bounties
-2. Sign up as a developer on the website
-3. Comment on the GitHub issue to request assignment
-4. Wait for maintainer confirmation before starting paid work
+When implementing the Email Threads API bounty, please adhere to the following standards:
 
-## Development Workflow
+#### API Design
+- Follow RESTful conventions for all endpoints
+- Use consistent response formats with the existing messages API
+- Implement proper pagination for list endpoints
+- Include comprehensive Swagger/OpenAPI documentation
 
-1. Fork the repository
+#### Database & Prisma
+- Use Prisma migrations for any schema changes
+- Ensure thread grouping is efficient at the database level
+- Maintain referential integrity between messages and threads
+- Consider performance implications of thread aggregation queries
 
-## Code Standards
+#### Authentication & Authorization
+- Enforce ownership checks on all endpoints
+- Verify user has access to requested threads
+- Maintain consistency with existing auth middleware
 
-- TypeScript for all new code
-- Jest for testing (minimum 80% coverage for new features)
-- Prisma for database operations
-- Swagger/OpenAPI for API documentation
-- Follow existing code style and patterns
+#### Testing Requirements
+- Write Jest tests for all new endpoints
+- Include tests for:
+  - Authentication and access control
+  - Thread ordering (recency)
+  - Filter and search functionality
+  - Draft message handling
+  - Thread detail retrieval
+- Aim for >80% code coverage on new code
 
-## Bounty-Specific Requirements
+#### Sync Behavior
+- Ensure Gmail sync updates thread ordering correctly
+- Ensure Outlook sync updates thread ordering correctly
+- Ensure IMAP sync updates thread ordering correctly
+- Handle edge cases where sync creates new vs. existing threads
 
-### Email Threads API Bounty
-
-When working on the Email Threads API bounty, ensure:
-
-- Thread-first email model is implemented
-- Drafts are preserved within correct conversation threads
-- Search/filter behavior is consistent with existing messages endpoint
-- Thread recency updates when drafts are created, updated, or sent
-- Synced emails (Gmail, Outlook, IMAP) update thread ordering correctly
-- Archived and deleted messages are excluded where required
-- Ownership and access control rules are preserved
-
-## Review Process
-
-
-## Questions?
-
-Join our Discord community or email developers@warpspeedopen.org
+#### Code Quality
+- Use TypeScript strict mode
+- Follow existing linting rules
+- Document complex thread logic with comments
+- Ensure backwards compatibility where possible
 - and the PR is merged.
