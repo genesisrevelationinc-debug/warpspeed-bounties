@@ -1,6 +1,7 @@
-# Attachment Summarizer Service
+# warpSpeed Bounties
 
 Paid open-source bounty tasks for developers contributing to **warpSpeed OPEN**.
+
 
 Developers can browse open bounties, sign up on the website, claim a GitHub issue, submit a pull request, and receive payment after the PR is approved and merged.
 
@@ -16,15 +17,11 @@ Developers can browse open bounties, sign up on the website, claim a GitHub issu
 
 1. Browse available bounty tasks.
 2. Sign up on the warpSpeed OPEN website.
-- Website: https://warpspeedopen.org
-- Bounties: https://warpspeedopen.org/bounties
-- Developer Signup: https://warpspeedopen.org/signup
-- Discord: https://discord.gg/warpspeed
-
-## Attachment Summarizer Service
-This service consumes SQS messages, downloads attachments from GCS, and generates summaries using a local LLM.
-
-## How the bounty process works
+3. Comment on the GitHub bounty issue to request assignment.
+4. Wait for maintainer confirmation before starting paid work.
+5. Fork the repository and create your branch.
+6. Submit your pull request.
+7. Respond to review comments.
 8. Get paid after the PR is approved and merged.
 
 ## Bounty categories
@@ -34,10 +31,12 @@ This service consumes SQS messages, downloads attachments from GCS, and generate
 - Node.js API
 - Prisma / database work
 - TypeScript
-- AI productivity features
-- Documentation
-- Integrations
+TypeScript
+AI productivity features
+Documentation
+Integrations
 
+- Attachment Summarizer Service (see BOUNTIES.md)
 ## Important payment rule
 
 Bounties are paid only after the work is approved and the pull request is merged.
