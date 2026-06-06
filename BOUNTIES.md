@@ -24,49 +24,12 @@ This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty 
 
 # warpSpeed Bounties
 
-## Email Threads API Implementation Specification
+This document tracks the status of warpSpeed bounties.
 
-### Overview
-The Email Threads API will provide a thread-first approach to email management, allowing users to work with email conversations rather than isolated messages. This document specifies the technical requirements for implementation.
+## Bounty Status
 
-### Database Schema Changes
+- Email Threads API: Open
+- [PAID BOUNTY - $750] Email Threads API
 
-#### EmailThread Model
-- id: UUID (Primary Key)
-- subject: String - The thread subject (derived from the first email's subject)
-- messageIds: EmailMessage[] - Array of message IDs in chronological order
-- participants: ThreadParticipant[] - Array of participants in the thread
-- firstMessageTimestamp: DateTime - Timestamp of the earliest message
-- lastMessageTimestamp: DateTime - Timestamp of the most recent message
-- messageCount: Integer - Total count of messages in thread
-- hasUnread: Boolean - Whether thread contains unread messages
-- isArchived: Boolean - Thread-level archive status
-- isDeleted: Boolean - Thread-level deletion status
-- draft: ThreadDraft - Associated draft (if any)
-- userId: UUID - Owner of the thread
-- createdAt: DateTime - When the thread was created
-- updatedAt: DateTime - When the thread was last updated
-
-#### ThreadParticipant Model
-- id: UUID
-- email: String - Participant email address
-- name: String - Participant display name
-- role: Enum - SENDER, RECEIVER, CC, BCC
-- threadId: UUID - Reference to parent thread
-
-#### ThreadDraft Model
-- id: UUID
-- threadId: UUID - Reference to the thread containing this draft
-- subject: String - Draft subject
-- body: String - Draft content
-- to: ThreadParticipant[] - Recipients
-- cc: ThreadParticipant[] - CC recipients
-- bcc: ThreadParticipant[] - BCC recipients
-- createdAt: DateTime - When draft was created
-- updatedAt: DateTime - When draft was last modified
-
-### API Endpoints
-
-#### List Email Threads
-
+To claim a bounty, developers must first sign up on [warpspeedopen.org](https://warpspeedopen.org) and comment on the corresponding GitHub issue with "I have signed up and would like to claim this bounty."
 Payment happens after the PR is approved and merged.
