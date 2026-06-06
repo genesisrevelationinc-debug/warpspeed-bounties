@@ -11,28 +11,34 @@ warpSpeed OPEN bounties are reviewed and managed by maintainers.
 
 ## Decision process
 
-# warpSpeed OPEN Governance
+# Governance
 
-## Project Structure
+## Bounty Review Process
 
-warpSpeed OPEN is a community-driven open source project with paid bounty opportunities.
+### Email Threads API Bounty Review Criteria
 
-## Bounty Administration
+Bounty submissions for the Email Threads API will be evaluated against:
 
-### Claiming Process
+1. **Specification Match (minimum 90%)**
+   - All required endpoints implemented
+   - Thread grouping behavior matches requirements
+   - Draft handling works correctly
+   - Search/filter consistency maintained
 
-1. Developers sign up at https://warpspeedopen.org/signup
+2. **Code Quality**
+   - Clean, maintainable TypeScript
+   - Proper error handling
+   - Efficient database queries
 
-### Payment Rules
+3. **Testing**
+   - Comprehensive Jest test suite
+   - Auth, ordering, filters, drafts, and thread detail coverage
 
+4. **Documentation**
+   - Swagger/OpenAPI specs complete
+   - README updates if needed
 
-### Current Maintainers
-
-- TBD
-
-## Decision Making
-
-Bounty specifications and acceptance criteria are defined on the official bounty page at https://warpspeedopen.org/bounties
-
-The official bounty page is the source of truth for full requirements, rules, and deadlines.
+5. **Payment Approval**
+   - 100% completion required for payment
+   - PR must be approved and merged
 Maintainers review bounty claims, pull requests, and acceptance criteria. Final merge decisions belong to maintainers.
