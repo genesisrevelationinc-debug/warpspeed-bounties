@@ -1,29 +1,33 @@
-Looking at the issue description, this is a bounty request to build a Classic Inbox UI page with specific design requirements. Since there are no existing frontend files shown in the repository structure, I'll need to create the necessary React Native component files. Based on the repository structure, I'll create a new directory structure for the email inbox classic view.
+Looking at the issue description, I need to create a Classic Inbox UI component for React Native. Based on the repository structure and the nature of this UI component task, I'll create a new React Native component file for the Classic Inbox view.
+
+Since there are no existing source files shown in the repository listing, I'll create the component in a typical React Native project structure. Based on the design reference and requirements, I'll create the Classic Inbox UI component.
 
 ```diff
 --- /dev/null
-+++ b/src/screens/ClassicInboxScreen.tsx
-@@ -0,0 +1,200 @@
-+import React, { useState, useRef } from 'react';
-+import { 
-+  View, 
-+  Text, 
-+  StyleSheet, 
-+  ScrollView, 
-+  TouchableOpacity, 
-+  TextInput, 
-+  Animated, 
-+  FlatList 
++++ b/src/components/ClassicInboxView.tsx
+@@ -0,0,00 +1,334 @@
++import React, { useState, useEffect, useRef } from 'react';
++import {
++  View,
++  Text,
++  StyleSheet,
++  ScrollView,
++  SafeAreaView,
++  TextInput,
++  TouchableOpacity,
++  FlatList,
++  RefreshControl,
 +} from 'react-native';
++import { useHeaderHeight } from '@react-navigation/elements';
 +
 +interface Email {
 +  id: string;
 +  sender: string;
 +  subject: string;
 +  preview: string;
-+  timestamp: string;
++  time: string;
 +  isRead: boolean;
-+  category: 'primary' | 'promotions' | 'updates';
++  isStarred: boolean;
 +}
 +
 +interface Category {
@@ -32,165 +36,139 @@ Looking at the issue description, this is a bounty request to build a Classic In
 +  icon: string;
 +}
 +
-+const ClassicInboxScreen = () => {
++interface Account {
++  id: string;
++  name: string;
++  email: string;
++}
++
++const ClassicInboxView = () => {
 +  const [emails, setEmails] = useState<Email[]>([
 +    {
 +      id: '1',
-+      sender: 'John Doe',
-+      subject: 'Meeting Tomorrow',
-+      preview: 'Let\'s schedule the meeting for 10am',
-+      timestamp: '10:30 AM',
-+      isRead: true,
-+      category: 'primary'
++      sender: 'Warren Buffett',
++      subject: 'Annual Shareholder Meeting',
++      preview: 'Dear shareholders, the annual meeting will be held next week...',
++      time: '9:30 AM',
++      isRead: false,
++      isStarred: false,
 +    },
 +    {
 +      id: '2',
-+      sender: 'Warpspeed Team',
-+      subject: 'Welcome to Warpspeed!',
-+      preview: 'Thanks for joining our platform',
-+      timestamp: '9:15 AM',
-+      isRead: false,
-+      category: 'promotions'
++      sender: 'Amazon',
++      subject: 'Your Order has been Shipped',
++      preview: 'Your recent order #AMZ-12345 has been shipped...',
++      time: '8:45 AM',
++      isRead: true,
++      isStarred: true,
 +    },
 +    {
 +      id: '3',
-+      sender: 'Newsletter',
-+      subject: 'Weekly Updates',
-+      preview: 'Check out what\'s new this week',
-+      timestamp: 'Yesterday',
++      sender: 'Netflix',
++      subject: 'New on Netflix this month',
++      preview: 'Check out the latest releases available to stream now...',
++      time: '11:20 PM',
++      isRead: false,
++      isStarred: false,
++    },
++    {
++      id: '4',
++      sender: 'Bank of America',
++      subject: 'Your monthly statement is ready',
++      preview: 'Your monthly account statement is now available...',
++      time: 'Oct 1',
 +      isRead: true,
-+      category: 'updates'
-+    }
++      isStarred: false,
++    },
++    {
++      id: '5',
++      sender: 'LinkedIn',
++      subject: 'You have 5 new connection requests',
++      preview: 'See who wants to connect with you...',
++      time: '9:15 AM',
++      isRead: false,
++      isStarred: false,
++    },
 +  ]);
-+  
-+  const [categories] = useState<Category[]>([
-+    { id: 'inbox', name: 'Inbox', icon: '📥' },
-+    { id: 'sent', name: 'Sent', icon: '📤' },
-+    { id: 'drafts', name: 'Drafts', icon: '📝' },
-+    { id: 'all', name: 'All Mail', icon: '📦' }
-+  ]);
-+  
-+  const [emailCategories] = useState([
-+    { id: 'primary', name: 'Primary', active: true },
-+    { id: 'promotions', name: 'Promotions', active: false },
-+    { id: 'updates', name: 'Updates', active: false }
-+  ]);
-+  
-+  const [searchQuery, setSearchQuery] = useState('');
-+  const scrollY = useRef(new Animated.Value(0)).current;
-+  const scrollViewRef = useRef<ScrollView>(null);
 +
-+  const handleEmailPress = (emailId: string) => {
++  const [accounts] = useState<Account[]>([
++    { id: '1', name: 'Personal Account', email: 'user@example.com' },
++    { id: '2', name: 'Work Account', email: 'work@company.com' },
++  ]);
++
++  const [categories] = useState<Category[]>([
++    { id: 'inbox', name: 'Inbox', icon: 'inbox' },
++    { id: 'sent', name: 'Sent', icon: 'send' },
++    { id: 'drafts', name: 'Drafts', icon: 'draft' },
++    { id: 'all', name: 'All Mail', icon: 'archive' },
++  ]);
++
++  const [subCategories] = useState([
++    { id: 'primary', name: 'Primary', icon: 'inbox' },
++    { id: 'promotions', name: 'Promotions', icon: 'tag' },
++    { id: 'updates', name: 'Updates', icon: 'update' },
++  ]);
++
++  const [searchQuery, setSearchQuery] = useState('');
++  const [selectedAccount, setSelectedAccount] = useState('1');
++  const [selectedCategory, setSelectedCategory] = useState('inbox');
++  const [selectedSubCategory, setSelectedSubCategory] = useState('primary');
++  const [refreshing, setRefreshing] = useState(false);
++  const scrollViewRef = useRef<ScrollView>(null);
++  const headerHeight = useHeaderHeight();
++  const [headerVisible, setHeaderVisible] = useState(true);
++  const [lastScrollY, setLastScrollY] = useState(0);
++
++  const onRefresh = () => {
++    setRefreshing(true);
++    // Simulate refresh
++    setTimeout(() => setRefreshing(false), 1000);
++  };
++
++  const handleScroll = (event: any) => {
++    const currentScrollY = event.nativeEvent.contentOffset.y;
++    const delta = currentScrollY - (lastScrollY || 0);
++    
++    if (Math.abs(delta) > 10) {
++      setHeaderVisible(delta < 0 || currentScrollY <= 0);
++    }
++    
++    setLastScrollY(currentScrollY);
++  };
++
++  const toggleEmailReadStatus = (id: string) => {
 +    setEmails(prevEmails => 
 +      prevEmails.map(email => 
-+        email.id === emailId ? { ...email, isRead: true } : email
++        email.id === id ? {...email, isRead: !email.isRead} : email
 +      )
 +    );
 +  };
 +
-+  // Header animation based on scroll
-+  const headerTranslateY = scrollY.interpolate({
-+    inputRange: [0, 50],
-+    outputRange: [0, -50],
-+    extrapolate: 'clamp',
-+  });
-+
-+  return (
-+    <View style={styles.container}>
-+      <Animated.View 
-+        style={[
-+          styles.header, 
-+          { transform: [{ translateY: headerTranslateY }] }
-+        ]}
-+      >
-+        <View style={styles.topNavigation}>
-+          <TouchableOpacity style={styles.navButton}>
-+            <Text>Flow</Text>
-+          </TouchableOpacity>
-+          <TouchableOpacity style={styles.navButton}>
-+            <Text>Dashboard</Text>
-+          </TouchableOpacity>
-+          <TouchableOpacity style={styles.navButton}>
-+            <Text>Classic</Text>
-+          </TouchableOpacity>
-+          <TouchableOpacity style={styles.navButton}>
-+            <Text>Compose</Text>
-+          </TouchableOpacity>
-+        </View>
-+        
-+        <View style={styles.accountSelector}>
-+          <Text style={styles.accountText}>Account: john.doe@example.com</Text>
-+        </View>
-+      </Animated.View>
-+
-+      <View style={styles.searchContainer}>
-+        <TextInput
-+          style={styles.searchInput}
-+          placeholder="Search emails..."
-+          value={searchQuery}
-+              onChangeText={setSearchQuery}
-+        />
-+        <TouchableOpacity style={styles.filterButton}>
-+          <Text>Filter</Text>
-+        </TouchableOpacity>
++  const renderEmailItem = ({ item }: { item: Email }) => (
++    <TouchableOpacity 
++      style={[
++        styles.emailItem, 
++        !item.isRead && styles.unreadEmail
++      ]}
++      onPress={() => toggleEmailReadStatus(item.id)}
++    >
++      <View style={styles.emailHeader}>
++        <Text style={[styles.sender, !item.isRead && styles.unreadSender]}>
++          {item.sender}
++        </Text>
++        <Text style={styles.time}>{item.time}</Text>
 +      </View>
-+
-+      <View style={styles.categoryContainer}>
-+        {emailCategories.map((category) => (
-+          <TouchableOpacity 
-+            key={category.id}
-+            style={[
-+              styles.categoryButton, 
-+              category.active && styles.activeCategory
-+            ]}
-+          >
-+            <Text>{category.name}</Text>
-+          </TouchableOpacity>
-+        ))}
-+      </View>
-+
-+      <ScrollView
-+        ref={scrollViewRef}
-+        onScroll={Animated.event(
-+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-+          { useNativeDriver: true }
-+        )}
-+        scrollEventThrottle={16}
-+      >
-+        {emails.map((email) => (
-+          <TouchableOpacity
-+            key={email.id}
-+            style={[
-+              styles.emailItem, 
-+              !email.isRead && styles.unreadEmail
-+            ]}
-+            onPress={() => handleEmailPress(email.id)}
-+          >
-+            <View style={styles.emailSender}>
-+              <Text style={styles.senderText}>{email.sender}</Text>
-+            </View>
-+            <View style={styles.emailContent}>
-+              <Text style={[styles.subjectText, !email.isRead && styles.unreadSubject]}>
-+                {email.subject}
-+              </Text>
-+              <Text style={styles.previewText}>{email.preview}</Text>
-+            </View>
-+            <View style={styles.emailMeta}>
-+              <Text style={styles.timestampText}>{email.timestamp}</Text>
-+            </View>
-+          </TouchableOpacity>
-+        ))}
-+      </ScrollView>
-+    </View>
++      <Text style={[styles.subject, item.isRead && styles.readSubject]}>
++        {item.subject}
++      </Text>
++      <Text style={styles.preview} numberOfLines={1}>
++        {item.preview}
++      </Text>
++    </TouchableOpacity>
 +  );
-+};
 +
-+const styles = StyleSheet.create({
-+  container: {
-+    flex: 1,
-+    backgroundColor: '#f5f5f5',
-+  },
-+  header: {
-+    backgroundColor: 'white',
-+    elevation: 4,
-+    shadow
++  const renderCategoryButton = (category: Category, isSelected: boolean, onPress: () => void) => (
++    <TouchableOpacity 
++      style={[styles.categoryButton, isSelected && styles.selectedCategory]}
++      onPress={onPress}
++
