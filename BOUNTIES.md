@@ -22,68 +22,43 @@ This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty 
 
 ## Payment condition
 
-# warpSpeed Bounties
+# Active Bounties
 
-This document tracks active and completed bounties for the warpSpeed project.
+## [PAID BOUNTY - $750] Email Threads API
 
-## Active Bounties
+**Status:** Open for claims  
+**Reward:** $750  
+**Difficulty:** Hard  
+**Labels:** help wanted, bounty, expert, paid, open, nodejs, prisma, typescript, backend, API
 
-### Email Threads API — $750 (Hard)
-
-| Field | Details |
-|-------|---------|
-| **Bounty ID** | WARP-2024-001 |
-| **Status** | Open — accepting claims |
-| **Reward** | $750 USD |
-| **Difficulty** | Hard |
-| **Skills** | Node.js, TypeScript, Prisma, API Development, Email Systems, Jest, Swagger |
-
-#### Description
+### Overview
 
 Build a thread-first Email Threads API for the warpSpeed app. This bounty introduces a new threaded email experience so users can work with conversations instead of isolated messages.
 
-#### Technical Requirements
+### Technical Requirements
 
-##### 1. Thread Listing Endpoint
-- `GET /api/v1/email-threads`
-- Returns paginated list of email threads for the authenticated user
-- Supports filtering by: account, label, date range, unread status, has-attachments
-- Supports sorting by: most recent activity (default), oldest first, thread size
-- Response includes: thread ID, subject, participant list, message count, unread count, last activity timestamp, preview snippet
+#### API Endpoints
 
-##### 2. Thread Detail Endpoint
-- `GET /api/v1/email-threads/:id`
-- Returns thread metadata + all related messages in chronological order
-- Includes draft messages in their correct position within the conversation
-- Excludes archived and deleted messages unless explicitly requested
-- Response includes full participant list with display names and email addresses
+1. **List Email Threads** - `GET /api/v1/email-threads`
+   - Return paginated list of email threads for the authenticated user
+   - Support filtering by: date range, participants, labels, has attachments, is unread
+   - Support sorting by: most recent activity, thread start date, participant count, message count
+   - Include thread metadata: subject, participants, message count, unread count, last activity date
+   - Default sort: most recent activity first
 
-##### 3. Thread-Aware Search & Filtering
-- `GET /api/v1/email-threads/search`
-- Groups search results by thread
-- Maintains consistent search behavior with existing `/messages` search endpoint
-- Supports full-text search across subject, body, and participant names
-- Supports filter combination: date range, has-attachments, participants, labels
+2. **Get Thread Detail** - `GET /api/v1/email-threads/:id`
+   - Return thread metadata with all related messages ordered by date
+   - Include draft messages in their correct chronological position
+   - Return participant list with email addresses and display names
+   - Include attachment metadata for each message
+   - Support `?includeDeleted=true` query param for trash folder view
 
-##### 4. Draft Integration
-- Drafts are created/updated within the correct thread context
-- Thread recency updates when drafts are created, updated, or sent
-- Unsent drafts appear in thread detail with appropriate status indicator
-- Draft deletion removes from thread without affecting other messages
+3. **Update Thread** - `PATCH /api/v1/email-threads/:id`
+   - Update thread-level properties: isArchived, isRead, labels assignments
+   - Bulk update read status for all messages in thread
+   - Validate ownership and access control
 
-##### 5. Sync Integration
-- Gmail, Outlook, and IMAP synced emails correctly update thread ordering
-- Thread grouping matches provider-native thread behavior where possible
-- Handles edge cases: split threads, merged threads, thread ID changes
-
-##### 6. Access Control
-- Respects existing ownership and access control rules
-- Users can only access threads for accounts they own or have shared access to
-- Team/shared mailbox threads follow existing permission model
-
-#### API Specification
-
-##### Data Models
+#### Data Model Requirements
 
 
 Payment happens after the PR is approved and merged.
