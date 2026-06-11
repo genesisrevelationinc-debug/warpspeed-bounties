@@ -22,67 +22,42 @@ This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty 
 
 ## Payment condition
 
-# Active Bounties
+# warpSpeed Bounties
 
-## [PAID BOUNTY - $750] Email Threads API
+This document tracks active, claimed, and completed bounty tasks for the warpSpeed OPEN developer programme.
 
-- **Status**: Open
-- **Reward**: $750
-- **Difficulty**: Hard
-- **Labels**: help wanted, bounty, expert, paid, open, nodejs, prisma, typescript, backend, API
+## Active Bounties
 
-### Description
+| ID | Title | Reward | Difficulty | Status |
+|----|-------|--------|------------|--------|
+| B-001 | Email Threads API | $750 | Hard | Open |
 
-Build a thread-first Email Threads API for the warpSpeed app.
+## Bounty Details
 
-This bounty introduces a new threaded email experience so users can work with conversations instead of isolated messages. Developers will create API support for listing email threads, opening a thread to view related messages, preserving draft activity inside the correct conversation, and ensuring search/filter behaviour remains consistent with the existing message API.
+### B-001: Email Threads API
 
-### Required Skills
+**Reward:** $750
+**Difficulty:** Hard
+**Skills:** Node.js, TypeScript, Prisma, API Development, Email Systems, Jest Testing, Swagger / API Documentation
 
-- Node.js
-- TypeScript
-- Prisma
-- API Development
-- Email Systems
-- Jest Testing
-- Swagger / API Documentation
+#### Description
 
-### Technical Requirements
+Build a thread-first Email Threads API for the warpSpeed app. This bounty introduces a new threaded email experience so users can work with conversations instead of isolated messages.
 
-1. **List Email Threads**
-   - `GET /api/v1/email-threads` - Returns paginated list of email threads for the authenticated user
-   - Support filtering by: date range, participants, labels, has:drafts, is:starred, is:unread
-   - Sort by most recent activity (updated when drafts are created/updated/sent)
-   - Include thread metadata: subject, participant list, message count, unread count, last activity date
+#### Requirements
 
-2. **Open Thread Detail**
-   - `GET /api/v1/email-threads/:id` - Returns thread metadata with all related messages
-   - Messages ordered by sentDate ascending (oldest first)
-   - Include drafts in correct position based on createdAt/updatedAt
-   - Exclude archived and deleted messages by default; include with `?includeArchived=true`
+- **List Email Threads**: API endpoint to list email threads for the authenticated user with pagination, sorting by recency, and filtering by read/unread status.
+- **Open Thread**: API endpoint to retrieve a single thread with its metadata and all related messages in chronological order.
+- **Search & Filter Integration**: Group filtered and search results by thread rather than returning isolated messages.
+- **Ownership & Access Control**: Preserve existing ownership and access control rules; users must only see threads they own or have access to.
+- **Draft Handling**: Include drafts in the correct conversation thread; update thread recency when drafts are created, updated, or sent.
+- **Archive/Delete Exclusion**: Exclude archived and deleted messages from thread listings and search results where required.
+- **Sync Integration**: Ensure synced Gmail, Outlook, and IMAP emails update thread ordering correctly upon sync.
+- **Consistent API**: Maintain consistent search and filtering behaviour with the existing messages endpoint.
+- **Documentation**: Add Swagger/OpenAPI documentation for all new endpoints.
+- **Testing**: Add Jest tests covering authentication, ordering, filters, drafts, and thread detail behaviour.
 
-3. **Thread Grouping for Search/Filter**
-   - `GET /api/v1/email-threads/search?q=...` - Search threads by content across all messages
-   - Group results by thread, returning thread-level metadata
-   - Maintain consistency with existing `/messages` search behavior
-
-4. **Draft Thread Association**
-   - `POST /api/v1/drafts` - Create draft within a thread (or create new thread)
-   - `PUT /api/v1/drafts/:id` - Update draft, update thread lastActivityAt
-   - `POST /api/v1/drafts/:id/send` - Send draft, update thread ordering
-   - Drafts must appear in correct thread when listed
-
-5. **Sync Integration**
-   - Gmail sync: Map `threadId` to warpSpeed thread on import
-   - Outlook sync: Map `conversationId` to warpSpeed thread on import
-   - IMAP sync: Group by `Message-ID`, `In-Reply-To`, `References` headers
-   - Update thread recency on sync
-
-6. **Access Control**
-   - User can only access threads where they own at least one message
-   - Respect existing message-level permissions
-
-### Data Model (Prisma)
+#### API Endpoints (Planned)
 
 
 Payment happens after the PR is approved and merged.
