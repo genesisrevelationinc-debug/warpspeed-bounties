@@ -24,40 +24,28 @@ This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty 
 
 # warpSpeed Bounties
 
-This document tracks active, claimed, and completed bounty tasks for the warpSpeed OPEN developer programme.
+This document tracks active and completed bounties for the warpSpeed OPEN project.
 
 ## Active Bounties
 
-| ID | Title | Reward | Difficulty | Status |
-|----|-------|--------|------------|--------|
-| B-001 | Email Threads API | $750 | Hard | Open |
+### Email Threads API — $750
 
-## Bounty Details
-
-### B-001: Email Threads API
-
-**Reward:** $750
-**Difficulty:** Hard
-**Skills:** Node.js, TypeScript, Prisma, API Development, Email Systems, Jest Testing, Swagger / API Documentation
+| Field | Details |
+|-------|---------|
+| **Status** | Open |
+| **Difficulty** | Hard |
+| **Skills** | Node.js, TypeScript, Prisma, API Development, Email Systems, Jest, Swagger |
+| **Issue** | #1 |
 
 #### Description
 
-Build a thread-first Email Threads API for the warpSpeed app. This bounty introduces a new threaded email experience so users can work with conversations instead of isolated messages.
+Build a thread-first Email Threads API for the warpSpeed app. This introduces a new threaded email experience so users can work with conversations instead of isolated messages.
 
-#### Requirements
+#### Technical Requirements
 
-- **List Email Threads**: API endpoint to list email threads for the authenticated user with pagination, sorting by recency, and filtering by read/unread status.
-- **Open Thread**: API endpoint to retrieve a single thread with its metadata and all related messages in chronological order.
-- **Search & Filter Integration**: Group filtered and search results by thread rather than returning isolated messages.
-- **Ownership & Access Control**: Preserve existing ownership and access control rules; users must only see threads they own or have access to.
-- **Draft Handling**: Include drafts in the correct conversation thread; update thread recency when drafts are created, updated, or sent.
-- **Archive/Delete Exclusion**: Exclude archived and deleted messages from thread listings and search results where required.
-- **Sync Integration**: Ensure synced Gmail, Outlook, and IMAP emails update thread ordering correctly upon sync.
-- **Consistent API**: Maintain consistent search and filtering behaviour with the existing messages endpoint.
-- **Documentation**: Add Swagger/OpenAPI documentation for all new endpoints.
-- **Testing**: Add Jest tests covering authentication, ordering, filters, drafts, and thread detail behaviour.
+##### Data Model (Prisma Schema)
 
-#### API Endpoints (Planned)
+Add to schema:
 
 
 Payment happens after the PR is approved and merged.
