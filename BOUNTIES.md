@@ -22,43 +22,53 @@ This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty 
 
 ## Payment condition
 
-# Active Bounties
+# warpSpeed Bounties Registry
 
-## [PAID BOUNTY - $750] Email Threads API
+This file tracks active, claimed, and completed bounties for the warpSpeed OPEN programme.
 
-**Status:** Open for claims  
-**Reward:** $750  
-**Difficulty:** Hard  
-**Labels:** help wanted, bounty, expert, paid, open, nodejs, prisma, typescript, backend, API
+## Active Bounties
 
-### Overview
+| Bounty | Reward | Status | Claimed By | Due Date |
+|--------|--------|--------|-----------|----------|
+| Email Threads API | $750 | Open | - | - |
+
+## Bounty Details
+
+### Email Threads API
+
+- **Reward**: $750
+- **Difficulty**: Hard
+- **Skills**: Node.js, TypeScript, Prisma, API Development, Email Systems, Jest Testing, Swagger/API Documentation
+- **Issue**: #1
+
+#### Description
 
 Build a thread-first Email Threads API for the warpSpeed app. This bounty introduces a new threaded email experience so users can work with conversations instead of isolated messages.
 
-### Technical Requirements
+#### Requirements
 
-#### API Endpoints
+1. **List Email Threads** - API endpoint to list email threads for the authenticated user
+2. **Open Thread** - API endpoint to open a single thread and return thread metadata with related messages
+3. **Group by Thread** - Group filtered/search results by thread
+4. **Access Control** - Preserve ownership and access control rules
+5. **Draft Support** - Include drafts in the correct conversation thread
+6. **Exclude Archived/Deleted** - Exclude archived and deleted messages where required
+7. **Thread Recency** - Update thread recency when drafts are created, updated, or sent
+8. **Sync Support** - Ensure synced Gmail, Outlook, and IMAP emails update thread ordering correctly
+9. **Search/Filter Consistency** - Maintain consistent search and filtering behaviour with the existing messages endpoint
+10. **Documentation** - Add Swagger/API documentation
+11. **Testing** - Add Jest tests for auth, ordering, filters, drafts, and thread detail behaviour
 
-1. **List Email Threads** - `GET /api/v1/email-threads`
-   - Return paginated list of email threads for the authenticated user
-   - Support filtering by: date range, participants, labels, has attachments, is unread
-   - Support sorting by: most recent activity, thread start date, participant count, message count
-   - Include thread metadata: subject, participants, message count, unread count, last activity date
-   - Default sort: most recent activity first
+#### Technical Stack
 
-2. **Get Thread Detail** - `GET /api/v1/email-threads/:id`
-   - Return thread metadata with all related messages ordered by date
-   - Include draft messages in their correct chronological position
-   - Return participant list with email addresses and display names
-   - Include attachment metadata for each message
-   - Support `?includeDeleted=true` query param for trash folder view
+- Node.js
+- TypeScript
+- Prisma ORM
+- Express/Fastify
+- Jest
+- Swagger/OpenAPI
 
-3. **Update Thread** - `PATCH /api/v1/email-threads/:id`
-   - Update thread-level properties: isArchived, isRead, labels assignments
-   - Bulk update read status for all messages in thread
-   - Validate ownership and access control
-
-#### Data Model Requirements
+#### API Endpoints (Proposed)
 
 
 Payment happens after the PR is approved and merged.
