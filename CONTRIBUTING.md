@@ -30,48 +30,27 @@ Payment is processed only after:
 - maintainers approve it,
 # Contributing to warpSpeed Bounties
 
-## Bounty Development Guidelines
+Thank you for your interest in contributing to warpSpeed OPEN! This document outlines the process for participating in our bounty programme.
 
-### Email Threads API Implementation Standards
+## Getting Started
 
-When implementing the Email Threads API bounty, please adhere to the following standards:
+1. Browse available bounties at [https://warpspeedopen.org/bounties](https://warpspeedopen.org/bounties)
+2. Sign up as a developer on our website
+3. Review the full bounty specification before claiming
 
-#### API Design
-- Follow RESTful conventions for all endpoints
-- Use consistent response formats with the existing messages API
-- Implement proper pagination for list endpoints
-- Include comprehensive Swagger/OpenAPI documentation
+## Bounty Claim Process
 
-#### Database & Prisma
-- Use Prisma migrations for any schema changes
-- Ensure thread grouping is efficient at the database level
-- Maintain referential integrity between messages and threads
-- Consider performance implications of thread aggregation queries
+### Step 1: Find an Open Bounty
 
-#### Authentication & Authorization
-- Enforce ownership checks on all endpoints
-- Verify user has access to requested threads
-- Maintain consistency with existing auth middleware
+Check the [BOUNTIES.md](./BOUNTIES.md) file or the GitHub issues with the `bounty` label.
 
-#### Testing Requirements
-- Write Jest tests for all new endpoints
-- Include tests for:
-  - Authentication and access control
-  - Thread ordering (recency)
-  - Filter and search functionality
-  - Draft message handling
-  - Thread detail retrieval
-- Aim for >80% code coverage on new code
+### Step 2: Sign Up
 
-#### Sync Behavior
-- Ensure Gmail sync updates thread ordering correctly
-- Ensure Outlook sync updates thread ordering correctly
-- Ensure IMAP sync updates thread ordering correctly
-- Handle edge cases where sync creates new vs. existing threads
+Visit [https://warpspeedopen.org/signup](https://warpspeedopen.org/signup) to create your developer account.
 
-#### Code Quality
-- Use TypeScript strict mode
-- Follow existing linting rules
-- Document complex thread logic with comments
-- Ensure backwards compatibility where possible
+### Step 3: Claim the Bounty
+
+Comment on the GitHub issue:
+
+
 - and the PR is merged.
