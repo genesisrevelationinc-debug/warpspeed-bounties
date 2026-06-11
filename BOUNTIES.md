@@ -24,28 +24,66 @@ This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty 
 
 # warpSpeed Bounties
 
-This document tracks active and completed bounties for the warpSpeed OPEN project.
+This document tracks active and completed bounties for the warpSpeed project.
 
 ## Active Bounties
 
-### Email Threads API — $750
+### Email Threads API — $750 (Hard)
 
 | Field | Details |
 |-------|---------|
-| **Status** | Open |
+| **Bounty ID** | WARP-2024-001 |
+| **Status** | Open — accepting claims |
+| **Reward** | $750 USD |
 | **Difficulty** | Hard |
 | **Skills** | Node.js, TypeScript, Prisma, API Development, Email Systems, Jest, Swagger |
-| **Issue** | #1 |
 
 #### Description
 
-Build a thread-first Email Threads API for the warpSpeed app. This introduces a new threaded email experience so users can work with conversations instead of isolated messages.
+Build a thread-first Email Threads API for the warpSpeed app. This bounty introduces a new threaded email experience so users can work with conversations instead of isolated messages.
 
 #### Technical Requirements
 
-##### Data Model (Prisma Schema)
+##### 1. Thread Listing Endpoint
+- `GET /api/v1/email-threads`
+- Returns paginated list of email threads for the authenticated user
+- Supports filtering by: account, label, date range, unread status, has-attachments
+- Supports sorting by: most recent activity (default), oldest first, thread size
+- Response includes: thread ID, subject, participant list, message count, unread count, last activity timestamp, preview snippet
 
-Add to schema:
+##### 2. Thread Detail Endpoint
+- `GET /api/v1/email-threads/:id`
+- Returns thread metadata + all related messages in chronological order
+- Includes draft messages in their correct position within the conversation
+- Excludes archived and deleted messages unless explicitly requested
+- Response includes full participant list with display names and email addresses
+
+##### 3. Thread-Aware Search & Filtering
+- `GET /api/v1/email-threads/search`
+- Groups search results by thread
+- Maintains consistent search behavior with existing `/messages` search endpoint
+- Supports full-text search across subject, body, and participant names
+- Supports filter combination: date range, has-attachments, participants, labels
+
+##### 4. Draft Integration
+- Drafts are created/updated within the correct thread context
+- Thread recency updates when drafts are created, updated, or sent
+- Unsent drafts appear in thread detail with appropriate status indicator
+- Draft deletion removes from thread without affecting other messages
+
+##### 5. Sync Integration
+- Gmail, Outlook, and IMAP synced emails correctly update thread ordering
+- Thread grouping matches provider-native thread behavior where possible
+- Handles edge cases: split threads, merged threads, thread ID changes
+
+##### 6. Access Control
+- Respects existing ownership and access control rules
+- Users can only access threads for accounts they own or have shared access to
+- Team/shared mailbox threads follow existing permission model
+
+#### API Specification
+
+##### Data Models
 
 
 Payment happens after the PR is approved and merged.
