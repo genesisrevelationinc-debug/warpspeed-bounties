@@ -24,7 +24,7 @@ This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty 
 
 # warpSpeed Bounties
 
-This document tracks active and completed bounties for the warpSpeed OPEN project.
+This document tracks active and completed bounty tasks for the warpSpeed OPEN developer programme.
 
 ## Active Bounties
 
@@ -32,32 +32,43 @@ This document tracks active and completed bounties for the warpSpeed OPEN projec
 
 | Field | Details |
 |-------|---------|
-| **Status** | Open |
+| **Status** | Open — accepting claims |
 | **Difficulty** | Hard |
 | **Skills** | Node.js, TypeScript, Prisma, API Development, Email Systems, Jest, Swagger |
 | **Issue** | [#1](https://github.com/warpspeedopen-source/warpspeed-bounties/issues/1) |
 
 #### Description
 
-Build a thread-first Email Threads API for the warpSpeed app. This introduces a new threaded email experience so users can work with conversations instead of isolated messages.
+Build a thread-first Email Threads API for the warpSpeed app. This bounty introduces a new threaded email experience so users can work with conversations instead of isolated messages.
 
-#### Requirements
+#### Technical Requirements
 
-- [ ] **Thread Listing**: List email threads for the authenticated user with pagination
-- [ ] **Thread Detail**: Open a single thread and return thread metadata with related messages
-- [ ] **Search/Filter Grouping**: Group filtered/search results by thread
-- [ ] **Ownership & Access Control**: Preserve existing ownership and access control rules
-- [ ] **Draft Handling**: Include drafts in the correct conversation thread
-- [ ] **Archive/Delete Exclusion**: Exclude archived and deleted messages where required
-- [ ] **Thread Recency Updates**: Update thread recency when drafts are created, updated, or sent
-- [ ] **Sync Compatibility**: Ensure synced Gmail, Outlook, and IMAP emails update thread ordering correctly
-- [ ] **Consistent Search/Filter**: Maintain consistent search and filtering behaviour with the existing messages endpoint
-- [ ] **API Documentation**: Add Swagger/OpenAPI documentation
-- [ ] **Jest Tests**: Add tests for auth, ordering, filters, drafts, and thread detail behaviour
+##### Core Endpoints
 
-#### Technical Specification
+- `GET /api/v1/email-threads` — List email threads for the authenticated user
+  - Support pagination (`page`, `limit`)
+  - Support filtering by `accountId`, `label`, `isRead`, `isStarred`, `dateFrom`, `dateTo`
+  - Support search by `q` (subject, sender name, sender email, snippet)
+  - Default sort: most recent activity first (`lastActivityAt DESC`)
+  - Return thread metadata: `id`, `subject`, `participants`, `messageCount`, `unreadCount`, `hasDrafts`, `lastActivityAt`, `preview`
 
-##### Data Model
+- `GET /api/v1/email-threads/:id` — Open a single thread
+  - Return thread metadata with all related messages
+  - Messages ordered by `sentAt ASC` (oldest first for reading flow)
+  - Include drafts in their correct position (by `updatedAt`)
+  - Mark thread as read for the authenticated user
+  - Return `participants` with email addresses and display names
+
+- `POST /api/v1/email-threads/:id/drafts` — Create or update a draft in a thread
+  - Update `lastActivityAt` on the thread
+  - Set `hasDrafts = true`
+
+- `POST /api/v1/email-threads/:id/send` — Send a draft from a thread
+  - Move message from `DRAFT` to `SENT` status
+  - Update thread `lastActivityAt`
+  - Clear `hasDrafts` if no other drafts remain
+
+##### Data Model (Prisma)
 
 
 Payment happens after the PR is approved and merged.
