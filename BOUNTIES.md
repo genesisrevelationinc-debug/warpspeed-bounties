@@ -24,18 +24,21 @@ This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty 
 
 # warpSpeed Bounties
 
-This document tracks active and completed bounty tasks for the warpSpeed OPEN developer programme.
+This document tracks active, claimed, and completed bounties for the warpSpeed OPEN project.
 
 ## Active Bounties
 
+| Bounty | Reward | Status | Claimed By | Due Date |
+|--------|--------|--------|------------|----------|
+| Email Threads API | $750 | Open | - | TBD |
+
+## Bounty Details
+
 ### Email Threads API — $750
 
-| Field | Details |
-|-------|---------|
-| **Status** | Open — accepting claims |
-| **Difficulty** | Hard |
-| **Skills** | Node.js, TypeScript, Prisma, API Development, Email Systems, Jest, Swagger |
-| **Issue** | [#1](https://github.com/warpspeedopen-source/warpspeed-bounties/issues/1) |
+**Status:** Open for claims  
+**Difficulty:** Hard  
+**Skills Required:** Node.js, TypeScript, Prisma, API Development, Email Systems, Jest Testing, Swagger / API Documentation
 
 #### Description
 
@@ -43,32 +46,28 @@ Build a thread-first Email Threads API for the warpSpeed app. This bounty introd
 
 #### Technical Requirements
 
-##### Core Endpoints
+##### Core API Endpoints
 
-- `GET /api/v1/email-threads` — List email threads for the authenticated user
-  - Support pagination (`page`, `limit`)
-  - Support filtering by `accountId`, `label`, `isRead`, `isStarred`, `dateFrom`, `dateTo`
-  - Support search by `q` (subject, sender name, sender email, snippet)
-  - Default sort: most recent activity first (`lastActivityAt DESC`)
-  - Return thread metadata: `id`, `subject`, `participants`, `messageCount`, `unreadCount`, `hasDrafts`, `lastActivityAt`, `preview`
+1. **GET /api/v1/email-threads** — List email threads for the authenticated user
+   - Support pagination (cursor-based and offset-based)
+   - Support filtering by: date range, participants, labels, has:drafts, is:unread, is:starred
+   - Support sorting by: lastActivityAt (default), createdAt, messageCount
+   - Return thread metadata: id, subject, participants, messageCount, unreadCount, lastMessageAt, lastMessagePreview, isStarred, labels
 
-- `GET /api/v1/email-threads/:id` — Open a single thread
-  - Return thread metadata with all related messages
-  - Messages ordered by `sentAt ASC` (oldest first for reading flow)
-  - Include drafts in their correct position (by `updatedAt`)
-  - Mark thread as read for the authenticated user
-  - Return `participants` with email addresses and display names
+2. **GET /api/v1/email-threads/:id** — Open a single thread
+   - Return thread metadata with all related messages
+   - Messages ordered by sentAt ascending (oldest first)
+   - Include draft messages in correct position (by updatedAt)
+   - Support `?includeDrafts=true|false` (default: true)
+   - Support `?includeArchived=false` to exclude archived messages
+   - Support `?includeDeleted=false` to exclude deleted messages (default)
 
-- `POST /api/v1/email-threads/:id/drafts` — Create or update a draft in a thread
-  - Update `lastActivityAt` on the thread
-  - Set `hasDrafts = true`
+3. **GET /api/v1/email-threads/:id/messages** — List messages in a thread (alternative endpoint)
+   - Same behavior as above but paginated messages only
 
-- `POST /api/v1/email-threads/:id/send` — Send a draft from a thread
-  - Move message from `DRAFT` to `SENT` status
-  - Update thread `lastActivityAt`
-  - Clear `hasDrafts` if no other drafts remain
+##### Data Model Requirements
 
-##### Data Model (Prisma)
+Extend the Prisma schema to support:
 
 
 Payment happens after the PR is approved and merged.
