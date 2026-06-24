@@ -20,155 +20,161 @@
 +  State,
 +  TapGestureHandler,
 +} from 'react-native-gesture-handler';
-+import Image from 'react-native-fast-image';
-+import { ImagePreviewProps, ImagePreviewRef } from './ImagePreview.types';
-+import { ImagePreviewActions } from './ImagePreviewActions';
-+import { useImageGestures } from './useImageGestures';
-+import { useImageSwipe } from './useImageSwipe';
++import ImageViewer from './ImageViewer';
++import ImagePreviewHeader from './ImagePreviewHeader';
++import ImagePreviewFooter from './ImagePreviewFooter';
++import { ImageItem, ImagePreviewProps } from './types';
 +
 +const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 +
-+export const ImagePreview = React.forwardRef<ImagePreviewRef, ImagePreviewProps>(
-+  (
-+    {
-+      images,
-+      initialIndex = 0,
-+      visible,
-+      onClose,
-+      onIndexChange,
-+      onDownload,
-+      onShare,
-+      onDelete,
-+      enableDownload = false,
-+      enableShare = false,
-+      enableDelete = false,
-+      downloadPermission = false,
-+      sharePermission = false,
-+      deletePermission = false,
-+      backgroundColor = '#000000',
-+      swipeThreshold = 120,
-+      maxZoom = 4,
-+      minZoom = 1,
-+      doubleTapZoom = 2.5,
-+      renderHeader,
-+      renderFooter,
-+      testID,
-+    },
-+    ref
-+  ) => {
-+    const [currentIndex, setCurrentIndex] = useState(initialIndex);
-+    const [isLoading, setIsLoading] = useState(true);
-+    const [isTransitioning, setIsTransitioning] = useState(false);
-+    const [showActions, setShowActions] = useState(true);
++const ImagePreview: React.FC<ImagePreviewProps> = ({
++  visible,
++  images,
++  initialIndex = 0,
++  onClose,
++  onIndexChange,
++  onDownload,
++  onShare,
++  onDelete,
++  showDownload = true,
++  showShare = true,
++  showDelete = true,
++  headerTitle,
++  backgroundColor = '#000000',
++}) => {
++  const [currentIndex, setCurrentIndex] = useState(initialIndex);
++  const [isLoading, setIsLoading] = useState(true);
++  const [showControls, setShowControls] = useState(true);
++  const [scale, setScale] = useState(1);
++  const [isZoomed, setIsZoomed] = useState(false);
 +
-+    const scaleAnim = useRef(new Animated.Value(1)).current;
-+    const translateXAnim = useRef(new Animated.Value(0)).current;
-+    const translateYAnim = useRef(new Animated.Value(0)).current;
-+    const opacityAnim = useRef(new Animated.Value(0)).current;
-+    const actionsOpacityAnim = useRef(new Animated.Value(1)).current;
++  const panRef = useRef(null);
++  const pinchRef = useRef(null);
++  const doubleTapRef = useRef(null);
 +
-+    const panRef = useRef(null);
-+    const pinchRef = useRef(null);
-+    const tapRef = useRef(null);
++  const translateX = useRef(new Animated.Value(0)).current;
++  const translateY = useRef(new Animated.Value(0)).current;
++  const scaleAnim = useRef(new Animated.Value(1)).current;
++  const opacityAnim = useRef(new Animated.Value(0)).current;
++  const controlsOpacity = useRef(new Animated.Value(1)).current;
 +
-+    const currentScale = useRef(1);
-+    const currentTranslateX = useRef(0);
-+    const currentTranslateY = useRef(0);
++  const currentImage = images[currentIndex];
++  const isFirstImage = currentIndex === 0;
++  const isLastImage = currentIndex === images.length - 1;
 +
-+    useEffect(() => {
-+      if (visible) {
-+        setCurrentIndex(initialIndex);
-+        setIsLoading(true);
-+        Animated.timing(opacityAnim, {
-+          toValue: 1,
-+          duration: 200,
-+          useNativeDriver: true,
-+        }).start();
-+      } else {
-+        opacityAnim.setValue(0);
-+        resetTransformations();
-+      }
-+    }, [visible, initialIndex]);
-+
-+    useEffect(() => {
-+      onIndexChange?.(currentIndex);
-+    }, [currentIndex, onIndexChange]);
-+
-+    const resetTransformations = useCallback(() => {
-+      currentScale.current = 1;
-+      currentTranslateX.current = 0;
-+      currentTranslateY.current = 0;
++  useEffect(() => {
++    if (visible) {
++      setCurrentIndex(initialIndex);
++      setIsLoading(true);
++      setScale(1);
++      setIsZoomed(false);
++      translateX.setValue(0);
++      translateY.setValue(0);
 +      scaleAnim.setValue(1);
-+      translateXAnim.setValue(0);
-+      translateYAnim.setValue(0);
-+    }, []);
++      Animated.timing(opacityAnim, {
++        toValue: 1,
++        duration: 200,
++        useNativeDriver: true,
++      }).start();
++    }
++  }, [visible, initialIndex]);
 +
-+    const animateToValue = useCallback(
-+      (value: Animated.Value, toValue: number, duration: number = 200) => {
-+        return new Promise<void>((resolve) => {
-+          Animated.timing(value, {
-+            toValue,
-+            duration,
-+            useNativeDriver: true,
-+          }).start(() => resolve());
-+        });
-+      },
-+      []
-+    );
++  const animateControls = useCallback((show: boolean) => {
++    Animated.timing(controlsOpacity, {
++      toValue: show ? 1 : 0,
++      duration: 200,
++      useNativeDriver: true,
++    }).start();
++    setShowControls(show);
++  }, []);
 +
-+    const handleDoubleTap = useCallback(
-+      (event: any) => {
-+        const { x, y } = event.nativeEvent;
-+        const newScale = currentScale.current > 1.5 ? minZoom : doubleTapZoom;
-+
-+        if (newScale === minZoom) {
-+          animateToValue(scaleAnim, minZoom);
-+          animateToValue(translateXAnim, 0);
-+          animateToValue(translateYAnim, 0);
-+          currentScale.current = minZoom;
-+          currentTranslateX.current = 0;
-+          currentTranslateY.current = 0;
-+        } else {
-+          const offsetX = (x - SCREEN_WIDTH / 2) * (1 - newScale);
-+          const offsetY = (y - SCREEN_HEIGHT / 2) * (1 - newScale);
-+          animateToValue(scaleAnim, newScale);
-+          animateToValue(translateXAnim, offsetX);
-+          animateToValue(translateYAnim, offsetY);
-+          currentScale.current = newScale;
-+          currentTranslateX.current = offsetX;
-+          currentTranslateY.current = offsetY;
-+        }
-+      },
-+      [minZoom, doubleTapZoom, scaleAnim, translateXAnim, translateYAnim]
-+    );
-+
-+    const handlePinch = useGestureHandler({
-+      onActive: ({ scale }) => {
-+        const newScale = Math.max(minZoom, Math.min(maxZoom, scale));
-+        scaleAnim.setValue(newScale);
-+      },
-+      onEnd: ({ scale }) => {
-+        const newScale = Math.max(minZoom, Math.min(maxZoom, scale));
-+        currentScale.current = newScale;
-+        if (newScale <= minZoom) {
-+          animateToValue(scaleAnim, minZoom);
-+          animateToValue(translateXAnim, 0);
-+          animateToValue(translateYAnim, 0);
-+          currentTranslateX.current = 0;
-+          currentTranslateY.current = 0;
-+        }
-+      },
++  const handleClose = useCallback(() => {
++    Animated.timing(opacityAnim, {
++      toValue: 0,
++      duration: 200,
++      useNativeDriver: true,
++    }).start(() => {
++      onClose();
 +    });
++  }, [onClose, opacityAnim]);
 +
-+    const handlePan = useGestureHandler({
-+      onActive: ({ translationX, translationY }) => {
-+        if (currentScale.current > minZoom) {
-+          const newTranslateX = currentTranslateX.current + translationX;
-+          const newTranslateY = currentTranslateY.current + translationY;
-+          translateXAnim.setValue(newTranslateX);
-+          translateYAnim.setValue(newTranslateY);
++  const handleIndexChange = useCallback((newIndex: number) => {
++    setCurrentIndex(newIndex);
++    setIsLoading(true);
++    setScale(1);
++    setIsZoomed(false);
++    translateX.setValue(0);
++    translateY.setValue(0);
++    scaleAnim.setValue(1);
++    onIndexChange?.(newIndex);
++  }, [onIndexChange, translateX, translateY, scaleAnim]);
++
++  const handleNext = useCallback(() => {
++    if (!isLastImage && !isZoomed) {
++      handleIndexChange(currentIndex + 1);
++    }
++  }, [isLastImage, isZoomed, currentIndex, handleIndexChange]);
++
++  const handlePrevious = useCallback(() => {
++    if (!isFirstImage && !isZoomed) {
++      handleIndexChange(currentIndex - 1);
++    }
++  }, [isFirstImage, isZoomed, currentIndex, handleIndexChange]);
++
++  const onPanGestureEvent = Animated.event(
++    [{ nativeEvent: { translationX: translateX, translationY: translateY } }],
++    { useNativeDriver: true }
++  );
++
++  const onPanHandlerStateChange = useCallback(
++    (event: any) => {
++      if (event.nativeEvent.oldState === State.ACTIVE) {
++        const { translationX, translationY } = event.nativeEvent;
++        const swipeThreshold = SCREEN_WIDTH * 0.25;
++
++        if (scale === 1) {
++          if (translationX < -swipeThreshold && !isLastImage) {
++            handleNext();
++          } else if (translationX > swipeThreshold && !isFirstImage) {
++            handlePrevious();
++          } else if (Math.abs(translationY) > 100) {
++            handleClose();
++          } else {
++            Animated.spring(translateX, {
++              toValue: 0,
++              useNativeDriver: true,
++            }).start();
++            Animated.spring(translateY, {
++              toValue: 0,
++              useNativeDriver: true,
++            }).start();
++          }
++        } else {
++          Animated.spring(translateX, {
++            toValue: 0,
++            useNativeDriver: true,
++          }).start();
++          Animated.spring(translateY, {
++            toValue: 0,
++            useNativeDriver: true,
++          }).start();
 +        }
-+      },
-+      onEnd: ({ translationX, translationY, velocityX }) => {
-+        if (currentScale.current <= minZoom && Math.abs(translationX) > swipeThreshold) {
-+          const direction = translationX >
++      }
++    },
++    [scale, isLastImage, isFirstImage, handleNext, handlePrevious, handleClose, translateX, translateY]
++  );
++
++  const onPinchGestureEvent = Animated.event(
+拓
++    [{ nativeEvent: { scale: scaleAnim } }],
++    { useNativeDriver: true }
++  );
++
++  const onPinchHandlerStateChange = useCallback(
++    (event: any) => {
++      if (event.nativeEvent.oldState === State.ACTIVE) {
++        const newScale = event.nativeEvent.scale;
++        const clampedScale = Math.min(Math.max(newScale, 1), 4);
++        
++        setScale(clampedScale);
++        setIs
