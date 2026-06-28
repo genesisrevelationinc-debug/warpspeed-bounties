@@ -4,8 +4,7 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Install dependencies for native modules
-RUN apk add --no-cache python3 make g++ \
-    && ln -sf python3 /usr/bin/python
+RUN apk add --no-cache python3 make g++
 
 COPY package*.json ./
 COPY prisma ./prisma/
@@ -23,24 +22,20 @@ WORKDIR /app
 
 # Install runtime dependencies for file processing
 RUN apk add --no-cache \
-    python3 \
     libreoffice \
     poppler-utils \
     tesseract-ocr \
     tesseract-ocr-data-eng \
-    && ln -sf python3 /usr/bin/python
+    && rm -rf /var/cache/apk/*
 
 # Create non-root user
-RUN addgroup -g 1001 -S nodejs \
-    && adduser -S nodejs -u 1001
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
 
 COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
 COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nodejs:nodejs /app/package*.json ./
 COPY --from=builder --chown=nodejs:nodejs /app/prisma ./prisma
-
-# Generate Prisma client in production
-RUN npx prisma generate
 
 USER nodejs
 
