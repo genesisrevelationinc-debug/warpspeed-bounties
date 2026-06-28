@@ -7,22 +7,27 @@ services:
       dockerfile: Dockerfile
     container_name: attachment-summarizer
     restart: unless-stopped
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=production
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/attachment_summarizer
-      - OLLAMA_BASE_URL=http://ollama:11434
     env_file:
       - .env
-    volumes:
-      - ./tmp:/app/tmp
-      - ./downloads:/app/downloads
+    environment:
+      - NODE_ENV=production
+      - OLLAMA_BASE_URL=http://ollama:11434
     depends_on:
-      db:
-          condition: service_healthy
-      ollama:
-          condition: service_started
+      - ollama
+      - db
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - attachment-summarizer-network
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    volumes:
+      - ollama-data:/root/.ollama
+    ports:
+      - "11434:11434"
     networks:
       - attachment-summarizer-network
 
@@ -35,30 +40,19 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=attachment_summarizer
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
     networks:
       - attachment-summarizer-network
 
-  ollama:
-    image: ollama/ollama:latest
-    container_name: attachment-summarizer-ollama
-    restart: unless-stopped
-    volumes:
-      - ollama_data:/root/.ollama
+  # Optional: LocalStack for SQS testing
+  localstack:
+    image: localstack/localstack:latest
+    container_name: localstack
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=sqs
     networks:
-      - attachment-summarizer-network
-
-volumes:
-  postgres_data:
-  ollama_data:
-
-networks:
-  attachment-summarizer-network:
-    driver: bridge
+      - attachment-s
