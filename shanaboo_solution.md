@@ -1,15 +1,6 @@
  ```diff
 --- /dev/null
-+++ b/b/services/attachment-summarizer/.dockerignore
-@@ -0,0 +1,6 @@
-+node_modules
-+dist
-+.env
-+*.log
-+coverage
-+.git
---- /dev/null
-+++ b/b/services/attachment-summarizer/.env.example
++++ b/services/attachment-summarizer/.env.example
 @@ -0,0 +1,21 @@
 +# AWS SQS Configuration
 +AWS_REGION=us-east-1
@@ -17,50 +8,92 @@
 +AWS_SECRET_ACCESS_KEY=your-secret-key
 +SQS_QUEUE_URL=https://sqs.us-east-1.amazonaws.com/123456789012/attachment-events
 +
-+# Google Cloud Storage
-+GCS_BUCKET_NAME=your-bucket-name
++# Google Cloud Storage Configuration
++GCS_PROJECT_ID=your-gcs-project-id
++GCS_BUCKET_NAME=your-attachment-bucket
 +GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account-key.json
 +
 +# Ollama / LLM Configuration
 +OLLAMA_BASE_URL=http://localhost:11434
 +OLLAMA_MODEL=llama3.2
-+SUMMARY_MAX_LENGTH=500
++SUMMARY_MAX_TOKENS=500
 +
-+# Application
++# Application Configuration
 +NODE_ENV=development
 +LOG_LEVEL=info
 +MAX_FILE_SIZE_MB=50
 +SUPPORTED_MIME_TYPES=application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/plain,text/html,image/png,image/jpeg,image/gif
 +
-+# Database (Prisma)
-+DATABASE_URL=postgresql://user:password@localhost:5432/attachment_summarizer
 --- /dev/null
-+++ b/b/services/attachment-summarizer/.gitignore
-@@ -0,0 +1,5 @@
-+node_modules
-+dist
++++ services/attachment-summarizer/.gitignore
+@@ -0,0 +1,35 @@
++# Dependencies
++node_modules/
++package-lock.json
++yarn.lock
++pnpm-lock.yaml
++
++# Build output
++dist/
++build/
++*.tsbuildinfo
++
++# Environment variables
 +.env
++.env.local
++.env.*.local
++
++# Logs
++logs/
 +*.log
-+coverage
++npm-debug.log*
++yarn-debug.log*
++yarn-error.log*
++
++# Testing
++coverage/
++.nyc_output/
++
++# IDE
++.idea/
++.vscode/
++*.swp
++*.swo
++
++# OS
++.DS_Store
++Thumbs.db
++
++# Temporary files
++tmp/
++temp/
++uploads/
++
 --- /dev/null
-+++ b/b/services/attachment-summarizer/Dockerfile
-@@ -0,0 +1,52 @@
++++ services/attachment-summarizer/Dockerfile
+@@ -0,0 +1,45 @@
 +# Build stage
 +FROM node:20-alpine AS builder
 +
 +WORKDIR /app
 +
 +# Install dependencies for native modules
-+RUN apk add --no-cache python3 make g++ \
-+    && ln -sf python3 /usr/bin/python
++RUN apk add --no-cache python3 make g++
 +
++# Copy package files
 +COPY package*.json ./
 +COPY prisma ./prisma/
 +
++# Install dependencies
 +RUN npm ci
 +
++# Generate Prisma client
++RUN npx prisma generate
++
++# Copy source code
 +COPY . .
 +
++# Build TypeScript
 +RUN npm run build
 +
 +# Production stage
@@ -69,96 +102,76 @@
 +WORKDIR /app
 +
 +# Install runtime dependencies
-+RUN apk add --no-cache \
-+    libreoffice \
-+    poppler-utils \
-+    tesseract-ocr \
-+    tesseract-ocr-data-eng \
-+    && ln -sf python3 /usr/bin/python
++RUN apk add --no-cache libreoffice tesseract-ocr
 +
-+# Create non-root user
-+RUN addgroup -g 1001 -S nodejs && \
-+    adduser -S nodejs -u 1001
++# Copy package files and install production dependencies
++COPY package*.json ./
++COPY prisma ./prisma/
++RUN npm ci --only=production && npx prisma generate
 +
-+# Copy built application
-+COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
-+COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
-+COPY --from=builder --chown=nodejs:nodejs /app/package*.json ./
-+COPY --from=builder --chown=nodejs:nodejs /app/prisma ./prisma
++# Copy built application from builder
++COPY --from=builder /app/dist ./dist
 +
-+# Generate Prisma client in production
-+RUN npx prisma generate
++# Create temp directory for downloads
++RUN mkdir -p /tmp/attachments
 +
-+USER nodejs
-+
-+ENV NODE_ENV=production
-+ENV PORT=3000
-+
++# Expose port for health checks
 +EXPOSE 3000
 +
++# Start the application
 +CMD ["node", "dist/index.js"]
++
 --- /dev/null
-+++ b/b/services/attachment-summarizer/docker-compose.yml
-@@ -0,0 +1,60 @@
++++ services/attachment-summarizer/docker-compose.yml
+@@ -0,0 +1,56 @@
 +version: '3.8'
 +
 +services:
-+  app:
++  attachment-summarizer:
 +    build:
 +      context: .
 +      dockerfile: Dockerfile
 +    container_name: attachment-summarizer
-+    restart: unless-stopped
-+    ports:
-+      - "3000:3000"
++    env_file:
++      - .env
 +    environment:
 +      - NODE_ENV=production
-+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/attachment_summarizer
-+      - AWS_REGION=${AWS_REGION}
-+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-+      - SQS_QUEUE_URL=${SQS_QUEUE_URL}
-+      - GCS_BUCKET_NAME=${GCS_BUCKET_NAME}
-+      - GOOGLE_APPLICATION_CREDENTIALS=/app/credentials/gcs-key.json
 +      - OLLAMA_BASE_URL=http://ollama:11434
-+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3.2}
-+    volumes:
-+      - ./credentials:/app/credentials:ro
 +    depends_on:
-+      - db
++      - postgres
 +      - ollama
++    volumes:
++      - ./tmp:/tmp/attachments
 +    networks:
 +      - attachment-summarizer-network
++    restart: unless-stopped
 +
-+  db:
++  postgres:
 +    image: postgres:15-alpine
 +    container_name: attachment-summarizer-db
-+    restart: unless-stopped
 +    environment:
-+      - POSTGRES_USER=postgres
-+      - POSTGRES_PASSWORD=postgres
-+      - POSTGRES_DB=attachment_summarizer
++      POSTGRES_USER: postgres
++      POSTGRES_PASSWORD: postgres
++      POSTGRES_DB: attachment_summarizer
 +    volumes:
 +      - postgres_data:/var/lib/postgresql/data
++    ports:
++      - "5432:5432"
 +    networks:
 +      - attachment-summarizer-network
 +
 +  ollama:
 +    image: ollama/ollama:latest
-+    container_name: attachment-summarizer-ollama
-+    restart: unless-stopped
++    container_name: attachment-summarizer-llm
 +    volumes:
 +      - ollama_data:/root/.ollama
++    ports:
++      - "11434:11434"
 +    networks:
 +      - attachment-summarizer-network
-+    # GPU support (optional)
-+    # deploy:
-+    #   resources:
-+    #     reservations:
-+    #       devices:
-+    #         - driver: nvidia
-+    #           count: 1
-+    #           capabilities: [gpu]
++    # Pull default model on first start
++    entrypoint: >
++      sh -c "ollama serve & sleep 10 && ollama pull llama3.2 && wait"
 +
 +volumes:
 +  postgres_data:
@@ -167,10 +180,11 @@
 +networks:
 +  attachment-summarizer-network:
 +    driver: bridge
++
 --- /dev/null
-+++ b/b/services/attachment-summarizer/jest.config.js
++++ services/attachment-summarizer/jest.config.js
 @@ -0,0 +1,18 @@
-+/** @type {import('jest').Config} */
++/** @type {import('ts-jest').JestConfigWithTsJest} */
 +module.exports = {
 +  preset: 'ts-jest',
 +  testEnvironment: 'node',
@@ -187,7 +201,20 @@
 +  coverageDirectory: 'coverage',
 +  coverageReporters: ['text', 'lcov', 'html'],
 +  setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],
-+  testTimeout: 30000,
 +};
++
 --- /dev/null
-+++ 	b/services/
++++ services/attachment-summarizer/package.json
+@@ -0,0 +1,65 @@
++{
++  "name": "attachment-summarizer",
++  "version": "1.0.0",
++  "description": "Node.js service that consumes email attachment events from SQS, extracts content, and generates summaries using a local LLM",
++  "main": "dist/index.js",
++  "scripts": {
++    "build": "tsc",
++    "start": "node dist/index.js",
++    "dev": "ts-node-dev --respawn src/index.ts",
++    "test": "jest",
++    "test:watch": "jest --watch",
++    "test:coverage": "
