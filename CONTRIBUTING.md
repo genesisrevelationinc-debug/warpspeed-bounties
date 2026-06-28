@@ -30,37 +30,19 @@ Payment is processed only after:
 - maintainers approve it,
 # Contributing to warpSpeed Bounties
 
-Thank you for your interest in contributing to warpSpeed OPEN! This guide covers how to participate in our bounty programme and submit quality work.
+Thank you for your interest in contributing to warpSpeed OPEN! This guide covers how to participate in our bounty program.
 
 ## Getting Started
 
-### For Bounty Work
+1. Browse available bounties at [warpspeedopen.org/bounties](https://warpspeedopen.org/bounties)
+2. Sign up as a developer on our website
+3. Review the full bounty specification before starting
 
-1. **Browse Available Bounties**
-   - Visit [warpspeedopen.org/bounties](https://warpspeedopen.org/bounties)
-   - Review requirements, rewards, and deadlines
+## Bounty Claim Process
 
-2. **Sign Up as a Developer**
-   - Complete the developer registration at [warpspeedopen.org/signup](https://warpspeedopen.org/signup)
+### Step 1: Request Assignment
 
-3. **Claim a Bounty**
-   - Find the GitHub issue for the bounty you want
-   - Comment: "I have signed up and would like to claim this bounty."
-   - **Wait for maintainer confirmation before starting work**
-
-4. **Develop and Submit**
-   - Fork the repository
-   - Create a feature branch: `feature/bounty-[issue-number]-short-description`
-   - Submit your pull request before the deadline
-
-## Bounty-Specific Guidelines
-
-
-If you're working on the **Messenger Group Chat Poll Creation & Voting UI** bounty, please follow these additional guidelines:
-
-#### Project Structure
-
-Create your components under the following structure:
+Comment on the GitHub issue you want to work on:
 
 
 - and the PR is merged.
