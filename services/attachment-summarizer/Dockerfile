@@ -14,6 +14,7 @@ RUN npm ci
 COPY . .
 
 RUN npm run build
+RUN npm prune --production
 
 # Production stage
 FROM node:20-alpine AS production
@@ -26,6 +27,7 @@ RUN apk add --no-cache \
     poppler-utils \
     tesseract-ocr \
     tesseract-ocr-data-eng \
+    ffmpeg \
     && rm -rf /var/cache/apk/*
 
 # Create non-root user
