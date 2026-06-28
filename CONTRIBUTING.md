@@ -28,4 +28,17 @@ Payment is processed only after:
 
 - the submitted PR meets the acceptance criteria,
 - maintainers approve it,
+# Contributing to warpSpeed Bounties
+
+Thank you for your interest in contributing to warpSpeed OPEN! This guide covers how to participate in bounty tasks, submit work, and get paid.
+
+## Getting Started
+
+1. Browse available bounties at [warpspeedopen.org/bounties](https://warpspeedopen.org/bounties)
+2. Sign up as a developer on the website
+3. Find a bounty issue on GitHub and comment to claim
+4. Wait for maintainer confirmation before starting
+
+## Bounty-Specific Guidelines
+
 - and the PR is merged.
