@@ -30,24 +30,28 @@ Payment is processed only after:
 - maintainers approve it,
 # Contributing to warpSpeed Bounties
 
-Thank you for your interest in contributing! This document outlines the process for working on bounty tasks.
+Thank you for your interest in contributing to warpSpeed OPEN! This document outlines the process for participating in bounty tasks.
 
 ## Getting Started
 
-1. Browse open bounties in [BOUNTIES.md](BOUNTIES.md)
-2. Sign up at [warpspeedopen.org/signup](https://warpspeedopen.org/signup)
-3. Comment on the GitHub issue to request assignment
+1. Review open bounties in [BOUNTIES.md](BOUNTIES.md)
+2. Sign up as a developer at https://warpspeedopen.org/signup undertand the requirements
+3. Claim a bounty by commenting on the GitHub issue
 4. Wait for maintainer confirmation before starting work
 
 ## Development Workflow
 
-### 1. Claim a Bounty
+### Branch Naming
 
-Comment on the issue: *"I have signed up and would like to claim this bounty."*
+Use the format: `bounty/{issue-number}-{short-description}`
 
-A maintainer will confirm your claim. **Do not start work until confirmed.**
+Examples:
+- `bounty/1-email-threads-api`
+- `bounty/2-oauth-integration`
 
-### 2. Set Up Your Environment
+### Commit Messages
+
+Follow conventional commits:
 
 
 - and the PR is merged.
