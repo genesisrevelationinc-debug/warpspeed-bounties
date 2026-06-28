@@ -1,211 +1,182 @@
  ```diff
 --- /dev/null
-+++ b/src/components/Poll/Poll.styles.ts
-@@ -0,0 +1,234 @@
-+import { StyleSheet } from 'react-native';
++++ b/src/components/Poll/PollCreation.tsx
+@@ -0,0 +1,298 @@
++import React, { useState, useCallback } from 'react';
++import {
++  View,
++  Text,
++  TextInput,
++  TouchableOpacity,
++  ScrollView,
++  Switch,
++  StyleSheet,
++  KeyboardAvoidingView,
++  Platform,
++} from 'react-native';
++import { Ionicons } from '@expo/vector-icons';
 +
-+export const pollStyles = StyleSheet.create({
-+  container: {
-+    backgroundColor: '#FFFFFF',
-+    borderRadius: 12,
-+    padding: 12,
-+    marginVertical: 4,
-+    maxWidth: '80%',
-+    shadowColor: '#000',
-+    shadowOffset: { width: 0, height: 1 },
-+    shadowOpacity: 0.1,
-+    shadowRadius: 2,
-+    elevation: 2,
-+  },
-+  ownPoll: {
-+    backgroundColor: '#DCF8C6',
-+  },
-+  otherPoll: {
-+    backgroundColor: '#FFFFFF',
-+  },
-+  question: {
-+    fontSize: 15,
-+    fontWeight: '600',
-+    color: '#1A1A1A',
-+    marginBottom: 8,
-+    lineHeight: 20,
-+  },
-+  optionsList: {
-+    gap: 8,
-+  },
-+  optionContainer: {
-+    position: 'relative',
-+    borderRadius: 8,
-+    overflow: 'hidden',
-+    minHeight: 40,
-+    justifyContent: 'center',
-+  },
-+  optionBackground: {
-+    position: 'absolute',
-+    top: 0,
-+    left: 0,
-+    bottom: 0,
-+    backgroundColor: '#E3F2FD',
-+    borderRadius: 8,
-+  },
-+  optionContent: {
-+    flexDirection: 'row',
-+    alignItems: 'center',
-+    paddingHorizontal: 12,
-+    paddingVertical: 10,
-+    zIndex: 1,
-+  },
-+  optionText: {
-+    fontSize: 14,
-+    color: '#1A1A1A',
-+    flex: 1,
-+  },
-+  optionTextVoted: {
-+    fontWeight: '600',
-+  },
-+  percentageText: {
-+    fontSize: 13,
-+    color: '#666666',
-+    marginLeft: 8,
-+  },
-+  checkmark: {
-+    marginLeft: 6,
-+    color: '#4CAF50',
-+    fontSize: 14,
-+    fontWeight: '700',
-+  },
-+  footer: {
-+    flexDirection: 'row',
-+    justifyContent: 'space-between',
-+    alignItems: 'center',
-+    marginTop: 10,
-+    paddingTop: 8,
-+    borderTopWidth: 1,
-+    borderTopColor: '#E0E0E0',
-+  },
-+  votesCount: {
-+    fontSize: 12,
-+    color: '#888888',
-+  },
-+  viewVotesButton: {
-+    paddingVertical: 4,
-+    paddingHorizontal: 8,
-+  },
-+  viewVotesText: {
-+    fontSize: 13,
-+    color: '#2196F3',
-+    fontWeight: '600',
-+  },
-+  multipleChoiceBadge: {
-+    position: 'absolute',
-+    top: 8,
-+    right: 8,
-+    backgroundColor: '#FF9800',
-+    borderRadius: 4,
-+    paddingHorizontal: 6,
-+    paddingVertical: 2,
-+  },
-+  multipleChoiceText: {
-+    fontSize: 10,
-+    color: '#FFFFFF',
-+    fontWeight: '600',
-+  },
-+});
++export interface PollOption {
++  id: string;
++  text: string;
++}
 +
-+export const pollCreationStyles = StyleSheet.create({
++export interface PollData {
++  question: string;
++  options: PollOption[];
++  allowMultipleChoice: boolean;
++  createdAt: Date;
++}
++
++interface PollCreationProps {
++  onCreatePoll: (poll: PollData) => void;
++  onCancel: () => void;
++  maxOptions?: number;
++  maxQuestionLength?: number;
++}
++
++const MAX_OPTIONS_DEFAULT = 12;
++const MAX_QUESTION_LENGTH_DEFAULT = 255;
++
++export const PollCreation: React.FC<PollCreationProps> = ({
++  onCreatePoll,
++  onCancel,
++  maxOptions = MAX_OPTIONS_DEFAULT,
++  maxQuestionLength = MAX_QUESTION_LENGTH_DEFAULT,
++}) => {
++  const [question, setQuestion] = useState('');
++  const [options, setOptions] = useState<PollOption[]>([
++    { id: '1', text: '' },
++    { id: '2', text: '' },
++  ]);
++  const [allowMultipleChoice, setAllowMultipleChoice] = useState(false);
++
++  const addOption = useCallback(() => {
++    if (options.length >= maxOptions) return;
++    const newOption: PollOption = {
++      id: Date.now().toString(),
++      text: '',
++    };
++    setOptions((prev) => [...prev, newOption]);
++  }, [options.length, maxOptions]);
++
++  const removeOption = useCallback((id: string) => {
++    setOptions((prev) => prev.filter((opt) => opt.id !== id));
++  }, []);
++
++  const updateOption = useCallback((id: string, text: string) => {
++    setOptions((prev) =>
++      prev.map((opt) => (opt.id === id ? { ...opt, text } : opt))
++    );
++  }, []);
++
++  const handleCreatePoll = useCallback(() => {
++    const validOptions = options.filter((opt) => opt.text.trim().length > 0);
++    if (question.trim().length === 0 || validOptions.length < 2) return;
++
++    const pollData: PollData = {
++      question: question.trim(),
++      options: validOptions,
++      allowMultipleChoice,
++      createdAt: new Date(),
++    };
++
++    onCreatePoll(pollData);
++    setQuestion('');
++    setOptions([
++      { id: '1', text: '' },
++      { id: '2', text: '' },
++    ]);
++    setAllowMultipleChoice(false);
++  }, [question, options, allowMultipleChoice, onCreatePoll]);
++
++  const canCreatePoll =
++    question.trim().length > 0 &&
++    options.filter((opt) => opt.text.trim().length > 0).length >= 2;
++
++  return (
++    <KeyboardAvoidingView
++      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
++      style={styles.container}
++    >
++      <View style={styles.header}>
++        <TouchableOpacity onPress={onCancel} style={styles.closeButton}>
++          <Ionicons name="close" size={24} color="#666" />
++        </TouchableOpacity>
++        <Textain style={styles.headerTitle}>Create Poll</Text>
++        <TouchableOpacity
++          onPress={handleCreatePoll}
++          disabled={!canCreatePoll}
++          style={[styles.createButton, !canCreatePoll && styles.createButtonDisabled]}
++        >
++          <Text style={[styles.createButtonText, !canCreatePoll && styles.createButtonTextDisabled]}>
++            Create
++          </Text>
++        </TouchableOpacity>
++      </View>
++
++      <ScrollView style={styles.content} keyboardShouldPersistTaps="handled">
++        <TextInput
++          style={styles.questionInput}
++          placeholder="Ask a question..."
++          placeholderTextColor="#999"
++          value={question}
++          onChangeText={setQuestion}
++          maxLength={maxQuestionLength}
++          multiline
++        />
++        <Text style={styles.characterCount}>
++          {question.length}/{maxQuestionLength}
++        </Text>
++
++        <View style={styles.optionsContainer}>
++          {options.map((option, index) => (
++            <View key={option.id} style={styles.optionRow}>
++              <Text style={styles.optionNumber}>{index + 1}.</Text>
++              <TextInput
++                style={styles.optionInput}
++                placeholder={`Option ${index + 1}`}
++                placeholderTextColor="#999"
++                value={option.text}
++                onChangeText={(text) => updateOption(option.id, text)}
++              />
++              {options.length > 2 && (
++                <TouchableOpacity onPress={() => removeOption(option.id)}>
++                  <Ionicons name="close-circle" size={20} color="#FF4444" />
++                </TouchableOpacity>
++              )}
++            </View>
++          ))}
++        </View>
++
++        {options.length < maxOptions && (
++          <TouchableOpacity onPress={addOption} style={styles.addOptionButton}>
++            <Ionicons name="add-circle-outline" size={20} color="#007AFF" />
++            <Text style={styles.addOptionText}>Add Option</Text>
++          </TouchableOpacity>
++        )}
++
++        <View style={styles.multipleChoiceContainer}>
++          <Text style={styles.multipleChoiceText}>Allow multiple choice</Text>
++          <Switch
++            value={allowMultipleChoice}
++            onValueChange={setAllowMultipleChoice}
++            trackColor={{ false: '#767577', true: '#81b0ff' }}
++            thumbColor={allowMultipleChoice ? '#007AFF' : '#f4f3f4'}
++          />
++        </View>
++      </ScrollView>
++    </KeyboardAvoidingView>
++  );
++};
++
++const styles = StyleSheet.create({
 +  container: {
-+    backgroundColor: '#FFFFFF',
-+    borderRadius: 16,
-+    padding: 16,
-+    marginHorizontal: 16,
-+    marginVertical: 8,
-+  },
-+  title: {
-+    fontSize: 18,
-+    fontWeight: '700',
-+    color: '#1A1A1A',
-+    marginBottom: 16,
-+  },
-+  questionInput: {
-+    borderWidth: 1,
-+    borderColor: '#E0E0E0',
-+    borderRadius: 8,
-+    padding: 12,
-+    fontSize: 15,
-+    color: '#1A1A1A',
-+    minHeight: 48,
-+    marginBottom: 12,
-+  },
-+  optionsContainer: {
-+    gap: 8,
-+    marginBottom: 12,
-+  },
-+  optionInput: {
-+    borderWidth: 1,
-+    borderColor: '#E0E0E0',
-+    borderRadius: 8,
-+    padding: 12,
-+    fontSize: 14,
-+    color: '#1A1A1A',
 +    flex: 1,
++    backgroundColor: '#FFFFFF',
 +  },
-+  optionRow: {
-+    flexDirection: 'row',
-+    alignItems: 'center',
-+    gap: 8,
-+  },
-+  addOptionButton: {
-+    flexDirection: 'row',
-+    alignItems: 'center',
-+    paddingVertical: 10,
-+    paddingHorizontal: 12,
-+    borderRadius: 8,
-+    borderWidth: 1,
-+    borderColor: '#2196F3',
-+    borderStyle: 'dashed',
-+    justifyContent: 'center',
-+  },
-+  addOptionText: {
-+    fontSize: 14,
-+    color: '#2196F3',
-+    fontWeight: '600',
-+    marginLeft: 6,
-+  },
-+  settingsRow: {
++  header: {
 +    flexDirection: 'row',
 +    alignItems: 'center',
 +    justifyContent: 'space-between',
-+    marginBottom: 16,
-+  },
-+  settingsLabel: {
-+    fontSize: 14,
-+    color: '#1A1A1A',
-+  },
-+  createButton: {
-+    backgroundColor: '#2196F3',
-+    borderRadius: 8,
-+    paddingVertical: 14,
-+    alignItems: 'center',
-+  },
-+  createButtonDisabled: {
-+    backgroundColor: '#BDBDBD',
-+  },
-+  createButtonText: {
-+    fontSize: 16,
-+    fontWeight: '600',
-+    color: '#FFFFFF',
-+  },
-+  charCount: {
-+    fontSize: 12,
-+    color: '#888888',
-+    textAlign: 'right',
-+    marginBottom: 8,
-+  },
-+  removeOptionButton: {
-+    padding: 4,
-+  },
-+  removeOptionText: {
-+    fontSize: 18,
-+    color: '#F44336',
-+    fontWeight: '600',
-+  },
++   
