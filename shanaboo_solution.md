@@ -1,7 +1,7 @@
  ```diff
 --- /dev/null
-+++ b/src/components/Poll/PollCreation.stories.tsx
-@@ -0,0 +1,42 @@
++++ b/src/components/poll/PollCreation.stories.tsx
+@@ -0,0 +1,72 @@
 +import React from 'react';
 +import { ComponentStory, ComponentMeta } from '@storybook/react-native';
 +import { PollCreation } from './PollCreation';
@@ -15,33 +15,68 @@
 +
 +export const Default = Template.bind({});
 +Default.args = {
-+  onCreatePoll: (poll) => console.log('Poll created:', poll),
-+  onCancel: () => console.log('Cancelled'),
++  maxOptions: 12,
++  maxQuestionLength: 255,
 +};
 +
-+export const WithMaxOptions = Template.bind({});
-+WithMaxOptions.args = {
-+  onCreatePoll: (poll) => console.log('Poll created:', poll),
-+  onCancel: () => console.log('Cancelled'),
++export const WithQuestion = Template.bind({});
++WithQuestion.args = {
++  ...Default.args,
++  initialQuestion: 'What time should we meet?',
++};
++
++export const WithOptions = Template.bind({});
++WithOptions.args = {
++  ...Default.args,
++  initialQuestion: 'What time should we meet?',
++  initialOptions: ['6:00 PM', '7:00 PM', '8:00 PM'],
++};
++
++export const MaxOptionsReached = Template.bind({});
++MaxOptionsReached.args = {
++  ...Default.args,
++  initialQuestion: 'Vote for your favorite color',
++  initialOptions: [
++    'Red', 'Blue', 'Green', 'Yellow', 'Purple', 'Orange',
++    'Pink', 'Black', 'White', 'Gray', 'Brown', 'Cyan',
++  ],
 +};
 +
 +export const SingleChoice = Template.bind({});
 +SingleChoice.args = {
-+  onCreatePoll: (poll) => console.log('Poll created:', poll),
-+  onCancel: () => console.log('Cancelled'),
-+  defaultAllowMultiple: false,
++  ...Default.args,
++  initialQuestion: 'Single choice poll',
++  initialOptions: ['Option A', 'Option B'],
++  allowMultipleChoice: false,
 +};
 +
 +export const MultipleChoice = Template.bind({});
 +MultipleChoice.args = {
-+  onCreatePoll: (poll) => console.log('Poll created:', poll),
-+  onCancel: () => console.log('Cancelled'),
-+  defaultAllowMultiple: true,
++  ...Default.args,
++  initialQuestion: 'Multiple choice poll',
++  initialOptions: ['Option A', 'Option B', 'Option C'],
++  allowMultipleChoice: true,
 +};
++
++export const LongQuestion = Template.bind({});
++LongQuestion.args = {
++  ...Default.args,
++  initialQuestion: 'This is a very long question that demonstrates the character limit behavior when the user types more than the allowed number of characters in the poll question field',
++  initialOptions: ['Yes', 'No'],
++};
++
++export const ValidationError = Template.bind({});
++ValidationError.args = {
++  ...Default.args,
++  initialQuestion: '',
++  initialOptions: ['', 'Valid option'],
++  showValidation: true,
++};
++
 +--- /dev/null
-+++ src/components/Poll/PollCreation.tsx
-@@ -0,0 +1,242 @@
-+import React, { useState, useCallback } from 'react';
++++ src/components/poll/PollCreation.tsx
+@@ -0,0 +1,298 @@
++import React, { useState, useCallback, useRef } from 'react';
 +import {
 +  View,
 +  Text,
@@ -49,139 +84,100 @@
 +  TouchableOpacity,
 +  ScrollView,
 +  StyleSheet,
-+  Switch,
++  KeyboardAvoidingView,
++  Platform,
 +} from 'react-native';
-+
-+export interface PollOption {
-+  id: string;
-+  text: string;
-+}
-+
-+export interface PollData {
-+  question: string;
-+  options: PollOption[];
-+  allowMultiple: boolean;
-+  createdAt: Date;
-+}
++import { PollOption, PollType } from './types';
 +
 +interface PollCreationProps {
-+  onCreatePoll: (poll: PollData) => void;
-+  onCancel: () => void;
-+  defaultAllowMultiple?: boolean;
++  maxOptions?: number;
++  maxQuestionLength?: number;
++  onCreatePoll: (poll: {
++    question: string;
++    options: PollOption[];
++    type: PollType;
++  }) => void;
++  onCancel?: () => void;
++  initialQuestion?: string;
++  initialOptions?: string[];
++  allowMultipleChoice?: boolean;
++  showValidation?: boolean;
 +}
 +
-+const MAX_OPTIONS = 12;
-+const MAX_QUESTION_LENGTH = 255;
-+
 +export const PollCreation: React.FC<PollCreationProps> = ({
++  maxOptions = 12,
++  maxQuestionLength = 255,
 +  onCreatePoll,
 +  onCancel,
-+  defaultAllowMultiple = false,
++  initialQuestion = '',
++  initialOptions = [],
++  allowMultipleChoice = false,
++  showValidation = false,
 +}) => {
-+  const [question, setQuestion] = useState('');
-+  const [options, setOptions] = useState<PollOption[]>([
-+    { id: '1', text: '' },
-+    { id: '2', text: '' },
-+  ]);
-+  const [allowMultiple, setAllowMultiple] = useState(defaultAllowMultiple);
++  const [question, setQuestion] = useState(initialQuestion);
++  const [options, setOptions] = useState<PollOption[]>(
++    initialOptions.length > 0
++      ? initialOptions.map((text, index) => ({
++          id: `option-${index}`,
++          text,
++          voteCount: 0,
++        }))
++      : [{ id: 'option-0', text: '', voteCount: 0 }]
++  );
++  const [pollType, setPollType] = useState<PollType>(
++    allowMultipleChoice ? PollType.MULTIPLE_CHOICE : PollType.SINGLE_CHOICE
++  );
++  const [errors, setErrors] = useState<Record<string, string>>({});
 +
-+  const addOption = useCallback(() => {
-+    if (options.length >= MAX_OPTIONS) return;
-+    setOptions((prev) => [
-+      ...prev,
-+      { id: Date.now().toString(), text: '' },
-+    ]);
-+  }, [options.length]);
++  const optionRefs = useRef<(TextInput | null)[]>([]);
 +
-+  const removeOption = useCallback((id: string) => {
-+    setOptions((prev) => prev.filter((opt) => opt.id !== id));
++  const validate = useCallback(() => {
++    const newErrors: Record<string, string> = {};
++
++    if (!question.trim()) {
++      newErrors.question = 'Please enter a poll question';
++    } else if (question.length > maxQuestionLength) {
++      newErrors.question = `Question must be ${maxQuestionLength} characters or less`;
++    }
++
++    const validOptions = options.filter((o) => o.text.trim());
++    if (validOptions.length < 2) {
++      newErrors.options = 'Please provide at least 2 options';
++    }
++
++    const emptyOptionIndex = options.findIndex((o, i) => !o.text.trim() && i < validOptions.length);
++    if (emptyOptionIndex !== -1) {
++      newErrors[`option-${emptyOptionIndex}`] = 'Option cannot be empty';
++    }
++
++    setErrors(newErrors);
++    return Object.keys(newErrors).length === 0;
++  }, [question, options, maxQuestionLength]);
++
++  const handleAddOption = useCallback(() => {
++    if (options.length >= maxOptions) return;
++    const newOption: PollOption = {
++      id: `option-${Date.now()}`,
++      text: '',
++      voteCount: 0,
++    };
++    setOptions((prev) => [...prev, newOption]);
++    setTimeout(() => {
++      optionRefs.current[options.length]?.focus();
++    }, 100);
++  }, [options.length, maxOptions]);
++
++  const handleRemoveOption = useCallback((index: number) => {
++    setOptions((prev) => prev.filter((_, i) => i !== index));
 +  }, []);
 +
-+  const updateOption = useCallback((id: string, text: string) => {
++  const handleOptionChange = useCallback((index: number, text: string) => {
 +    setOptions((prev) =>
-+      prev.map((opt) => (opt.id === id ? { ...opt, text } : opt))
++      prev.map((opt, i) => (i === index ? { ...opt, text } : opt))
 +    );
 +  }, []);
 +
 +  const handleCreatePoll = useCallback(() => {
-+    const validOptions = options.filter((opt) => opt.text.trim().length > 0);
-+    if (question.trim().length === 0 || validOptions.length < 2) return;
++    if (!validate()) return;
 +
-+    onCreatePoll({
-+      question: question.trim(),
-+      options: validOptions,
-+      allowMultiple,
-+      createdAt: new Date(),
-+    });
-+  }, [question, options, allowMultiple, onCreatePoll]);
-+
-+  const canCreatePoll =
-+    question.trim().length > 0 &&
-+    options.filter((opt) => opt.text.trim().length > 0).length >= 2;
-+
-+  return (
-+    <View style={styles.container}>
-+      <View style={styles.header}>
-+        <TouchableOpacity onPress={onCancel}>
-+          <Text style={styles.cancelText}>Cancel</Text>
-+        </TouchableOpacity>
-+        <Text style={styles.title}>Create Poll</Text>
-+        <TouchableOpacity
-+          onPress={handleCreatePoll}
-+          disabled={!canCreatePoll}
-+          style={[styles.createButton, !canCreatePoll && styles.createButtonDisabled]}
-+        >
-+          <Text style={[styles.createButtonText, !canCreatePoll && styles.createButtonTextDisabled]}>
-+            Create
-+          </Text>
-+        </TouchableOpacity>
-+      </View>
-+
-+      <ScrollView style={styles.scrollView}>
-+        <TextInput
-+          style={styles.questionInput}
-+          placeholder="Ask a question..."
-+          placeholderTextColor="#999"
-+          value={question}
-+          onChangeText={setQuestion}
-+          maxLength={MAX_QUESTION_LENGTH}
-+          multiline
-+        />
-+        <Text style={styles.characterCount}>
-+          {question.length}/{MAX_QUESTION_LENGTH}
-+        </Text>
-+
-+        <View style={styles.optionsContainer}>
-+          {options.map((option, index) => (
-+            <View key={option.id} style={styles.optionRow}>
-+              <TextInput
-+                style={styles.optionInput}
-+                placeholder={`Option ${index + 1}`}
-+                placeholderTextColor="#999"
-+                value={option.text}
-+                onChangeText={(text) => updateOption(option.id, text)}
-+              />
-+              {options.length > 2 && (
-+                <TouchableOpacity
-+                  onPress={() => removeOption(option.id)}
-+                  style={styles.removeButton}
-+                >
-+                  <Text style={styles.removeButtonText}>×</Text>
-+                </TouchableOpacity>
-+              )}
-+            </View>
-+          ))}
-+        </View>
-+
-+        {options.length < MAX_OPTIONS && (
-+          <TouchableOpacity onPress={addOption} style={styles.addOptionButton}>
-+            <Text style={styles.addOptionText}>+ Add Option</Text>
-+          </TouchableOpacity>
-+        )}
-+
-+        <View style={styles.multipleChoiceRow}>
-+          <Text style={styles.multipleChoiceText}>Allow multiple choices</Text>
-+          <Switch
-+            value={allowMultiple}
-+            onValueChange={setAllowMultiple}
-+            trackColor={{ false:
++    const validOptions = options.filter((
