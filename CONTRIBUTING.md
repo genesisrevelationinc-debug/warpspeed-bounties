@@ -34,60 +34,33 @@ Thank you for your interest in contributing to warpSpeed OPEN! This guide covers
 
 ## Getting Started
 
-1. Browse available bounties at [warpspeedopen.org/bounties](https://warpspeedopen.org/bounties)
-2. Sign up as a developer on our website
-3. Find a bounty issue on GitHub and comment to claim
-4. Wait for maintainer confirmation before starting work
+### For Bounty Work
 
-## Bounty Workflow
+1. **Browse Available Bounties**
+   - Visit [warpspeedopen.org/bounties](https://warpspeedopen.org/bounties)
+   - Review requirements, rewards, and deadlines
 
-### Claiming a Bounty
+2. **Sign Up as a Developer**
+   - Complete the developer registration at [warpspeedopen.org/signup](https://warpspeedopen.org/signup)
 
-1. Comment on the GitHub issue: **"I have signed up and would like to claim this bounty."**
-2. A maintainer will confirm your claim
-3. **Do not start work until confirmed**
+3. **Claim a Bounty**
+   - Find the GitHub issue for the bounty you want
+   - Comment: "I have signed up and would like to claim this bounty."
+   - **Wait for maintainer confirmation before starting work**
 
-1. Fork the repository and create a feature branch
-2. Review the full bounty specification on the official bounty page
-3. Implement the feature according to requirements
-4. Include Storybook stories for all UI components
-5. Ensure TypeScript types are complete and accurate
-6. Test on both iOS and Android if applicable
+4. **Develop and Submit**
+   - Fork the repository
+   - Create a feature branch: `feature/bounty-[issue-number]-short-description`
+   - Submit your pull request before the deadline
 
-- Code must be original or properly licensed
-- Include all necessary files for the feature to work
-- Provide Storybook composed view for the full user experience
-- Document any new dependencies or setup steps
-- Ensure 90%+ specification match
+## Bounty-Specific Guidelines
 
-1. Reference the bounty issue number in your PR description
-2. Include screenshots or screen recordings for UI changes
-3. Describe any deviations from the specification and rationale
-4. Respond promptly to review comments
-5. Maximum 3 submission attempts per bounty
 
-- Payment is made only at 100% completion
-- Payment is processed only after the pull request is approved and merged
-- Ensure your payment details are up to date in your developer profile
+If you're working on the **Messenger Group Chat Poll Creation & Voting UI** bounty, please follow these additional guidelines:
 
-- Use functional components with hooks
-- Define comprehensive TypeScript interfaces
-- Follow existing code style and patterns
-- Optimize for mobile performance
+#### Project Structure
 
-- Build reusable, composable components
-- Support both light and dark themes where applicable
-- Ensure accessibility with proper labels and roles
-- Test on multiple screen sizes
+Create your components under the following structure:
 
-- Create stories for all new components
-- Include composed views showing full user flows
-- Document component props and usage
-- Use knobs/controls for interactive testing
 
-- GitHub issues for technical discussions
-- Bounty page for specification questions
-- Be respectful and professional in all interactions
-
-Contact us through the [developer portal](https://warpspeedopen.org/signup) or check our [Discord community](https://warpspeedopen.org/discord).
 - and the PR is merged.
