@@ -1,80 +1,47 @@
  ```diff
 --- /dev/null
 +++ b/services/attachment-summarizer/.env.example
-@@ -0,0 +1,21 @@
+@@ -0,0 +1,22 @@
 +# AWS SQS Configuration
 +AWS_REGION=us-east-1
 +AWS_ACCESS_KEY_ID=your-access-key
 +AWS_SECRET_ACCESS_KEY=your-secret-key
 +SQS_QUEUE_URL=https://sqs.us-east-1.amazonaws.com/123456789012/attachment-events
++SQS_VISIBILITY_TIMEOUT=300
++SQS_WAIT_TIME_SECONDS=20
++SQS_MAX_NUMBER_OF_MESSAGES=10
 +
 +# Google Cloud Storage Configuration
 +GCS_PROJECT_ID=your-gcs-project-id
 +GCS_BUCKET_NAME=your-attachment-bucket
-+GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account-key.json
++GCS_KEY_FILE_PATH=./gcs-service-account-key.json
 +
 +# Ollama / LLM Configuration
 +OLLAMA_BASE_URL=http://localhost:11434
 +OLLAMA_MODEL=llama3.2
-+SUMMARY_MAX_TOKENS=500
++OLLAMA_SUMMARY_MAX_TOKENS=500
 +
 +# Application Configuration
 +NODE_ENV=development
 +LOG_LEVEL=info
-+PROCESSING_TIMEOUT_MS=300000
 +MAX_FILE_SIZE_MB=50
-+
 --- /dev/null
-+++ services/attachment-summarizer/.gitignore
-@@ -0,0 +1,35 @@
-+# Dependencies
++++ b/services/attachment-summarizer/.gitignore
+@@ -0,0 +1,5 @@
 +node_modules/
-+package-lock.json
-+yarn.lock
-+
-+# Build output
 +dist/
-+build/
-+*.tsbuildinfo
-+
-+# Environment variables
 +.env
-+.env.local
-+.env.*.local
-+
-+# Logs
-+logs/
 +*.log
-+npm-debug.log*
-+
-+# Testing
-+coverage/
-+.nyc_output/
-+
-+# IDE
-+.idea/
-+.vscode/
-+*.swp
-+*.swo
-+
-+# OS
-+.DS_Store
-+Thumbs.db
-+
-+# Temporary files
-+tmp/
-+temp/
-+uploads/
-+
++gcs-service-account-key.json
 --- /dev/null
-+++ services/attachment-summarizer/Dockerfile
-@@ -0,0 +1,45 @@
++++ b/services/attachment-summarizer/Dockerfile
+@@ -0,0 +1,52 @@
 +# Build stage
 +FROM node:20-alpine AS builder
 +
 +WORKDIR /app
 +
-+# Install dependencies for native modules
++# Install dependencies for building native modules
 +RUN apk add --no-cache python3 make g++
 +
 +COPY package*.json ./
@@ -94,16 +61,18 @@
 +
 +# Install runtime dependencies for file processing
 +RUN apk add --no-cache \
++    python3 \
 +    libreoffice \
 +    poppler-utils \
 +    tesseract-ocr \
 +    tesseract-ocr-data-eng \
-+    && rm -rf /var/cache/apk/*
++    && ln -sf python3 /usr/bin/python
 +
 +# Create non-root user
 +RUN addgroup -g 1001 -S nodejs && \
 +    adduser -S nodejs -u 1001
 +
++# Copy built application
 +COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
 +COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
 +COPY --from=builder --chown=nodejs:nodejs /app/package*.json ./
@@ -111,16 +80,18 @@
 +
 +USER nodejs
 +
++ENV NODE_ENV=production
++ENV PORT=3000
++
 +EXPOSE 3000
 +
 +HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-+    CMD node -e "require.resolve('./dist/healthcheck.js')" || exit 1
++    CMD node -e "require('http').get('http://localhost:3000/health', (r) => r.statusCode === 200 ? process.exit(0) : process.exit(1))"
 +
 +CMD ["node", "dist/index.js"]
-+
 --- /dev/null
-+++ services/attachment-summarizer/docker-compose.yml
-@@ -0,0 +1,68 @@
++++ b/services/attachment-summarizer/docker-compose.yml
+@@ -0,0 +1,56 @@
 +version: '3.8'
 +
 +services:
@@ -129,92 +100,84 @@
 +      context: .
 +      dockerfile: Dockerfile
 +    container_name: attachment-summarizer
++    restart: unless-stopped
++    ports:
++      - "3000:3000"
 +    environment:
 +      - NODE_ENV=production
-+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/attachments?schema=public
-+      - REDIS_URL=redis://redis:6379
-+    env_file:
-+      - .env
-+    depends_on:
-+      db:
-+        condition: service_healthy
-+      redis:
-+        condition: service_started
-+      ollama:
-+        condition: service_started
++      - AWS_REGION=${AWS_REGION}
++      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
++      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
++      - SQS_QUEUE_URL=${SQS_QUEUE_URL}
++      - GCS_PROJECT_ID=${GCS_PROJECT_ID}
++      - GCS_BUCKET_NAME=${GCS_BUCKET_NAME}
++      - OLLAMA_BASE_URL=http://ollama:11434
++      - OLLAMA_MODEL=${OLLAMA_MODEL}
++      - DATABASE_URL=postgresql://postgres:postgres@db:5432/attachment_summarizer
 +    volumes:
-+      - ./tmp:/app/tmp
++      - ./gcs-service-account-key.json:/app/gcs-service-account-key.json:ro
++    depends_on:
++      - db
++      - ollama
 +    networks:
-+      - attachment-network
++      - attachment-summarizer-network
 +
 +  db:
 +    image: postgres:15-alpine
-+    container_name: attachment-db
++    container_name: attachment-summarizer-db
++    restart: unless-stopped
 +    environment:
-+      POSTGRES_USER: postgres
-+      POSTGRES_PASSWORD: postgres
-+      POSTGRES_DB: attachments
++      - POSTGRES_USER=postgres
++      - POSTGRES_PASSWORD=postgres
++      - POSTGRES_DB=attachment_summarizer
 +    volumes:
-+      - postgres-data:/var/lib/postgresql/data
-+    healthcheck:
-+      test: ["CMD-SHELL", "pg_isready -U postgres"]
-+      interval: 5s
-+      timeout: 5s
-+      retries: 5
++      - postgres_data:/var/lib/postgresql/data
 +    networks:
-+      - attachment-network
-+
-+  redis:
-+    image: redis:7-alpine
-+    container_name: attachment-redis
-+    networks:
-+      - attachment-network
++      - attachment-summarizer-network
 +
 +  ollama:
 +    image: ollama/ollama:latest
-+    container_name: attachment-ollama
++    container_name: attachment-summarizer-ollama
++    restart: unless-stopped
 +    volumes:
-+      - ollama-data:/root/.ollama
-+    environment:
-+      - OLLAMA_HOST=0.0.0.0
++      - ollama_data:/root/.ollama
 +    networks:
-+      - attachment-network
++      - attachment-summarizer-network
++    # Pre-pull the model on first run
++    entrypoint: ["/bin/sh", "-c", "ollama serve & sleep 10 && ollama pull ${OLLAMA_MODEL:-llama3.2} && wait"]
 +
 +volumes:
-+  postgres-data:
-+  ollama-data:
++  postgres_data:
++  ollama_data:
 +
 +networks:
-+  attachment-network:
++  attachment-summarizer-network:
 +    driver: bridge
-+
 --- /dev/null
-+++ services/attachment-summarizer/jest.config.js
-@@ -0,0 +1,20 @@
++++ b/services/attachment-summarizer/jest.config.js
+@@ -0,0 +1,18 @@
 +/** @type {import('ts-jest').JestConfigWithTsJest} */
 +module.exports = {
 +  preset: 'ts-jest',
 +  testEnvironment: 'node',
 +  roots: ['<rootDir>/src'],
-+  testMatch: ['**/__tests__/**/*.test.ts', '**/?(*.)+(spec|test).ts'],
++  testMatch: ['**/__tests__/**/*.test.ts'],
 +  transform: {
-+    '^.+\\.ts$': 'ts-jest',
++    '^.+\\.tsx?$': 'ts-jest',
++  },
++  moduleNameMapper: {
++    '^@/(.*)$': '<rootDir>/src/$1',
 +  },
 +  collectCoverageFrom: [
 +    'src/**/*.ts',
 +    '!src/**/*.d.ts',
 +    '!src/**/__tests__/**',
 +  ],
-+  coverageDirectory: 'coverage',
-+  coverageReporters: ['text', 'lcov', 'html'],
 +  setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],
-+  testTimeout: 30000,
 +};
-+
 --- /dev/null
-+++ services/attachment-summarizer/package.json
-@@ -0,0 +1,65 @@
++++ b/services/attachment-summarizer/package.json
+@@ -0,0 +1,62 @@
 +{
 +  "name": "attachment-summarizer",
-+  "version": "1.0.0",
-+  "description": "Node.js service that consumes email attachment events from SQS
++ 
