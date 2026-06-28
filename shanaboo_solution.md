@@ -1,7 +1,7 @@
  ```diff
 --- /dev/null
-+++ b/src/components/poll/PollCreation.stories.tsx
-@@ -0,0 +1,78 @@
++++ b/src/components/Poll/PollCreation.stories.tsx
+@@ -0,0 +1,42 @@
 +import React from 'react';
 +import { ComponentStory, ComponentMeta } from '@storybook/react-native';
 +import { PollCreation } from './PollCreation';
@@ -25,14 +25,22 @@
 +  onCancel: () => console.log('Cancelled'),
 +};
 +
-+export const WithLongQuestion = Template.bind({});
-+WithLongQuestion.args = {
++export const SingleChoice = Template.bind({});
++SingleChoice.args = {
 +  onCreatePoll: (poll) => console.log('Poll created:', poll),
 +  onCancel: () => console.log('Cancelled'),
++  defaultAllowMultiple: false,
++};
++
++export const MultipleChoice = Template.bind({});
++MultipleChoice.args = {
++  onCreatePoll: (poll) => console.log('Poll created:', poll),
++  onCancel: () => console.log('Cancelled'),
++  defaultAllowMultiple: true,
 +};
 +--- /dev/null
-++++ src/components/poll/PollCreation.tsx
-@@ -0,0 +1,264 @@
++++ src/components/Poll/PollCreation.tsx
+@@ -0,0 +1,242 @@
 +import React, { useState, useCallback } from 'react';
 +import {
 +  View,
@@ -41,8 +49,7 @@
 +  TouchableOpacity,
 +  ScrollView,
 +  StyleSheet,
-+  KeyboardAvoidingView,
-+  Platform,
++  Switch,
 +} from 'react-native';
 +
 +export interface PollOption {
@@ -51,46 +58,40 @@
 +}
 +
 +export interface PollData {
-+  id: string;
 +  question: string;
 +  options: PollOption[];
-+  allowMultipleChoice: boolean;
++  allowMultiple: boolean;
 +  createdAt: Date;
-+  totalParticipants: number;
 +}
 +
 +interface PollCreationProps {
 +  onCreatePoll: (poll: PollData) => void;
 +  onCancel: () => void;
-+  maxOptions?: number;
-+  questionMaxLength?: number;
++  defaultAllowMultiple?: boolean;
 +}
 +
 +const MAX_OPTIONS = 12;
-+const QUESTION_MAX_LENGTH = 255;
++const MAX_QUESTION_LENGTH = 255;
 +
 +export const PollCreation: React.FC<PollCreationProps> = ({
 +  onCreatePoll,
 +  onCancel,
-+  maxOptions = MAX_OPTIONS,
-+  questionMaxLength = QUESTION_MAX_LENGTH,
++  defaultAllowMultiple = false,
 +}) => {
 +  const [question, setQuestion] = useState('');
 +  const [options, setOptions] = useState<PollOption[]>([
 +    { id: '1', text: '' },
 +    { id: '2', text: '' },
 +  ]);
-+  const [allowMultipleChoice, setAllowMultipleChoice] = useState(false);
-+  const [errors, setErrors] = useState<Record<string, string>>({});
++  const [allowMultiple, setAllowMultiple] = useState(defaultAllowMultiple);
 +
 +  const addOption = useCallback(() => {
-+    if (options.length >= maxOptions) return;
-+    const newOption: PollOption = {
-+      id: Date.now().toString(),
-+      text: '',
-+    };
-+    setOptions((prev) => [...prev, newOption]);
-+  }, [options.length, maxOptions]);
++    if (options.length >= MAX_OPTIONS) return;
++    setOptions((prev) => [
++      ...prev,
++      { id: Date.now().toString(), text: '' },
++    ]);
++  }, [options.length]);
 +
 +  const removeOption = useCallback((id: string) => {
 +    setOptions((prev) => prev.filter((opt) => opt.id !== id));
@@ -102,74 +103,55 @@
 +    );
 +  }, []);
 +
-+  const validate = (): boolean => {
-+    const newErrors: Record<string, string> = {};
++  const handleCreatePoll = useCallback(() => {
++    const validOptions = options.filter((opt) => opt.text.trim().length > 0);
++    if (question.trim().length === 0 || validOptions.length < 2) return;
 +
-+    if (!question.trim()) {
-+      newErrors.question = 'Question is required';
-+    } else if (question.length > questionMaxLength) {
-+      newErrors.question = `Question must be less than ${questionMaxLength} characters`;
-+    }
-+
-+    const validOptions = options.filter((opt) => opt.text.trim());
-+    if (validOptions.length < 2) {
-+      newErrors.options = 'At least 2 options are required';
-+    }
-+
-+    setErrors(newErrors);
-+    return Object.keys(newErrors).length === 0;
-+  };
-+
-+  const handleCreate = () => {
-+    if (!validate()) return;
-+
-+    const poll: PollData = {
-+      id: Date.now().toString(),
++    onCreatePoll({
 +      question: question.trim(),
-+      options: options.filter((opt) => opt.text.trim()),
-+      allowMultipleChoice,
++      options: validOptions,
++      allowMultiple,
 +      createdAt: new Date(),
-+      totalParticipants: 0,
-+    };
++    });
++  }, [question, options, allowMultiple, onCreatePoll]);
 +
-+    onCreatePoll(poll);
-+  };
-+
-+  const canAddMore = options.length < maxOptions;
++  const canCreatePoll =
++    question.trim().length > 0 &&
++    options.filter((opt) => opt.text.trim().length > 0).length >= 2;
 +
 +  return (
-+    <KeyboardAvoidingView
-+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-+      style={styles.container}
-+    >
-+      <ScrollView style={styles.scrollView}>
-+        <View style={styles.header}>
-+          <Text style={styles.title}>Create Poll</Text>
-+          <TouchableOpacity onPress={onCancel}>
-+            <Text style={styles.cancelText}>Cancel</Text>
-+          </TouchableOpacity>
-+        </View>
-+
-+        <View style={styles.questionContainer}>
-+          <TextInput
-+            style={[styles.questionInput, errors.question && styles.inputError]}
-+            placeholder="Ask a question..."
-+            placeholderTextColor="#999"
-+            value={question}
-+            onChangeText={setQuestion}
-+            maxLength={questionMaxLength}
-+            multiline
-+          />
-+          <Text style={styles.characterCount}>
-+            {question.length}/{questionMaxLength}
++    <View style={styles.container}>
++      <View style={styles.header}>
++        <TouchableOpacity onPress={onCancel}>
++          <Text style={styles.cancelText}>Cancel</Text>
++        </TouchableOpacity>
++        <Text style={styles.title}>Create Poll</Text>
++        <TouchableOpacity
++          onPress={handleCreatePoll}
++          disabled={!canCreatePoll}
++          style={[styles.createButton, !canCreatePoll && styles.createButtonDisabled]}
++        >
++          <Text style={[styles.createButtonText, !canCreatePoll && styles.createButtonTextDisabled]}>
++            Create
 +          </Text>
-+          {errors.question && (
-+            <Text style={styles.errorText}>{errors.question}</Text>
-+          )}
-+        </View>
++        </TouchableOpacity>
++      </View>
++
++      <ScrollView style={styles.scrollView}>
++        <TextInput
++          style={styles.questionInput}
++          placeholder="Ask a question..."
++          placeholderTextColor="#999"
++          value={question}
++          onChangeText={setQuestion}
++          maxLength={MAX_QUESTION_LENGTH}
++          multiline
++        />
++        <Text style={styles.characterCount}>
++          {question.length}/{MAX_QUESTION_LENGTH}
++        </Text>
 +
 +        <View style={styles.optionsContainer}>
-+          <Text style={styles.sectionTitle}>Options</Text>
 +          {options.map((option, index) => (
 +            <View key={option.id} style={styles.optionRow}>
 +              <TextInput
@@ -187,4 +169,19 @@
 +                  <Text style={styles.removeButtonText}>×</Text>
 +                </TouchableOpacity>
 +              )}
-+           
++            </View>
++          ))}
++        </View>
++
++        {options.length < MAX_OPTIONS && (
++          <TouchableOpacity onPress={addOption} style={styles.addOptionButton}>
++            <Text style={styles.addOptionText}>+ Add Option</Text>
++          </TouchableOpacity>
++        )}
++
++        <View style={styles.multipleChoiceRow}>
++          <Text style={styles.multipleChoiceText}>Allow multiple choices</Text>
++          <Switch
++            value={allowMultiple}
++            onValueChange={setAllowMultiple}
++            trackColor={{ false:
