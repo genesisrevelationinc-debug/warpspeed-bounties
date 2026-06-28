@@ -1,232 +1,182 @@
-Looking at the bounty requirements, I need to create a note locking feature with biometric/PIN authentication. Since the repository only contains documentation files and no actual source code, I'll need to add the implementation. Based on the structure, I'll create the necessary files for the note locking feature.
-
-```diff ---
-
-Add authentication.ts to implement note locking with biometrics/PIN support
---- a/src/services/AuthenticationService.ts
-+++ b/src/services/AuthenticationService.ts
-@@ -1,0 +1,1 @@
-+// This file was not found in the provided files, so I'll create a new implementation
-+// for note locking functionality
-+import { NativeModules } from 'react-native';
+ ```diff
+--- /dev/null
++++ b/src/components/NoteLockScreen.tsx
+@@ -0,0 +1,256 @@
++import React, { useState, useCallback, useEffect } from 'react';
++import {
++  View,
++  Text,
++  StyleSheet,
++  TouchableOpacity,
++  TextInput,
++  Platform,
++  ActivityIndicator,
++} from 'react-native';
++import * as LocalAuthentication from 'expo-local-authentication';
++import { NoteLockScreenProps } from '../types/note-lock.types';
++import { LockState } from '../types/note.types';
 +
-+export class AuthenticationManager {
-+  private static instance: AuthenticationManager;
-+  private static isCreatingInstance = false;
-+  
-+  // Mock implementation for the note locking system
-+  static async requestDeviceAuth(reason: string): Promise<boolean> {
-+    return new Promise((resolve) => {
-+      // Mock biometric authentication
-+      resolve(true);
-+    });
-+  }
++const PIN_LENGTH = 4;
 +
-+  static async biometricAuth(): Promise<boolean> {
-+    return new Promise((resolve) => {
-+      // Mock biometric authentication
-+      resolve(true);
-+    });
-+  }
++export const NoteLockScreen: React.FC<NoteLockScreenProps> = ({
++  noteTitle,
++  lockState,
++  onAuthenticate,
++  onCancel,
++  theme = 'light',
++}) => {
++  const [pin, setPin] = useState('');
++  const [error, setError] = useState<string | null>(null);
++  const [isAuthenticating, setIsAuthenticating] = useState(false);
++  const [biometricType, setBiometricType] = useState<string | null>(null);
 +
-+  static async deviceAuth(): Promise<boolean> {
-+    return new Promise((resolve) => {
-+      // Mock device authentication
-+      resolve(true);
-+    });
-+  }
-+}
++  const isDark = theme === 'dark';
 +
-+export class NoteLockService {
-+  static async encryptNote(noteId: string): Promise<void> {
-+    // Mock note encryption
-+    return new Promise((resolve) => {
-+      // Mock implementation
-+      resolve();
-+    });
-+  }
-+}
++  useEffect(() => {
++    checkBiometricSupport();
++  }, []);
 +
-+export class NoteLockService {
-+  static async decryptNote(noteId: string): Promise<void> {
-+    // Mock implementation
-+    return new Promise((resolve) => {
-+      // Mock note decryption
-+      resolve();
-+    });
-+  }
++  const checkBiometricSupport = async () => {
++    const hasHardware = await LocalAuthentication.hasHardwareAsync();
++    if (!hasHardware) return;
 +
-+  static async lockNote(noteId: string) {
-+    // Mock implementation for locking a note
-+    return;
-+  }
-+}
++    const supportedTypes = await LocalAuthentication.supportedAuthenticationTypesAsync();
++    if (supportedTypes.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION)) {
++      setBiometricType('Face ID');
++    } else if (supportedTypes.includes(LocalAuthentication.AuthenticationType.FINGERPRINT)) {
++      setBiometricType('Touch ID');
++    } else if (supportedTypes.includes(LocalAuthentication.AuthenticationType.IRIS)) {
++      setBiometricType('Iris');
++    }
++  };
 +
-+export class NoteLockService {
-+  static async lockNoteWithBiometrics(noteId: string) {
-+    // Production implementation would integrate with biometric APIs
-+    return;
-+    return new Promise((resolve) => {
-+      resolve();
-+    });
-+  }
-+}
++  const handleBiometricAuth = useCallback(async () => {
++    setIsAuthenticating(true);
++    setError(null);
 +
-+export class NoteLockService {
-+  static async lockNoteWithPin(noteId: string, pin: string) {
-+    return new Promise((resolve) => {
-+      resolve();
-+    });
-+  }
-+}
++    try {
++      const result = await LocalAuthentication.authenticateAsync({
++        promptMessage: 'Authenticate to unlock note',
++        fallbackLabel: 'Use PIN',
++        cancelLabel: 'Cancel',
++        disableDeviceFallback: false,
++      });
 +
-+export class NoteLockService {
-+  static async unlockNote(noteId: string) {
-+    // Mock implementation
-+    return;
-+  }
-+}
++      if (result.success) {
++        onAuthenticate('biometric');
++      } else {
++        setError('Authentication failed. Please try again.');
++      }
++    } catch (err) {
++      setError('Biometric authentication error. Please use PIN.');
++    } finally {
++      setIsAuthenticating(false);
++    }
++  }, [onAuthenticate]);
 +
-+export class NoteLockService {
-+  static async saveNote(noteId: string, content: string) {
-+    return new Promise((resolve) => {
-+      // Mock implementation
-+      resolve();
-+    });
-+  }
-+}
++  const handlePinSubmit = useCallback(() => {
++    if (pin.length !== PIN_LENGTH) {
++      setError(`PIN must be ${PIN_LENGTH} digits`);
++      return;
++    }
 +
-+export class NoteLockService {
-+  static async saveNoteWithEncryption(noteId: string, content: string) {
-+    return new Promise((resolve) => {
-+      // Mock implementation
-+      resolve();
-+    });
-+  }
-+}
-+}
++    setIsAuthenticating(true);
++    setError(null);
 +
-+export class NoteLockService {
-+  static async saveNoteWithBiometric(noteId: string, content: string) {
-+    return new Promise((resolve) => {
-+      // Mock note with biometric authentication
-+      resolve();
-+    });
-+  }
-+}
++    // Simulate async validation - in real app, this would hash and compare
++    setTimeout(() => {
++      onAuthenticate('pin', pin);
++      setIsAuthenticating(false);
++    }, 100);
++  }, [pin, onAuthenticate]);
 +
-+export class NoteLockService {
-+  static async saveNoteWithPin(noteId: string, pin: string) {
-+    return new Promise((resolve) => {
-+      resolve();
-+    });
-+  }
-+}
++  const handlePinDigit = useCallback((digit: string) => {
++    if (pin.length < PIN_LENGTH) {
++      setPin(prev => {
++        const newPin = prev + digit;
++        if (newPin.length === PIN_LENGTH) {
++          // Auto-submit when PIN is complete
++          setTimeout(() => {
++            // Validation will happen in effect or we can call directly
++          }, 0);
++        }
++        return newPin;
++      });
++      setError(null);
++    }
++  }, [pin]);
 +
-+export class NoteLockService {
-+  static async saveNoteWithPinAndBiometric(noteId: string, pin: string) {
-+    return new Promise((resolve) => {
-+      resolve();
-+    });
-+  }
-+}
++  const handleBackspace = useCallback(() => {
++    setPin(prev => prev.slice(0, -1));
++    setError(null);
++  }, []);
 +
-+export class NoteLockService {
-+  static async saveNoteWithPinAndBiometric(noteId: string, pin: string) {
-+    return new Promise((resolve) => {
-+      resolve();
-+    });
-+  }
-+}
++  const handleClear = useCallback(() => {
++    setPin('');
++    setError(null);
++  }, []);
 +
-+export class NoteLockService {
-+  static async saveNoteWithPinAndBiometric(noteId: string, pin: string) {
-+    return new Promise((resolve) => {
-+      resolve();
-+    });
-+  }
-+}
++  const renderPinDots = () => {
++    return (
++      <View style={styles.pinDotsContainer}>
++        {Array.from({ length: PIN_LENGTH }).map((_, index) => (
++          <View
++            key={index}
++            style={[
++              styles.pinDot,
++              {
++                backgroundColor: isDark ? '#fff' : '#000',
++                opacity: index < pin.length ? 1 : 0.2,
++              },
++            ]}
++          />
++        ))}
++      </View>
++    );
++  };
 +
-+export class NoteLockService {
-+  static async saveNote(noteId: string, content: string) {
-+    return new Promise((resolve) => {
-+      // Mock implementation
-+      resolve();
-+    });
-+  }
-+}
++  return (
++    <View style={[styles.container, { backgroundColor: isDark ? '#1a1a1a' : '#ffffff' }]}>
++      <View style={styles.content}>
++        <View style={styles.lockIconContainer}>
++          <Text style={[styles.lockIcon, { color: isDark ? '#fff' : '#000' }]}>🔒</Text>
++        </View>
 +
-+export class NoteLockService {
-+  static async saveNoteWithPinAndBiometric(noteId: string, pin: string) {
-+    return new Promise((resolve) => {
-+      resolve();
-+    });
-+  }
-+}
++        <Text style={[styles.title, { color: isDark ? '#fff' : '#000' }]}>
++          {noteTitle || 'Locked Note'}
++        </Text>
 +
-+export class NoteLockService {
-+  static async saveNoteWithPinBiometric(noteId: string, pin: string) {
-+    return new Promise((resolve) => {
-+      // Mock implementation
-+      resolve();
-+    });
-+  }
-+}
++        <Text style={[styles.subtitle, { color: isDark ? '#aaa' : '#666' }]}>
++          {lockState === LockState.BIOMETRIC && biometricType
++            ? `Use ${biometricType} or enter PIN`
++            : 'Enter PIN to unlock'}
++        </Text>
 +
-+export class NoteLockService {
-+  static async saveNoteWithPinBiometric(noteId: string, pin: string) {
-+    return new Promise((resolve) => {
-+      // Mock implementation
-+      resolve();
-+    });
-+  }
-+}
++        {error && (
++          <Text style={styles.errorText}>{error}</Text>
++        )}
 +
-+export class NoteLockService {
-+  static async saveNoteWithPinBiometric(noteId: string, pin: string) {
-+    return new Promise((resolve) => {
-+      resolve();
-+    });
-+  }
-+}
++        {renderPinDots()}
 +
-+export class NoteLockService {
-+  static async saveNoteWithBiometric(noteId: string, content: string) {
-+    return new Promise((resolve) => {
-+      // Mock implementation
-+      resolve();
-+    });
-+  }
-+}
-+
-+export class NoteLockService {
-+  static async saveNoteWithBiometricAndPin(noteId: string, content: string) {
-+    return new Promise((resolve) => {
-+      // Mock implementation
-+      resolve();
-+    });
-+  }
-+}
-+
-+export class NoteLockService {
-+  static async saveNoteWithBiometricAndPin(noteId: string, content: string) {
-+    return new Promise((resolve) => {
-+      // Mock implementation
-+      resolve();
-+    });
-+  }
-+}
-+
-+export class NoteLockService {
-+  static async saveNoteWithBiometricAndPin(content: string, pin: string) {
-+    return new Promise((resolve) => {
-+      // Mock implementation
-+      resolve();
-+    });
-+  }
-+}
-+
-+export class NoteLockService {
-+  static async saveNoteWithBiometricAndPinAndContent(noteId: string, content: string) {
-+    return new Promise((resolve) => {
-+
++        <View style={styles.keypadContainer}>
++          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
++            <TouchableOpacity
++              key={num}
++              style={styles.keypadButton}
++              onPress={() => handlePinDigit(num.toString())}
++              disabled={isAuthenticating}
++            >
++              <Text style={[styles.keypadButtonText, { color: isDark ? '#fff' : '#000' }]}>
++                {num}
++              </Text>
++            </TouchableOpacity>
++          ))}
++          <TouchableOpacity
++            style={styles.keypadButton}
++            onPress={handleBiometricAuth}
++            disabled={isAuthenticating || !biometricType}
++          >
++            <Text style={[styles.keypadButtonText, { color: isDark ? '#fff' : '#000', fontSize: 20 }]}>
++              {biometricType === 'Face ID' ? '👤' : '👆'}
++            </Text>
++         
