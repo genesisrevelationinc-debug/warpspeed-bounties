@@ -2,184 +2,185 @@
 --- /dev/null
 +++ b/src/components/audio/AudioPlayer.tsx
 @@ -0,0 +1,268 @@
-+import React, { useState, useEffect, useRef, useCallback } from 'react';
-+import { View, StyleSheet, TouchableOpacity, Text, Animated } from 'react-native';
-+import Slider from '@react-native-community/slider';
-+import { AudioService } from '../../services/audio/AudioService';
-+import { formatDuration } from '../../utils/time';
++import React, { useCallback, useEffect, useRef, useState } from 'react';
++import {
++  View,
++  Text,
++  TouchableOpacity,
++  StyleSheet,
++  Animated,
++  PanResponder,
++  GestureResponderEvent,
++} from 'react-native';
++import { Audio } from 'expo-av';
++import { Ionicons } from '@expo/vector-icons';
 +import { AudioPlayerProps, PlaybackSpeed } from './types';
++import { formatDuration } from '../../utils/audioUtils';
 +
-+const SPEEDS: PlaybackSpeed[] = [0.5, 1, 1.5, 2];
++const PLAYBACK_SPEEDS: PlaybackSpeed[] = [1, 1.5, 2];
 +
 +export const AudioPlayer: React.FC<AudioPlayerProps> = ({
 +  audioUri,
 +  initialPosition = 0,
 +  onPositionChange,
 +  onDelete,
-+  onTranscribe,
 +  style,
 +}) => {
++  const [sound, setSound] = useState<Audio.Sound | null>(null);
 +  const [isPlaying, setIsPlaying] = useState(false);
 +  const [position, setPosition] = useState(initialPosition);
 +  const [duration, setDuration] = useState(0);
-+  const [speed, setSpeed] = useState<PlaybackSpeed>(1);
++  const [playbackSpeed, setPlaybackSpeed] = useState<PlaybackSpeed>(1);
 +  const [isLoading, setIsLoading] = useState(true);
-+  const [error, setError] = useState<string | null>(null);
-+  
-+  const audioServiceRef = useRef<AudioService | null>(null);
 +  const progressAnim = useRef(new Animated.Value(0)).current;
 +  const positionRef = useRef(position);
-+  const isMounted = useRef(true);
-+
-+  useEffect(() => {
-+    isMounted.current = true;
-+    return () => {
-+      isMounted.current = false;
-+    };
-+  }, []);
++  const durationRef = useRef(duration);
 +
 +  useEffect(() => {
 +    positionRef.current = position;
 +  }, [position]);
 +
 +  useEffect(() => {
-+    const initAudio = async () => {
-+      try {
-+        setIsLoading(true);
-+        setError(null);
-+        
-+        const service = new AudioService();
-+        audioServiceRef.current = service;
-+        
-+        await service.loadAudio(audioUri);
-+        const audioDuration = await service.getDuration();
-+        
-+        if (!isMounted.current) return;
-+        
-+        setDuration(audioDuration);
-+        
-+        if (initialPosition > 0 && initialPosition < audioDuration) {
-+          await service.seekTo(initialPosition);
-+          setPosition(initialPosition);
-+        }
-+        
-+        setIsLoading(false);
-+      } catch (err) {
-+        if (!isMounted.current) return;
-+        setError(err instanceof Error ? err.message : 'Failed to load audio');
-+        setIsLoading(false);
++    durationRef.current = duration;
++  }, [duration]);
++
++  const loadSound = useCallback(async () => {
++    try {
++      setIsLoading(true);
++      const { sound: newSound, status } = await Audio.Sound.createAsync(
++        { uri: audioUri },
++        {
++          positionMillis: initialPosition,
++          shouldPlay: false,
++          rate: playbackSpeed,
++        },
++        onPlaybackStatusUpdate
++      );
++
++      setSound(newSound);
++      if (status.isLoaded) {
++        setDuration(status.durationMillis || 0);
++        setPosition(status.positionMillis);
 +      }
-+    };
++      setIsLoading(false);
++    } catch (error) {
++      console.error('Error loading sound:', error);
++      setIsLoading(false);
++    }
++  }, [audioUri, initialPosition]);
 +
-+    initAudio();
-+
++  useEffect(() => {
++    loadSound();
 +    return () => {
-+      audioServiceRef.current?.cleanup();
-+      audioServiceRef.current = null;
++      if (sound) {
++        sound.unloadAsync();
++      }
 +    };
 +  }, [audioUri]);
 +
-+  useEffect(() => {
-+    const interval = setInterval(() => {
-+      if (isPlaying && audioServiceRef.current) {
-+        const currentPos = audioServiceRef.current.getCurrentPosition();
-+        setPosition(currentPos);
-+        onPositionChange?.(currentPos);
-+      }
-+    }, 100);
++  const onPlaybackStatusUpdate = useCallback(
++    (status: Audio.PlaybackStatus) => {
++      if (!status.isLoaded) return;
 +
-+    return () => clearInterval(interval);
-+  }, [isPlaying, onPositionChange]);
-+
-+  useEffect(() => {
-+    Animated.timing(progressAnim, {
-+      toValue: duration > 0 ? position / duration : 0,
-+      duration: 100,
-+      useNativeDriver: false,
-+    }).start();
-+  }, [position, duration, progressAnim]);
-+
-+  const handlePlayPause = useCallback(async () => {
-+    if (!audioServiceRef.current) return;
-+
-+    try {
-+      if (isPlaying) {
-+        await audioServiceRef.current.pause();
++      if (status.didJustFinish) {
 +        setIsPlaying(false);
-+      } else {
-+        await audioServiceRef.current.play();
-+        setIsPlaying(true);
++        setPosition(0);
++        onPositionChange?.(0);
++        progressAnim.setValue(0);
++        return;
 +      }
-+    } catch (err) {
-+      setError(err instanceof Error ? err.message : 'Playback error');
++
++      setPosition(status.positionMillis);
++      setDuration(status.durationMillis || durationRef.current);
++
++      const progress = status.durationMillis
++        ? status.positionMillis / status.durationMillis
++        : 0;
++      progressAnim.setValue(progress);
++
++      if (status.isPlaying) {
++        onPositionChange?.(status.positionMillis);
++      }
++    },
++    [onPositionChange, progressAnim]
++  );
++
++  const togglePlayPause = useCallback(async () => {
++    if (!sound) return;
++
++    if (isPlaying) {
++      await sound.pauseAsync();
++      setIsPlaying(false);
++    } else {
++      await sound.playAsync();
++      setIsPlaying(true);
 +    }
-+  }, [isPlaying]);
++  }, [sound, isPlaying]);
 +
-+  const handleSeek = useCallback(async (value: number) => {
-+    if (!audioServiceRef.current) return;
-+    
-+    const newPosition = value * duration;
-+    await audioServiceRef.current.seekTo(newPosition);
-+    setPosition(newPosition);
-+    onPositionChange?.(newPosition);
-+  }, [duration, onPositionChange]);
++  const seekTo = useCallback(
++    async (millis: number) => {
++      if (!sound) return;
++      const clampedMillis = Math.max(0, Math.min(millis, duration));
++      await sound.setPositionAsync(clampedMillis);
++      setPosition(clampedMillis);
++      const progress = duration > 0 ? clampedMillis / duration : 0;
++      progressAnim.setValue(progress);
++    },
++    [sound, duration, progressAnim]
++  );
 +
-+  const handleSkip = useCallback(async (seconds: number) => {
-+    if (!audioServiceRef.current) return;
-+    
-+    const newPosition = Math.max(0, Math.min(duration, position + seconds));
-+    await audioServiceRef.current.seekTo(newPosition);
-+    setPosition(newPosition);
-+    onPositionChange?.(newPosition);
-+  }, [duration, position, onPositionChange]);
++  const skipForward = useCallback(async () => {
++    await seekTo(position + 15000); // 15 seconds
++  }, [seekTo, position]);
 +
-+  const handleSpeedChange = useCallback(async () => {
-+    if (!audioServiceRef.current) return;
-+    
-+    const currentIndex = SPEEDS.indexOf(speed);
-+    const nextIndex = (currentIndex + 1) % SPEEDS.length;
-+    const newSpeed = SPEEDS[nextIndex];
-+    
-+    await audioServiceRef.current.setSpeed(newSpeed);
-+    setSpeed(newSpeed);
-+  }, [speed]);
++  const skipBackward = useCallback(async () => {
++    await seekTo(position - 15000); // 15 seconds
++  }, [seekTo, position]);
 +
-+  const progressWidth = progressAnim.interpolate({
-+    inputRange: [0, 1],
-+    outputRange: ['0%', '100%'],
-+  });
++  const changePlaybackSpeed = useCallback(() => {
++    const currentIndex = PLAYBACK_SPEEDS.indexOf(playbackSpeed);
++    const nextIndex = (currentIndex + 1) % PLAYBACK_SPEEDS.length;
++    const newSpeed = PLAYBACK_SPEEDS[nextIndex];
++    setPlaybackSpeed(newSpeed);
++    sound?.setRateAsync(newSpeed, true);
++  }, [playbackSpeed, sound]);
 +
-+  if (isLoading) {
-+    return (
-+      <View style={[styles.container, style]}>
-+        <Text style={styles.loadingText}>Loading audio...</Text>
-+      </View>
-+    );
-+  }
++  const panResponder = useRef(
++    PanResponder.create({
++      onStartShouldSetPanResponder: () => true,
++      onMoveShouldSetPanResponder: () => true,
++      onPanResponderMove: (_, gestureState) => {
++        const { moveX } = gestureState;
++        // Calculate progress based on touch position
++        // This is simplified; in production, measure the progress bar layout
++      },
++      onPanResponderRelease: (_, gestureState) => {
++        // Handle seek on release
++      },
++    })
++  ).current;
 +
-+  if (error) {
-+    return (
-+      <View style={[styles.container, style]}>
-+        <Text style={styles.errorText}>{error}</Text>
-+      </View>
-+    );
-+  }
++  const progressPercent = duration > 0 ? (position / duration) * 100 : 0;
 +
 +  return (
 +    <View style={[styles.container, style]}>
-+      <View style={styles.waveformContainer}>
-+        <Animated.View style={[styles.progressBar, { width: progressWidth }]} />
-+      </View>
-+      
-+      <View style={styles.timeContainer}>
-+        <Text style={styles.timeText}>{formatDuration(position)}</Text>
-+        <Text style={styles.timeText}>{formatDuration(duration)}</Text>
-+      </View>
-+
-+      <View style={styles.controlsContainer}>
-+        <TouchableOpacity onPress={() => handleSkip(-10)} style={styles.skipButton}>
-+          <Text style={styles.controlText}>-10s</Text>
++      <View style={styles.controlsRow}>
++        <TouchableOpacity onPress={skipBackward} style={styles.controlButton}>
++          <Ionicons name="play-back" size={20} color="#666" />
++          <Text style={styles.skipText}>15</Text>
 +        </TouchableOpacity>
 +
-+        <TouchableOpacity onPress={handlePlayPause} style={styles.playButton}>
-+          <Text
++        <TouchableOpacity
++          onPress={togglePlayPause}
++          style={styles.playButton}
++          disabled={isLoading}
++        >
++          <Ionicons
++            name={isPlaying ? 'pause' : 'play'}
++            size={28}
++            color="#fff"
++          />
++        </TouchableOpacity>
++
++        <TouchableOpacity onPress={skipForward} style={styles.controlButton}>
++          <Ionicons name="play-forward" size={20} color="#666"
