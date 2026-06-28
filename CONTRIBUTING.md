@@ -30,28 +30,28 @@ Payment is processed only after:
 - maintainers approve it,
 # Contributing to warpSpeed Bounties
 
-Thank you for your interest in contributing to warpSpeed OPEN!
+Thank you for your interest in contributing to warpSpeed OPEN! This document outlines the process for participating in our bounty programme.
 
 ## Getting Started
 
-1. Browse available bounties at https://warpspeedopen.org/bounties
-2. Sign up as a developer on the website
-3. Comment on a GitHub issue to claim a bounty
-4. Wait for maintainer confirmation before starting work
+1. **Browse Available Bounties**
+   - Check [BOUNTIES.md](./BOUNTIES.md) for active bounty listings
+   - Review the technical requirements and acceptance criteria
+   - Ensure you have the required skills and availability
 
-## Development Guidelines
+2. **Sign Up as a Developer**
+   - Visit [warpSpeed Signup](https://warpspeedopen.org/signup)
+   - Complete your developer profile
+   - Verify your email and payment information
 
-### Note Locking Feature (Active Bounty)
+3. **Claim a Bounty**
+   - Comment on the GitHub issue with: *"I have signed up and would like to claim this bounty."*
+   - Wait for maintainer confirmation (required before starting work)
+   - Once confirmed, you will be assigned to the issue
 
-When implementing the note locking feature, please follow these architectural principles:
+## Development Workflow
 
-#### Clean Separation of Concerns
-
-- **Authentication Layer**: Handle all biometric/PIN authentication
-- **Note-Locking Logic**: Manage lock state, timeout configuration, and persistence
-- **UI Components**: Present locked states and handle user interactions
-
-#### Required Components
+### Branch Naming
 
 
 - and the PR is merged.
