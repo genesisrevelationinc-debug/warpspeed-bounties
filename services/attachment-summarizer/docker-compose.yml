@@ -1,4 +1,4 @@
-version: '3.elineno'
+version: '3.8'
 
 services:
   app:
@@ -6,47 +6,37 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: attachment-summarizer
-    ports:
-      - "3000:3000"
+    restart: unless-stopped
+    env_file:
+      - .env
     environment:
-      - NODE_ENV=production
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/attachment_summarizer?schema=public
-      - AWS_REGION=${AWS_REGION}
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-      - SQS_QUEUE_URL=${SQS_QUEUE_URL}
-      - GCS_PROJECT_ID=${GCS_PROJECT_ID}
-      - GCS_BUCKET_NAME=${GCS_BUCKET_NAME}
-      - GOOGLE_APPLICATION_CREDENTIALS=/app/secrets/gcs-key.json
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/attachment_summarizer
       - OLLAMA_BASE_URL=http://ollama:11434
-      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3.2}
-    volumes:
-      - ./secrets:/app/secrets:ro
-      - ./tmp:/app/tmp
     depends_on:
       db:
         condition: service_healthy
       ollama:
         condition: service_started
-      redis:
-        condition: service_started
+    volumes:
+      - ./tmp:/app/tmp
     networks:
       - attachment-summarizer-network
 
   db:
     image: postgres:15-alpine
     container_name: attachment-summarizer-db
+    restart: unless-stopped
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=attachment_summarizer
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: attachment_summarizer
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
+      interval: 5s
       timeout: 5s
       retries: 5
     networks:
@@ -55,24 +45,15 @@ services:
   ollama:
     image: ollama/ollama:latest
     container_name: attachment-summarizer-ollama
+    restart: unless-stopped
     volumes:
-      - ollama-data:/root/.ollama
-    ports:
-      - "11434:11434"
-    networks:
-      - attachment-summarizer-network
-
-  redis:
-    image: redis:7-alpine
-    container_name: attachment-summarizer-redis
-    ports:
-      - "6379:6379"
+      - ollama_data:/root/.ollama
     networks:
       - attachment-summarizer-network
 
 volumes:
-  postgres-data:
-  ollama-data:
+  postgres_data:
+  ollama_data:
 
 networks:
   attachment-summarizer-network:
