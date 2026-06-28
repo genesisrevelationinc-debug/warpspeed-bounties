@@ -12,17 +12,17 @@ services:
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/attachment_summarizer
-      - REDIS_URL=redis://redis:6379
       - OLLAMA_BASE_URL=http://ollama:11434
     env_file:
       - .env
+    volumes:
+      - ./tmp:/app/tmp
+      - ./downloads:/app/downloads
     depends_on:
       db:
-        condition: service_healthy
-      redis:
-        condition: service_started
+          condition: service_healthy
       ollama:
-        condition: service_started
+          condition: service_started
     networks:
       - attachment-summarizer-network
 
@@ -31,7 +31,7 @@ services:
     container_name: attachment-summarizer-db
     restart: unless-stopped
     environment:
-      - POSTGRES postgres
+      - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=attachment_summarizer
     volumes:
@@ -46,23 +46,12 @@ services:
     networks:
       - attachment-summarizer-network
 
-  redis:
-    image: redis:7-alpine
-    container_name: attachment-summarizer-redis
-    restart: unless-stopped
-    ports:
-      - "6379:6379"
-    networks:
-      - attachment-summarizer-network
-
   ollama:
     image: ollama/ollama:latest
     container_name: attachment-summarizer-ollama
     restart: unless-stopped
     volumes:
       - ollama_data:/root/.ollama
-    ports:
-      - "11434:11434"
     networks:
       - attachment-summarizer-network
 
