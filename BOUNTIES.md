@@ -30,41 +30,69 @@ This document tracks active and completed bounty tasks for the warpSpeed OPEN pr
 
 ### Messenger Group Chat Poll Creation & Voting UI
 
+- **Bounty ID**: WARP-2024-001
 - **Reward**: $440
-- **Status**: Open for claims
-- **Skills**: React Native, TypeScript, Storybook, UI Components
-- **Issue**: [#1](https://github.com/warpspeedopen-source/warpspeed-bounties/issues/1)
-- **Design Reference**: [Adobe XD](https://xd.adobe.com/view/0cec7f20-eb33-402e-be87-f7e02753e028-59bf/)
+- **Status**: Open
+- **Difficulty**: Medium
+- **Skills**: React Native, TypeScript, Storybook, UI Components, Mobile Interaction Design
 
-#### Scope
+#### Description
 
-- Poll creation from group chat input
-- Poll question input with 255 character limit
-- Up to 12 answer options
-- Single-choice and multiple-choice voting
-- Inline poll messages in chat
-- Real-time voting and result display
-- Vote percentage based on total group participants
-- "View Votes" bottom sheet with detailed insights
-- Voter profile previews and per-option voter lists
-- Storybook components for full UX
+Build a poll creation and voting feature for group chats in the warpSpeed app.
+
+#### Requirements
+
+- [ ] Poll creation from the group chat input action/arrow menu
+- [ ] Poll question input with 255 character limit
+- [ ] Multiple answer options (up to 12)
+- [ ] Single-choice or multiple-choice voting support
+- [ ] Inline poll message inside the chat conversation
+- [ ] Direct voting from the chat
+- [ ] Real-time result updates with visual progress bars
+- [ ] Vote percentage calculation based on total group participants
+- [ ] "View Votes" bottom sheet with detailed voting insights
+- [ ] Voter profile previews and detailed voter list per option
+- [ ] Persistent poll display in chat history
+- [ ] Storybook components and composed view
+
+#### Design Reference
+
+[Adobe XD Prototype](https://xd.adobe.com/view/0cec7f20-eb33-402e-be87-f7e02753e028-59bf/)
 
 #### How to Claim
 
 1. Visit [warpSpeed Bounties](https://warpspeedopen.org/bounties)
 2. Sign up as a developer
-3. Comment on the GitHub issue: "I have signed up and would like to claim this bounty."
+3. Comment on GitHub issue: "I have signed up and would like to claim this bounty."
 4. Wait for maintainer confirmation before starting work
 
-#### Rules
+#### Acceptance Criteria
 
+- Minimum 90% specification match required for consideration
+- Payment at 100% completion after PR approval and merge
 - Maximum 3 submission attempts
-- Minimum 90% specification match required
-- Payment at 100% completion after PR merge
 - First code commit required at halfway mark
 - Code must be original or properly licensed
 
 ## Completed Bounties
 
-_None yet — be the first!_
+_No completed bounties yet._
+
+## Bounty Rules
+
+1. Do not start work until a maintainer confirms your claim
+2. Maximum 3 submission attempts
+ decentralized
+3. Minimum 90% specification match required for consideration
+4. Payment is made only at 100% completion
+5. Payment is processed only after the pull request is approved and merged
+6. First code commit is required at the halfway mark between bounty start and bounty expiration
+7. Code must be original or properly licensed
+8. The official bounty page is the source of truth for full requirements, rules, and deadlines
+
+## Contact
+
+- Website: https://warpspeedopen.org
+- Bounties: https://warpspeedopen.org/bounties
+- Developer Signup: https://warpspeedopen.org/signup
 Payment happens after the PR is approved and merged.
