@@ -22,20 +22,21 @@ This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty 
 
 ## Payment condition
 
-# warpSpeed Bounties
+# Active Bounties
 
-This document tracks active and completed bounty tasks for the warpSpeed OPEN developer programme.
+This document lists all active bounty tasks for the warpSpeed OPEN project.
 
-## Active Bounties
+---
 
-### [PAID BOUNTY - $440] Messenger Group Chat Poll Creation & Voting UI
+## [PAID BOUNTY - $440] Messenger Group Chat Poll Creation & Voting UI
 
-**Status:** Open for claims  
-**Reward:** $440  
-**Difficulty:** Medium  
-**Labels:** help wanted, bounty, paid, open, typescript, ui, react-native, frontend
+**Issue**: [#1](https://github.com/warpspeedopen-source/warpspeed-bounties/issues/1)  
+**Status**: 🟢 Open  
+**Reward**: $440  
+**Difficulty**: Medium  
+**Labels**: `help wanted`, `bounty`, `paid`, `open`, `typescript`, `ui`, `react-native`, `frontend`
 
-#### Overview
+### Overview
 
 Build a poll creation and voting feature for group chats in the warpSpeed app.
 
@@ -43,96 +44,70 @@ The feature should allow users to create polls directly from the group chat inpu
 
 The experience should feel smooth, intuitive, and consistent with modern messaging apps such as WhatsApp.
 
-#### Technical Requirements
+### Design Reference
 
-- **Platform:** React Native with TypeScript
-- **UI Framework:** Storybook for component development and testing
-- **Target:** Group chat messaging interface
+[Adobe XD Prototype](https://xd.adobe.com/view/0cec7f20-eb33-402e-be87-f7e02753e028-59bf/)
 
-#### Feature Scope
+### Technical Requirements
 
-##### Poll Creation
-- Access poll creation from the group chat input action/arrow menu
-- Poll question input field with 255 character limit
-- Multiple answer options (up to 12 options maximum)
-- Support for both single-choice and multiple-choice voting modes
-- Intuitive add/remove option interface
+#### Core Features
 
-##### Poll Display (Inline Chat Message)
-- Poll renders inline within the chat conversation
-- Question text prominently displayed
-- Option list with selection indicators
-- Real-time vote count and percentage display
-- Visual progress bars showing vote distribution
-- Percentage calculation based on total group participants
+| Feature | Description |
+|---------|-------------|
+| Poll Creation | Initiated from group chat input action/arrow menu |
+| Question Input | Text input with 255 character limit |
+| Options | Multiple answer options, up to 12 maximum |
+| Voting Modes | Single-choice or multiple-choice support |
+| Inline Display | Poll renders as a message bubble in chat |
+| Direct Voting | Vote directly from the chat interface |
+| Real-time Results | Live result updates with visual progress bars |
+| Percentage Calculation | Based on total group participants |
+| View Votes | Action to open detailed voting insights |
+| Bottom Sheet | Shows voter profile previews and detailed voter list per option |
+| Persistence | Poll remains visible in chat history |
 
-##### Voting Interaction
-- Direct voting from the chat bubble without leaving the conversation
-- Single-tap vote for single-choice polls
-- Multi-select capability for multiple-choice polls
-- Visual feedback on selection
-- Ability to change vote (if enabled)
+#### UI/UX Requirements
 
-##### Real-Time Results
-- Live update of vote counts and percentages
-- Smooth animated transitions for result bars
-- Updated view for all participants in real-time
-
-##### "View Votes" Bottom Sheet
-- Accessible action to open detailed voting insights
-- Bottom sheet modal presentation
-- Voter profile previews (avatars)
+- Smooth, intuitive interactions
+- Consistent with modern messaging apps (WhatsApp-style)
+- Visual result bars or progress indicators
+- Voter profile previews in bottom sheet
 - Detailed voter list per option
-- Expandable/collapsible option sections
 
-##### Chat History Persistence
-- Polls remain visible and interactive in chat history
-- Historical vote data preserved
-- Consistent display across app restarts
+#### Technical Stack
 
-#### Design Reference
+- React Native
+- TypeScript
+- Storybook (for component development)
+- UI Components
+- Mobile Interaction Design
+- Real-time UI States
 
-[Adobe XD Design Mockup](https://xd.adobe.com/view/0cec7f20-eb33-402e-be87-f7e02753zet028-59bf/)
+### Deliverables
 
-#### Component Deliverables (Storybook)
+1. Reusable poll components
+2. Poll creation flow
+3. Inline poll message component
+4. Voting interface
+5. Results display with progress bars
+6. "View Votes" bottom sheet
+7. Storybook stories for all components
+8. Composed view demonstrating full user experience
 
-The following Storybook stories should be implemented:
-
-1. **PollCreationForm** - Full poll creation interface
-2. **PollOptionInput** - Individual option input with add/remove
-3. **PollMessageBubble** - Inline poll display in chat
-4. **PollOptionResult** - Single option with vote bar
-5. **PollVoteSheet** - Bottom sheet with detailed votes
-6. **VoterAvatarList** - Horizontal voter preview avatars
-7. **VoterListItem** - Individual voter detail row
-8. **PollTypeSelector** - Single vs multiple choice toggle
-9. **PollCreationMenu** - Chat input action menu trigger
-10. **PollMessageComposer** - Full composed chat integration
-
-#### Acceptance Criteria
-
-- [ ] All Storybook components render correctly with mock data
-- [ ] Poll creation flow allows 2-12 options with 255-char question
-- [ ] Single and multiple choice modes function correctly
-- [ ] Vote percentages calculate accurately based on participant count
-- [ ] Real-time updates reflect across all UI states
-- [ ] "View Votes" bottom sheet displays voter details per option
-- [ ] UI matches design reference (90%+ fidelity)
-- [ ] TypeScript types are complete and strict
-- [ ] Components are reusable and properly documented
-- [ ] Accessibility labels and hints included
-- [ ] Works on both iOS and Android
-
-#### How to Claim
+### How to Claim
 
 1. Visit [warpSpeed Bounties](https://warpspeedopen.org/bounties)
 2. Sign up as a developer
-3. Comment on the GitHub issue: "I have signed up and would like to claim this bounty."
-4. Wait for maintainer confirmation before starting work
+3. Review full bounty details and rules
+4. Comment on the GitHub issue:
 
----
+   > "I have signed up and would like to claim this bounty."
 
-## Completed Bounties
+5. **Wait for maintainer confirmation before starting work**
 
-*No completed bounties yet.*
+### Important Rules
+
+See the [GitHub issue](https://github.com/warpspeedopen-source/warpspeed-bounties/issues/1) and [official bounty page](https://warpspeedopen.org/bounties) for complete rules, deadlines, and submission requirements.
+
+The official bounty page is the **source of truth** for full requirements, rules, and deadlines.
 Payment happens after the PR is approved and merged.
