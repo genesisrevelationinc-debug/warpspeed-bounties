@@ -24,21 +24,18 @@ This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty 
 
 # warpSpeed Bounties
 
-This document tracks active and completed bounties for the warpSpeed OPEN project.
+This document tracks active and completed bounty tasks for the warpSpeed OPEN developer programme.
 
 ## Active Bounties
 
-### Messenger Group Chat Poll Creation & Voting UI
+### [PAID BOUNTY - $440] Messenger Group Chat Poll Creation & Voting UI
 
-| Field | Details |
-|-------|---------|
-| **Bounty ID** | WARP-POLL-001 |
-| **Reward** | $440 |
-| **Difficulty** | Medium |
-| **Status** | 🟢 Open - Claimed |
-| **Skills** | React Native, TypeScript, Storybook, UI Components, Mobile Interaction Design, Real-time UI States |
+**Status:** Open for claims  
+**Reward:** $440  
+**Difficulty:** Medium  
+**Labels:** help wanted, bounty, paid, open, typescript, ui, react-native, frontend
 
-#### Description
+#### Overview
 
 Build a poll creation and voting feature for group chats in the warpSpeed app.
 
@@ -46,46 +43,96 @@ The feature should allow users to create polls directly from the group chat inpu
 
 The experience should feel smooth, intuitive, and consistent with modern messaging apps such as WhatsApp.
 
-#### Design Reference
-
-[Adobe XD Design Mockups](https://xd.adobe.com/view/0cec7f20-eb33-402e-be87-f7e02753e028-59bf/)
-
 #### Technical Requirements
 
-##### Poll Creation
-- [ ] Poll creation from the group chat input action/arrow menu
-- [ ] Poll question input with 255 character limit
-- [ ] Multiple answer options (up to 12 poll options)
-- [ ] Single-choice or multiple-choice voting support
-- [ ] Validation and error states for invalid inputs
+- **Platform:** React Native with TypeScript
+- **UI Framework:** Storybook for component development and testing
+- **Target:** Group chat messaging interface
 
-##### Poll Message Component
-- [ ] Inline poll message inside the chat conversation
-- [ ] Persistent poll display in chat history
-- [ ] Visual result bars or progress indicators
-- [ ] Vote percentage calculation based on total group participants
-- [ ] Real-time result updates
+#### Feature Scope
+
+##### Poll Creation
+- Access poll creation from the group chat input action/arrow menu
+- Poll question input field with 255 character limit
+- Multiple answer options (up to 12 options maximum)
+- Support for both single-choice and multiple-choice voting modes
+- Intuitive add/remove option interface
+
+##### Poll Display (Inline Chat Message)
+- Poll renders inline within the chat conversation
+- Question text prominently displayed
+- Option list with selection indicators
+- Real-time vote count and percentage display
+- Visual progress bars showing vote distribution
+- Percentage calculation based on total group participants
 
 ##### Voting Interaction
-- [ ] Direct voting from the chat
-- [ ] Single and multiple choice voting
-- [ ] Vote change/revoke capability
-- [ ] Visual feedback on vote selection
+- Direct voting from the chat bubble without leaving the conversation
+- Single-tap vote for single-choice polls
+- Multi-select capability for multiple-choice polls
+- Visual feedback on selection
+- Ability to change vote (if enabled)
 
-##### View Votes Bottom Sheet
-- [ ] "View Votes" action on poll message
-- [ ] Bottom sheet showing detailed voting insights
-- [ ] Voter profile previews
-- [ ] Detailed voter list per option
-- [ ] Scrollable participant list
+##### Real-Time Results
+- Live update of vote counts and percentages
+- Smooth animated transitions for result bars
+- Updated view for all participants in real-time
 
-##### Storybook & Testing
-- [ ] Storybook components for all poll UI elements
-- [ ] Composed view for full user experience
-- [ ] Interactive stories for all states
-- [ ] Edge case handling (empty states, max options, etc.)
+##### "View Votes" Bottom Sheet
+- Accessible action to open detailed voting insights
+- Bottom sheet modal presentation
+- Voter profile previews (avatars)
+- Detailed voter list per option
+- Expandable/collapsible option sections
 
-#### Component Architecture
+##### Chat History Persistence
+- Polls remain visible and interactive in chat history
+- Historical vote data preserved
+- Consistent display across app restarts
 
+#### Design Reference
 
+[Adobe XD Design Mockup](https://xd.adobe.com/view/0cec7f20-eb33-402e-be87-f7e02753zet028-59bf/)
+
+#### Component Deliverables (Storybook)
+
+The following Storybook stories should be implemented:
+
+1. **PollCreationForm** - Full poll creation interface
+2. **PollOptionInput** - Individual option input with add/remove
+3. **PollMessageBubble** - Inline poll display in chat
+4. **PollOptionResult** - Single option with vote bar
+5. **PollVoteSheet** - Bottom sheet with detailed votes
+6. **VoterAvatarList** - Horizontal voter preview avatars
+7. **VoterListItem** - Individual voter detail row
+8. **PollTypeSelector** - Single vs multiple choice toggle
+9. **PollCreationMenu** - Chat input action menu trigger
+10. **PollMessageComposer** - Full composed chat integration
+
+#### Acceptance Criteria
+
+- [ ] All Storybook components render correctly with mock data
+- [ ] Poll creation flow allows 2-12 options with 255-char question
+- [ ] Single and multiple choice modes function correctly
+- [ ] Vote percentages calculate accurately based on participant count
+- [ ] Real-time updates reflect across all UI states
+- [ ] "View Votes" bottom sheet displays voter details per option
+- [ ] UI matches design reference (90%+ fidelity)
+- [ ] TypeScript types are complete and strict
+- [ ] Components are reusable and properly documented
+- [ ] Accessibility labels and hints included
+- [ ] Works on both iOS and Android
+
+#### How to Claim
+
+1. Visit [warpSpeed Bounties](https://warpspeedopen.org/bounties)
+2. Sign up as a developer
+3. Comment on the GitHub issue: "I have signed up and would like to claim this bounty."
+4. Wait for maintainer confirmation before starting work
+
+---
+
+## Completed Bounties
+
+*No completed bounties yet.*
 Payment happens after the PR is approved and merged.
