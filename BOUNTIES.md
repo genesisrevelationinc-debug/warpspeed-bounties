@@ -24,63 +24,45 @@ This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty 
 
 # warpSpeed Bounties
 
+This document tracks active and completed bounty tasks for the warpSpeed OPEN ecosystem.
+
 ## Active Bounties
 
-### Note Locking - Biometrics/PIN ($660)
+### Note Locking - Biometrics/PIN
 
-**Status:** 🟢 Open for claims  
-**Reward:** $660  
-**Difficulty:** Medium  
-**Skills:** React Native, TypeScript, Biometric Authentication, Secure UI States
+| Field | Details |
+|-------|---------|
+| **Bounty ID** | WARP-2024-001 |
+| **Reward** | $660 |
+| **Status** | 🟡 Open - Awaiting Developer Assignment |
+| **Difficulty** | Medium |
+| **Skills** | React Native, TypeScript, Biometric Authentication, Secure UI States |
 
-**Description:** Build note-level locking for the warpSpeed Notes experience using biometrics, device authentication, or a user-defined PIN.
+#### Description
 
-**Key Requirements:**
-- Lock new or existing notes
-- Authentication via Face ID, Touch ID, fingerprint, device PIN, or user-defined PIN
-- Clear locked-note state in UI
-- Locked notes hidden/obscured until unlocked
-- Re-authentication after app restart or configurable timeout
-- Remove/change lock settings with authentication
-- Clean separation of authentication layer, note-locking logic, and UI components
+Build note-level locking for the warpSpeed Notes experience using biometrics, device authentication, or a user-defined PIN.
 
-**Design Reference:** [Adobe XD Prototype](https://xd.adobe.com/view/b74cd4eb-ec51-400e-bdb2-5041a123510c-e21f/)
+This bounty gives users a private vault inside Notes. Users should be able to lock new or existing notes, clearly see which notes are locked, and unlock them only after successful authentication.
 
-**Full Details:** [warpspeedopen.org/bounties](https://warpspeedopen.org/bounties)
+#### Requirements
 
----
+- [ ] Ability to lock a new note
+- [ ] Ability to lock an existing note
+- [ ] Authentication using Face ID, Touch ID, fingerprint, device PIN, or user-defined PIN where supported
+- [ ] Clear locked-note state in the UI
+- [ ] Locked notes hidden or obscured until authentication succeeds
+- [ ] Secure lock screen for unauthenticated access attempts
+- [ ] No note content revealed before successful unlock
+- [ ] Re-authentication after app restart
+- [ ] Re-authentication after a configurable timeout period
+- [ ] Ability to remove a note lock through note settings
+- [ ] Ability to change lock settings through note settings
+- [ ] Authentication required before removing or changing a lock
+- [ ] Clear UI indicators such as lock icons or labels
+- [ ] Clean separation between authentication layer, note-locking logic, and UI components
+- [ ] Reusable TypeScript and React Native implementation that can be extended later
 
-## How to Claim a Bounty
+#### Technical Architecture
 
-1. Browse available bounty tasks on [our website](https://warpspeedopen.org/bounties)
-2. Sign up on the warpSpeed OPEN website
-3. Comment on the GitHub bounty issue to request assignment
-4. **Wait for maintainer confirmation before starting paid work**
-5. Fork the repository and create your branch
-6. Submit your pull request
 
-## Bounty Rules
-
-- **Do not start work until a maintainer confirms your claim**
-- Maximum 3 submission attempts
-- Minimum 90% specification match required for consideration
-- Payment is made only at 100% completion
-- Payment is processed only after the pull request is approved and merged
-- First code commit is required at the halfway mark between bounty start and bounty expiration
-- Code must be original or properly licensed
-
-## Payment
-
-Bounties are paid only after the work is approved and the pull request is merged.
-
-## Categories
-
-- Frontend UI
-- React Native
-- Node.js API
-- Prisma / database work
-- TypeScript
-- AI productivity features
-- Documentation
-- Integrations
 Payment happens after the PR is approved and merged.
