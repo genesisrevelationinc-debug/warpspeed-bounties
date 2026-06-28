@@ -30,28 +30,52 @@ Payment is processed only after:
 - maintainers approve it,
 # Contributing to warpSpeed Bounties
 
-Thank you for your interest in contributing to warpSpeed OPEN! This document outlines the process for participating in bounty tasks.
+Thank you for your interest in contributing to warpSpeed OPEN! This document outlines how to participate in our bounty program and contribute code.
 
-## Getting Started
+## Bounty Contribution Process
 
-1. Review open bounties in [BOUNTIES.md](BOUNTIES.md)
-2. Sign up as a developer at https://warpspeedopen.org/signup undertand the requirements
-3. Claim a bounty by commenting on the GitHub issue
-4. Wait for maintainer confirmation before starting work
+### 1. Find a Bounty
 
-## Development Workflow
+Browse open bounties at [https://warpspeedopen.org/bounties](https://warpspeedopen.org/bounties) or check the [BOUNTIES.md](./BOUNTIES.md) file for active bounties.
 
-### Branch Naming
+### 2. Sign Up
 
-Use the format: `bounty/{issue-number}-{short-description}`
+Register as a developer on the warpSpeed OPEN website before claiming any bounty.
 
-Examples:
-- `bounty/1-email-threads-api`
-- `bounty/2-oauth-integration`
+### 3. Claim the Bounty
 
-### Commit Messages
+To claim a bounty:
 
-Follow conventional commits:
+1. Open the bounty page and review full technical requirements
+2. Comment on the GitHub issue: **"I have signed up and would like to claim this bounty."**
+3. Wait for **maintainer confirmation** before starting work
+4. Once confirmed, fork the repository and create your feature branch
+
+> ⚠️ **Important**: Do not start work until a maintainer confirms your claim.
+
+### 4. Development Guidelines
+
+#### Email Threads API Specific Guidelines
+
+When working on the Email Threads API bounty, please adhere to the following:
+
+- **Thread-first architecture**: All email operations should treat the thread as the primary entity
+- **Backward compatibility**: Existing message API endpoints must continue to function
+- **Access control**: Respect existing ownership and permission models
+- **Draft handling**: Drafts must be included in their correct conversation thread
+- **Sync compatibility**: Gmail, Outlook, and IMAP sync must update thread ordering correctly
+
+#### Code Standards
+
+- Use **TypeScript** for all new code
+- Follow existing **Prisma** schema conventions
+- Write **Jest tests** for all new endpoints and business logic
+- Document all endpoints with **Swagger/OpenAPI**
+- Maintain >90% test coverage for new features
+
+#### Database Schema Considerations
+
+When modifying the Prisma schema for thread support:
 
 
 - and the PR is merged.
