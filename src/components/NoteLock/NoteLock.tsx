@@ -6,133 +6,149 @@ import { NoteLockSettings } from './NoteLockSettings';
 import { SecureStorage } from '../../utils/SecureStorage';
 import { useAuthTimeout } from '../../hooks/useAuthTimeout';
 
-export type LockType = 'biometric' | 'device' | 'pin' | null;
+export type LockType = 'biometric' | 'pin' | 'device' | null;
 
 export interface NoteLockConfig {
-  noteId: string;
+  isLocked: boolean;
   lockType: LockType;
   pinHash?: string;
-  isLocked: boolean;
   lastAuthenticatedAt?: number;
+  timeoutMinutes: number;
 }
 
 interface NoteLockProps {
   noteId: string;
   children: React.ReactNode;
-  onLockChange?: (isLocked: boolean) => void;
+  onLockChange?: (config: NoteLockConfig) => void;
 }
 
-const AUTH_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes default
+const DEFAULT_TIMEOUT_MINUTES = 5;
 
 export const NoteLock: React.FC<NoteLockProps> = ({ noteId, children, onLockChange }) => {
   const [lockConfig, setLockConfig] = useState<NoteLockConfig | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isUnlocked, setIsUnlocked] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const { isTimedOut, resetTimeout } = useAuthTimeout(AUTH_TIMEOUT_MS);
-
-  useEffect(() => {
-    loadLockConfig();
-  }, [noteId]);
-
-  useEffect(() => {
-    if (isTimedOut && lockConfig?.isLocked) {
-      setIsAuthenticated(false);
-    }
-  }, [isTimedOut, lockConfig?.isLocked]);
-
-  const loadLockConfig = async () => {
+  const loadLockConfig = useCallback(async () => {
     try {
       const config = await SecureStorage.getItem<NoteLockConfig>(`note_lock_${noteId}`);
       if (config) {
         setLockConfig(config);
-        // Check if we need re-authentication on app restart
-        if (config.isLocked) {
-          setIsAuthenticated(false);
-        }
+        setIsUnlocked(false);
+      } else {
+        setLockConfig(null);
+        setIsUnlocked(true);
       }
+    } catch (error) {
+      console.error('Failed to load lock config:', error);
+      setLockConfig(null);
+      setIsUnlocked(true);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [noteId]);
 
-  const authenticate = useCallback(async (): Promise<boolean> => {
-    if (!lockConfig || !lockConfig.isLocked) {
-      return true;
+  useEffect(() => {
+    loadLockConfig();
+  }, [loadLockConfig]);
+
+  const { checkTimeout } = useAuthTimeout(lockConfig?.timeoutMinutes || DEFAULT_TIMEOUT_MINUTES);
+
+  useEffect(() => {
+    if (lockConfig && checkTimeout(lockConfig.lastAuthenticatedAt)) {
+      setIsUnlocked(false);
     }
+  }, [lockConfig, checkTimeout]);
 
+  const authenticateWithBiometric = useCallback(async (): Promise<boolean> => {
     try {
-      if (lockConfig.lockType === 'biometric' || lockConfig.lockType === 'device') {
-        const result = await LocalAuthentication.authenticateAsync({
-          promptMessage: 'Authenticate to unlock note',
-          fallbackLabel: 'Use passcode',
-          disableDeviceFallback: false,
-        });
-
-        if (result.success) {
-          setIsAuthenticated(true);
-          resetTimeout();
-          return true;
-        }
-        return false;
-      } else if (lockConfig.lockType === 'pin') {
-        // PIN authentication handled by overlay
-        return false;
-      }
-
-      return true;
+      const result = await LocalAuthentication.authenticateAsync({
+        promptMessage: 'Authenticate to unlock note',
+        fallbackLabel: 'Use device PIN',
+        disableDeviceFallback: false,
+      });
+      return result.success;
     } catch (error) {
-      console.error('Authentication error:', error);
+      console.error('Biometric authentication failed:', error);
       return false;
     }
-  }, [lockConfig, resetTimeout]);
+  }, []);
 
-  const handlePinAuthenticate = useCallback((pin: string): boolean => {
-    if (lockConfig?.pinHash && pin === lockConfig.pinHash) {
-      setIsAuthenticated(true);
-      resetTimeout();
-      return true;
+  const authenticateWithPIN = useCallback(async (pin: string): Promise<boolean> => {
+    if (!lockConfig?.pinHash) return false;
+    const hashedPin = await SecureStorage.hashPin(pin);
+    return hashedPin === lockConfig.pinHash;
+  }, [lockConfig?.pinHash]);
+
+  const handleUnlock = useCallback(async (pin?: string): Promise<boolean> => {
+    if (!lockConfig) return true;
+
+    let success = false;
+
+    if (lockConfig.lockType === 'biometric' || lockConfig.lockType === 'device') {
+      success = await authenticateWithBiometric();
+    } else if (lockConfig.lockType === 'pin' && pin) {
+      success = await authenticateWithPIN(pin);
     }
-    return false;
-  }, [lockConfig, resetTimeout]);
+
+    if (success) {
+      const updatedConfig = {
+        ...lockConfig,
+        lastAuthenticatedAt: Date.now(),
+      };
+      await SecureStorage.setItem(`note_lock_${noteId}`, updatedConfig);
+      setLockConfig(updatedConfig);
+      setIsUnlocked(true);
+    }
+
+    return success;
+  }, [lockConfig, noteId, authenticateWithBiometric, authenticateWithPIN]);
 
   const handleLockChange = useCallback(async (newConfig: NoteLockConfig | null) => {
     if (newConfig) {
       await SecureStorage.setItem(`note_lock_${noteId}`, newConfig);
       setLockConfig(newConfig);
+      setIsUnlocked(true);
     } else {
       await SecureStorage.removeItem(`note_lock_${noteId}`);
       setLockConfig(null);
+      setIsUnlocked(true);
     }
-    setIsAuthenticated(!newConfig?.isLocked);
-    onLockChange?.(newConfig?.isLocked ?? false);
+    onLockChange?.(newConfig || { isLocked: false, lockType: null, timeoutMinutes: DEFAULT_TIMEOUT_MINUTES });
   }, [noteId, onLockChange]);
 
   if (isLoading) {
     return <View style={styles.container} />;
   }
 
-  if (!lockConfig?.isLocked || isAuthenticated) {
-    return <>{children}</>;
+  if (!isUnlocked && lockConfig?.isLocked) {
+    return (
+      <NoteLockOverlay
+        lockType={lockConfig.lockType}
+        onUnlock={handleUnlock}
+        onOpenSettings={() => setShowSettings(true)}
+      />
+    );
   }
 
   return (
-    <NoteLockOverlay
-      lockType={lockConfig.lockType}
-      onAuthenticate={authenticate}
-      onPinAuthenticate={handlePinAuthenticate}
-      onShowSettings={() => setShowSettings(true)}
-    />
+    <View style={styles.container}>
+      {children}
+      {showSettings && (
+        <NoteLockSettings
+          currentConfig={lockConfig}
+          onSave={handleLockChange}
+          onClose={() => setShowSettings(false)}
+          requireAuth={handleUnlock}
+        />
+      )}
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
   },
 });
-
-export { NoteLockSettings };
-export type { NoteLockConfig };
