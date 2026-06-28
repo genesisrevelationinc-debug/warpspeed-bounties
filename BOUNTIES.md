@@ -22,92 +22,112 @@ This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty 
 
 ## Payment condition
 
-# Active Bounties
+# warpSpeed Bounties
 
-This document lists all active bounty tasks for the warpSpeed OPEN project.
+This document tracks active and completed bounty tasks for the warpSpeed OPEN developer programme.
 
----
+## Active Bounties
 
-## [PAID BOUNTY - $440] Messenger Group Chat Poll Creation & Voting UI
+### Messenger Group Chat Poll Creation & Voting UI
 
-**Issue**: [#1](https://github.com/warpspeedopen-source/warpspeed-bounties/issues/1)  
-**Status**: 🟢 Open  
-**Reward**: $440  
-**Difficulty**: Medium  
-**Labels**: `help wanted`, `bounty`, `paid`, `open`, `typescript`, `ui`, `react-native`, `frontend`
+| Field | Details |
+|-------|---------|
+| **Bounty ID** | WARP-POLL-001 |
+| **Reward** | $440 |
+| **Status** | 🟢 Open |
+| **Difficulty** | Medium |
+| **Category** | Frontend UI, React Native, TypeScript |
+| **Skills** | React Native, TypeScript, Storybook, UI Components, Mobile Interaction Design, Real-time UI States |
 
-### Overview
+#### Description
 
-Build a poll creation and voting feature for group chats in the warpSpeed app.
+Build a poll creation and voting feature for group chats in the warpSpeed app. The feature should allow users to create polls directly from the group chat input area, send polls inline into the conversation, vote on options, view real-time results, and open a detailed "View Votes" bottom sheet.
 
-The feature should allow users to create polls directly from the group chat input area, send polls inline into the conversation, vote on options, view real-time results, and open a detailed "View Votes" bottom sheet.
+#### Technical Requirements
 
-The experience should feel smooth, intuitive, and consistent with modern messaging apps such as WhatsApp.
+- **Poll Creation**
+  - Access poll creation from group chat input action/arrow menu
+  - Poll question input with 255 character limit
+  - Multiple answer options (up to 12 options)
+  - Single-choice or multiple-choice voting support
+  
+- **Poll Display**
+  - Inline poll message inside chat conversation
+  - Persistent poll display in chat history
+  - Visual result bars or progress indicators
+  - Vote percentage calculation based on total group participants
+  
+- **Voting Experience**
+  - Direct voting from the chat
+  - Real-time result updates
+  - "View Votes" action to open detailed view
+  
+- **Bottom Sheet**
+  - Detailed voting insights
+  - Voter profile previews
+  - Detailed voter list per option
 
-### Design Reference
+- **Storybook**
+  - Reusable poll components
+  - Composed view for full user experience
 
-[Adobe XD Prototype](https://xd.adobe.com/view/0cec7f20-eb33-402e-be87-f7e02753e028-59bf/)
+#### Design Reference
 
-### Technical Requirements
+[Adobe XD Design Mockup](https://xd.adobe.com/view/0cec7f20-eb33-402e-be87-f7e02753e028-59bf/)
 
-#### Core Features
+#### Acceptance Criteria
 
-| Feature | Description |
-|---------|-------------|
-| Poll Creation | Initiated from group chat input action/arrow menu |
-| Question Input | Text input with 255 character limit |
-| Options | Multiple answer options, up to 12 maximum |
-| Voting Modes | Single-choice or multiple-choice support |
-| Inline Display | Poll renders as a message bubble in chat |
-| Direct Voting | Vote directly from the chat interface |
-| Real-time Results | Live result updates with visual progress bars |
-| Percentage Calculation | Based on total group participants |
-| View Votes | Action to open detailed voting insights |
-| Bottom Sheet | Shows voter profile previews and detailed voter list per option |
-| Persistence | Poll remains visible in chat history |
+- [ ] Poll creation accessible from group chat input menu
+- [ ] Poll question supports up to 255 characters
+- [ ] Up to 12 poll options supported
+- [ ] Single and multiple choice voting modes
+- [ ] Inline poll rendering in chat messages
+- [ ] Real-time vote result updates
+- [ ] Visual progress bars for results
+- [ ] Percentage calculation based on group participants
+- [ ] "View Votes" bottom sheet with detailed insights
+- [ ] Voter profile previews and per-option voter lists
+- [ ] Polls persist in chat history
+- [ ] Storybook stories for all components
+- [ ] Minimum 90% specification match
 
-#### UI/UX Requirements
+#### Submission Rules
 
-- Smooth, intuitive interactions
-- Consistent with modern messaging apps (WhatsApp-style)
-- Visual result bars or progress indicators
-- Voter profile previews in bottom sheet
-- Detailed voter list per option
+1. Do not start work until a maintainer confirms your claim
+2. Maximum 3 submission attempts
+3. Minimum 90% specification match required for consideration
+4. Payment made only at 100% completion
+5. Payment processed after PR approval and merge
+6. First code commit required at halfway mark between bounty start and expiration
+7. Code must be original or properly licensed
 
-#### Technical Stack
-
-- React Native
-- TypeScript
-- Storybook (for component development)
-- UI Components
-- Mobile Interaction Design
-- Real-time UI States
-
-### Deliverables
-
-1. Reusable poll components
-2. Poll creation flow
-3. Inline poll message component
-4. Voting interface
-5. Results display with progress bars
-6. "View Votes" bottom sheet
-7. Storybook stories for all components
-8. Composed view demonstrating full user experience
-
-### How to Claim
+#### How to Claim
 
 1. Visit [warpSpeed Bounties](https://warpspeedopen.org/bounties)
 2. Sign up as a developer
 3. Review full bounty details and rules
-4. Comment on the GitHub issue:
+4. Comment on the GitHub issue: *"I have signed up and would like to claim this bounty."*
+5. Wait for maintainer confirmation before starting work
 
-   > "I have signed up and would like to claim this bounty."
+---
 
-5. **Wait for maintainer confirmation before starting work**
+## Completed Bounties
 
-### Important Rules
+*No completed bounties yet.*
 
-See the [GitHub issue](https://github.com/warpspeedopen-source/warpspeed-bounties/issues/1) and [official bounty page](https://warpspeedopen.org/bounties) for complete rules, deadlines, and submission requirements.
+---
 
-The official bounty page is the **source of truth** for full requirements, rules, and deadlines.
+## Bounty Status Legend
+
+| Status | Meaning |
+|--------|---------|
+| 🟢 Open | Available for claiming |
+| 🟡 Claimed | Assigned to a developer |
+| 🟠 In Review | PR submitted, under review |
+| 🔵 Completed | Approved and merged |
+| ⚫ Cancelled | Bounty cancelled or expired |
+
+---
+
+*For questions about bounties, contact the warpSpeed OPEN team or visit [warpSpeedopen.org](https://warpspeedopen.org).*
 Payment happens after the PR is approved and merged.
