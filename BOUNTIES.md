@@ -24,88 +24,46 @@ This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty 
 
 # warpSpeed Bounties
 
-This document tracks active and completed bounties for the warpSpeed OPEN programme.
-
 ## Active Bounties
 
 ### Note Locking - Biometrics/PIN
 
-| Field | Details |
-|-------|---------|
-| **Reward** | $660 |
-| **Difficulty** | Medium |
-| **Status** | 🟢 Open for claims |
-| **Skills** | React Native, TypeScript, Biometric Authentication, Secure UI States |
+- **Reward**: $660
+- **Status**: Open for claims
+- **Skills**: React Native, TypeScript, Biometric Authentication, Secure UI States
+- **Issue**: [#1](https://github.com/warpspeedopen-source/warpspeed-bounties/issues/1)
 
-#### Description
+## Claimed Bounties
 
-Build note-level locking for the warpSpeed Notes experience using biometrics, device authentication, or a user-defined PIN.
-
-This bounty gives users a private vault inside Notes. Users should be able to lock new or existing notes, clearly see which notes are locked, and unlock them only after successful authentication.
-
-Locked notes must stay hidden or obscured until unlocked, and the app should require re-authentication after app restart or after a configurable timeout.
-
-#### Technical Requirements
-
-- [ ] Ability to lock a new note
-- [ ] Ability to lock an existing note
-- [ ] Authentication using Face ID, Touch ID, fingerprint, device PIN, or user-defined PIN where supported
-- [ ] Clear locked-note state in the UI
-- [ ] Locked notes hidden or obscured until authentication succeeds
-- [ ] Secure lock screen for unauthenticated access attempts
-- [ ] No note content revealed before successful unlock
-- [ ] Re-authentication after app restart
-- [ ] Re-authentication after a configurable timeout period
-- [ ] Ability to remove a note lock through note settings
-- [ ] Ability to change lock settings through note settings
-- [ ] Authentication required before removing or changing a lock
-- [ ] Clear UI indicators such as lock icons or labels
-- [ ] Clean separation between authentication layer, note-locking logic, and UI components
-- [ ] Reusable TypeScript and React Native implementation that can be extended later
-
-#### Design Reference
-
-[Adobe XD Design](https://xd.adobe.com/view/b74cd4eb-ec51-400e-bdb2-5041a123510c-e21f/)
-
-#### How to Claim
-
-1. Visit [warpSpeed Bounties](https://warpspeedopen.org/bounties)
-2. Sign up as a developer
-3. Return to GitHub issue and comment: *"I have signed up and would like to claim this bounty."*
-4. Wait for maintainer confirmation before starting work
-
-#### Important Rules
-
-- Do not start work until a maintainer confirms your claim
-- Maximum 3 submission attempts
-- Minimum 90% specification match required for consideration
-- Payment is made only at 100% completion
-- Payment is processed only after the pull request is approved and merged
-- First code commit is required at the halfway mark between bounty start and bounty expiration
-- Code must be original or properly licensed
-- The official bounty page is the source of truth for full requirements, rules, and deadlines
-
----
-
-## Bounty Status Legend
-
-| Symbol | Meaning |
-|--------|---------|
-| 🟢 | Open for claims |
-| 🟡 | Claimed, in progress |
-| 🔵 | Under review |
-| ✅ | Completed and paid |
-| ❌ | Cancelled or expired |
-
----
+None yet.
 
 ## Completed Bounties
 
-*No completed bounties yet.*
+None yet.
 
----
+## How to Claim
 
-## Bounty Categories
+1. Browse available bounty tasks.
+2. Sign up on the warpSpeed OPEN website.
+3. Comment on the GitHub bounty issue to request assignment.
+4. Wait for maintainer confirmation before starting paid work.
+5. Fork the repository and create your branch.
+6. Submit your pull request.
+7. Respond to review comments.
+8. Get paid after the PR is approved and merged.
+
+## Bounty Rules
+
+- Do not start work until a maintainer confirms your claim.
+- Maximum 3 submission attempts.
+- Minimum 90% specification match required for consideration.
+- Payment is made only at 100% completion.
+- Payment is processed only after the pull request is approved and merged.
+- First code commit is required at the halfway mark between bounty start and bounty expiration.
+- Code must be original or properly licensed.
+- The official bounty page is the source of truth for full requirements, rules, and deadlines.
+
+## Categories
 
 - Frontend UI
 - React Native
@@ -115,22 +73,4 @@ Locked notes must stay hidden or obscured until unlocked, and the app should req
 - AI productivity features
 - Documentation
 - Integrations
-
----
-
-## Payment Information
-
-Bounties are paid only after the work is approved and the pull request is merged.
-
-Payment is processed via the method selected during developer signup.
-
----
-
-## Questions?
-
-- Website: [warpspeedopen.org](https://warpspeedopen.org)
-- Bounties: [warpspeedopen.org/bounties](https://warpspeedopen.org/bounties)
-- Developer Signup: [warpspeedopen.org/signup](https://warpspeedopen.org/signup)
-
-*Last updated: 2024*
 Payment happens after the PR is approved and merged.
