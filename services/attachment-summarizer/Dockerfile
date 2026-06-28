@@ -3,51 +3,52 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Install build dependencies
+# Install dependencies for native modules
 RUN apk add --no-cache python3 make g++
 
-# Copy package files
 COPY package*.json ./
 COPY prisma ./prisma/
 
-# Install dependencies
 RUN npm ci
 
-# Generate Prisma client
-RUN npx prisma generate
-
-# Copy source code
 COPY . .
 
-# Build TypeScript
 RUN npm run build
+RUN npm run prisma:generate
 
 # Production stage
 FROM node:20-alpine AS production
 
 WORKDIR /app
 
-# Install runtime dependencies for file processing
+# Install dependencies for file processing
 RUN apk add --no-cache \
+    python3 \
+    make \
+    g++ \
     libreoffice \
     poppler-utils \
     tesseract-ocr \
-    tesseract-ocr-data-eng \
-    && rm -rf /var/cache/apk/*
+    tesseract-ocr-data-eng
 
-# Copy package files
+# Install Ollama
+RUN wget -q -O /etc/apk/keys/ollama.alpine.dev.rsa.pub https://ollama.com/download/ollama.alpine.dev.rsa.pub && \
+    echo "https://ollama.com/download/alpine" >> /etc/apk/repositories && \
+    apk add --no-cache ollama
+
 COPY package*.json ./
 COPY prisma ./prisma/
 
-# Install production dependencies only
-RUN npm ci --only=production && \
-    npx prisma generate
+RUN npm ci --only=production
+RUN npm run prisma:generate
 
-# Copy built application from builder
 COPY --from=builder /app/dist ./dist
 
-# Create temp directories
-RUN mkdir -p tmp uploads downloads
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+
+USER nodejs
 
 EXPOSE 3000
 
