@@ -3,47 +3,33 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Install dependencies for native modules
-RUN apk add --no-cache python3 make g++
-
 COPY package*.json ./
-COPY prisma ./prisma/
+COPY tsconfig.json ./
 
 RUN npm ci
 
 COPY . .
 
 RUN npm run build
-RUN npm prune --production
 
 # Production stage
 FROM node:20-alpine AS production
 
 WORKDIR /app
 
-# Install runtime dependencies for file processing
+# Install dependencies for file processing
 RUN apk add --no-cache \
+    pdftotext \
+    antiword \
     libreoffice \
-    poppler-utils \
     tesseract-ocr \
-    tesseract-ocr-data-eng \
-    ffmpeg \
-    && rm -rf /var/cache/apk/*
+    tesseract-ocr-data-eng
 
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001
+COPY package*.json ./
 
-COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
-COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
-COPY --from=builder --chown=nodejs:nodejs /app/package*.json ./
-COPY --from=builder --chown=nodejs:nodejs /app/prisma ./prisma
+RUN npm ci --only=production && npm cache clean --force
 
-USER nodejs
-
-EXPOSE 3000
-
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD node -e "require('http').get('http://localhost:3000/health', (r) => r.statusCode === 200 ? process.exit(0) : process.exit(1))"
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/prisma ./prisma
 
 CMD ["node", "dist/index.js"]
