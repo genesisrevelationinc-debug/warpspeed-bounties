@@ -2,7 +2,7 @@
 --- /dev/null
 +++ b/src/components/audio/AudioPlayer.tsx
 @@ -0,0 +1,268 @@
-+import React, { useState, useEffect, useCallback, useRef } from 'react';
++import React, { useState, useEffect, useRef, useCallback } from 'react';
 +import {
 +  View,
 +  Text,
@@ -10,175 +10,172 @@
 +  StyleSheet,
 +  Animated,
 +  PanResponder,
-+  GestureResponderEvent,
++  Dimensions,
 +} from 'react-native';
-+import Slider from '@react-native-community/slider';
-+import { AudioService } from '../../services/audio/AudioService';
-+import { formatDuration } from '../../utils/time';
++import { Ionicons } from '@expo/vector-icons';
 +import { AudioPlayerProps, PlaybackSpeed } from '../../types/audio';
++import { formatDuration } from '../../utils/timeUtils';
++import { audioService } from '../../services/audioService';
++
++const { width: SCREEN_WIDTH } = Dimensions.get('window');
 +
 +const PLAYBACK_SPEEDS: PlaybackSpeed[] = [0.5, 1, 1.5, 2];
 +
 +export const AudioPlayer: React.FC<AudioPlayerProps> = ({
 +  audioUri,
-+  initialPosition = 0,
-+  onPositionChange,
++  duration,
++  lastPosition = 0,
 +  onDelete,
++  onPositionChange,
 +  noteId,
 +}) => {
 +  const [isPlaying, setIsPlaying] = useState(false);
-+  const [position, setPosition] = useState(initialPosition);
-+  const [duration, setDuration] = useState(0);
-+  const [speed, setSpeed] = useState<PlaybackSpeed>(1);
-+  const [isLoading, setIsLoading] = useState(true);
++  const [currentPosition, setCurrentPosition] = useState(lastPosition);
++  const [playbackSpeed, setPlaybackSpeed] = useState<PlaybackSpeed>(1);
++  const [isLoading, setIsLoading] = useState(false);
 +  const progressAnim = useRef(new Animated.Value(0)).current;
-+  const updateInterval = useRef<NodeJS.Timeout | null>(null);
-+
-+  const audioService = useRef(new AudioService()).current;
++  const progressRef = useRef(0);
 +
 +  useEffect(() => {
-+    loadAudio();
-+    return () => {
-+      cleanup();
-+    };
-+  }, [audioUri]);
++    const subscription = audioService.onPlaybackStatusUpdate((status) => {
++      if (status.isLoaded) {
++        setCurrentPosition(status.positionMillis);
++        setIsPlaying(status.isPlaying);
 +
-+  const loadAudio = async () => {
-+    try {
-+      setIsLoading(true);
-+      await audioService.loadAudio(audioUri);
-+      const audioDuration = await audioService.getDuration();
-+      setDuration(audioDuration);
-+      if (initialPosition > 0) {
-+        await audioService.seekTo(initialPosition);
-+        setPosition(initialPosition);
++        if (status.didJustFinish) {
++          setCurrentPosition(0);
++          setIsPlaying(false);
++          onPositionChange?.(0);
++        }
 +      }
-+      setIsLoading(false);
-+    } catch (error) {
-+      console.error('Failed to load audio:', error);
-+      setIsLoading(false);
-+    }
-+  };
++    });
 +
-+  const cleanup = () => {
-+    if (updateInterval.current) {
-+      clearInterval(updateInterval.current);
-+    }
-+    audioService.stop();
-+  };
++    return () => {
++      subscription.remove();
++    };
++  }, [onPositionChange]);
 +
-+  const startProgressUpdate = () => {
-+    updateInterval.current = setInterval(async () => {
-+      const currentPosition = await audioService.getCurrentPosition();
-+      setPosition(currentPosition);
-+      onPositionChange?.(currentPosition);
-+    }, 100);
-+  };
++  useEffect(() => {
++    const progress = duration > 0 ? currentPosition / duration : 0;
++    progressAnim.setValue(progress * SCREEN_WIDTH * 0.7);
++    progressRef.current = progress;
++  }, [currentPosition, duration, progressAnim]);
 +
-+  const stopProgressUpdate = () => {
-+    if (updateInterval.current) {
-+      clearInterval(updateInterval.current);
-+      updateInterval.current = null;
-+    }
-+  };
++  useEffect(() => {
++    return () => {
++      audioService.stopPlayback();
++    };
++  }, []);
 +
-+  const togglePlayback = async () => {
++  const handlePlayPause = async () => {
 +    if (isPlaying) {
-+      await audioService.pause();
++      await audioService.pausePlayback();
 +      setIsPlaying(false);
-+      stopProgressUpdate();
++      onPositionChange?.(currentPosition);
 +    } else {
-+      await audioService.play();
-+      setIsPlaying(true);
-+      startProgressUpdate();
++      setIsLoading(true);
++      try {
++        await audioService.startPlayback(audioUri, currentPosition, playbackSpeed);
++        setIsPlaying(true);
++      } catch (error) {
++        console.error('Playback error:', error);
++      } finally {
++        setIsLoading(false);
++      }
 +    }
 +  };
 +
-+  const handleSeek = async (value: number) => {
-+    await audioService.seekTo(value);
-+    setPosition(value);
++  const handleSeek = async (seekPosition: number) => {
++    const clampedPosition = Math.max(0, Math.min(seekPosition, duration));
++    setCurrentPosition(clampedPosition);
++    await audioService.seekTo(clampedPosition);
++    onPositionChange?.(clampedPosition);
 +  };
 +
-+  const handleSpeedChange = () => {
-+    const currentIndex = PLAYBACK_SPEEDS.indexOf(speed);
++  const handleRewind = () => {
++    handleSeek(Math.max(0, currentPosition - 10000));
++  };
++
++  const handleFastForward = () => {
++    handleSeek(Math.min(duration, currentPosition + 10000));
++  };
++
++  const toggleSpeed = () => {
++    const currentIndex = PLAYBACK_SPEEDS.indexOf(playbackSpeed);
 +    const nextIndex = (currentIndex + 1) % PLAYBACK_SPEEDS.length;
 +    const newSpeed = PLAYBACK_SPEEDS[nextIndex];
-+    setSpeed(newSpeed);
-+    audioService.setSpeed(newSpeed);
++    setPlaybackSpeed(newSpeed);
++    audioService.setPlaybackSpeed(newSpeed);
 +  };
 +
-+  const handleRewind = async () => {
-+    const newPosition = Math.max(0, position - 10);
-+    await handleSeek(newPosition);
-+  };
++  const panResponder = useRef(
++    PanResponder.create({
++      onStartShouldSetPanResponder: () => true,
++      onMoveShouldSetPanResponder: () => true,
++      onPanResponderGrant: (evt) => {
++        const { locationX } = evt.nativeEvent;
++        const progressBarWidth = SCREEN_WIDTH * 0.7;
++        const newPosition = (locationX / progressBarWidth) * duration;
++        handleSeek(newPosition);
++      },
++      onPanResponderMove: (evt) => {
++        const { locationX } = evt.nativeEvent;
++        const progressBarWidth = SCREEN_WIDTH * 0.7;
++        const newPosition = (locationX / progressBarWidth) * duration;
++        handleSeek(newPosition);
++      },
++    })
++  ).current;
 +
-+  const handleFastForward = async () => {
-+    const newPosition = Math.min(duration, position + 10);
-+    await handleSeek(newPosition);
-+  };
-+
-+  const progress = duration > 0 ? (position / duration) * 100 : 0;
++  const progressBarWidth = SCREEN_WIDTH * 0.7;
++  const progressWidth = (currentPosition / duration) * progressBarWidth;
 +
 +  return (
 +    <View style={styles.container}>
 +      <View style={styles.waveformContainer}>
-+        <AudioWaveform isPlaying={isPlaying} amplitude={0.5} />
++        <View style={styles.waveform}>
++          {Array.from({ length: 40 }).map((_, i) => (
++            <View
++              key={i}
++              style={[
++                styles.waveformBar,
++                {
++                  height: 4 + Math.random() * 20,
++                  opacity: i / 40 <= progressRef.current ? 1 : 0.3,
++                },
++              ]}
++            />
++          ))}
++        </View>
 +      </View>
 +
-+      <View style={styles.progressContainer}>
-+        <Text style={styles.timeText}>{formatDuration(position)}</Text>
-+        <Slider
-+          style={styles.slider}
-+          minimumValue={0}
-+          maximumValue={duration}
-+          value={position}
-+          onSlidingComplete={handleSeek}
-+          minimumTrackTintColor="#007AFF"
-+          maximumTrackTintColor="#D3D3D3"
-+          thumbTintColor="#007AFF"
-+        />
-+        <Text style={styles.timeText}>{formatDuration(duration)}</Text>
-+      </View>
-+
-+      <View style={styles.controlsContainer}>
++      <View style={styles.controls}>
 +        <TouchableOpacity onPress={handleRewind} style={styles.controlButton}>
-+          <Text style={styles.controlText}>⏪ 10s</Text>
++          <Ionicons name="play-back" size={20} color="#333" />
 +        </TouchableOpacity>
 +
-+        <TouchableOpacity onPress={togglePlayback} style={styles.playButton}>
-+          <Text style={styles.playButtonText}>{isPlaying ? '⏸' : '▶️'}</Text>
++        <TouchableOpacity
++          onPress={handlePlayPause}
++          disabled={isLoading}
++          style={styles.playButton}
++        >
++          <Ionicons
++            name={isPlaying ? 'pause' : 'play'}
++            size={28}
++            color="#fff"
++          />
 +        </TouchableOpacity>
 +
 +        <TouchableOpacity onPress={handleFastForward} style={styles.controlButton}>
-+          <Text style={styles.controlText}>10s ⏩</Text>
++          <Ionicons name="play-forward" size={20} color="#333" />
 +        </TouchableOpacity>
 +
-+        <TouchableOpacity onPress={handleSpeedChange} style={styles.speedButton}>
-+          <Text style={styles.speedText}>{speed}x</Text>
++        <TouchableOpacity onPress={toggleSpeed} style={styles.speedButton}>
++          <Text style={styles.speedText}>{playbackSpeed}x</Text>
 +        </TouchableOpacity>
 +      </View>
 +
-+      {onDelete && (
-+        <TouchableOpacity onPress={onDelete} style={styles.deleteButton}>
-+          <Text style={styles.deleteText}>🗑️ Delete Audio</Text>
-+        </TouchableOpacity>
-+      )}
-+    </View>
-+  );
-embaliased
-+};
++      <View style={styles.progressContainer} {...panResponder.panHandlers}>
++        <View style={styles.progressBar}>
++          <View style={[styles.progressFill, { width: progressWidth }]} />
 +
-+const AudioWaveform: React.FC<{ isPlaying: boolean; amplitude: number }> = ({
-+  isPlaying,
-+  amplitude,
-+}) => {
-+  const bars = Array.from({ length: 40 }, (_, i) => i);
-+  const animations = useRef(bars.map(() => new Animated.Value(0.3))).current;
-+
-+  useEffect(() => {
-+    if (isPlaying) {
-+      animations.forEach((anim, index) => {
-+        Animated.loop(
-+          Animated.sequence([
-+            Animated.timing(anim, {
-+              toValue: Math.random() *
