@@ -28,33 +28,45 @@ This document tracks active and completed bounties for the warpSpeed OPEN projec
 
 ## Active Bounties
 
-### Email Threads API — $750 (Hard)
+### Email Threads API — $750
 
 | Field | Details |
 |-------|---------|
-| **Bounty ID** | BNT-2024-001 |
-| **Status** | 🟢 Open — accepting claims |
-| **Reward** | $750 USD |
+| **Status** | Open — accepting claims |
 | **Difficulty** | Hard |
 | **Skills** | Node.js, TypeScript, Prisma, API Development, Email Systems, Jest, Swagger |
-| **GitHub Issue** | #1 |
+| **Issue** | [#1](https://github.com/warpspeedopen-source/warpspeed-bounties/issues/1) |
 
-#### Description
+#### Scope
 
-Build a thread-first Email Threads API for the warpSpeed app. This bounty introduces a new threaded email experience so users can work with conversations instead of isolated messages.
+Build a thread-first Email Threads API for the warpSpeed app. This introduces a new threaded email experience so users can work with conversations instead of isolated messages.
 
-#### Technical Requirements
+#### Deliverables
 
-##### Core API Endpoints
+- [ ] `GET /api/v1/email-threads` — List email threads for the authenticated user
+- [ ] `GET /api/v1/email-threads/:id` — Open a single thread with metadata and related messages
+- [ ] Thread grouping for filtered/search results
+- [ ] Ownership and access control rules preserved
+- [ ] Drafts included in correct conversation thread
+- [ ] Archived and deleted messages excluded where required
+- [ ] Thread recency updated on draft create/update/send
+- [ ] Synced Gmail/Outlook/IMAP emails update thread ordering
+- [ ] Consistent search/filter behavior with existing messages endpoint
+- [ ] Swagger/API documentation
+- [ ] Jest tests for auth, ordering, filters, drafts, and thread detail
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/v1/email-threads` | List email threads for authenticated user |
-| `GET` | `/api/v1/email-threads/:id` | Get single thread with messages |
-| `POST` | `/api/v1/email-threads/:id/draft` | Create/update draft in thread |
-| `DELETE` | `/api/v1/email-threads/:id` | Soft-delete thread (archive) |
+#### API Specification
 
-##### Data Model Requirements
+##### `GET /api/v1/email-threads`
 
+**Query Parameters:**
+- `page` (number, optional, default: 1)
+- `limit` (number, optional, default: 20)
+- `search` (string, optional) — full-text search across subject and body
+- `filter` (enum, optional) — `all`, `unread`, `starred`, `drafts`
+- `sort` (enum, optional, default: `lastActivityAt`) — `lastActivityAt`, `subject`
+- `accountId` (string, optional) — filter by email account
+
+**Response:**
 
 Payment happens after the PR is approved and merged.
