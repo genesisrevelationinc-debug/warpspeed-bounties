@@ -24,146 +24,63 @@ This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty 
 
 # warpSpeed Bounties
 
-This document lists active and completed bounties for the warpSpeed OPEN project.
-
 ## Active Bounties
 
-### Note Locking - Biometrics/PIN
+### Note Locking - Biometrics/PIN ($660)
 
-| Field | Details |
-|-------|---------|
-| **Bounty ID** | BNT-001 |
-| **Reward** | $660 |
-| **Status** | 🟢 Active - Claimed |
-| **Difficulty** | Medium |
-| **Skills** | React Native, TypeScript, Biometric Authentication, Secure UI States |
+**Status:** 🟢 Open for claims  
+**Reward:** $660  
+**Difficulty:** Medium  
+**Skills:** React Native, TypeScript, Biometric Authentication, Secure UI States
 
-#### Description
+**Description:** Build note-level locking for the warpSpeed Notes experience using biometrics, device authentication, or a user-defined PIN.
 
-Build note-level locking for the warpSpeed Notes experience using biometrics, device authentication, or a user-defined PIN.
+**Key Requirements:**
+- Lock new or existing notes
+- Authentication via Face ID, Touch ID, fingerprint, device PIN, or user-defined PIN
+- Clear locked-note state in UI
+- Locked notes hidden/obscured until unlocked
+- Re-authentication after app restart or configurable timeout
+- Remove/change lock settings with authentication
+- Clean separation of authentication layer, note-locking logic, and UI components
 
-This bounty gives users a private vault inside Notes. Users should be able to lock new or existing notes, clearly see which notes are locked, and unlock them only after successful authentication.
+**Design Reference:** [Adobe XD Prototype](https://xd.adobe.com/view/b74cd4eb-ec51-400e-bdb2-5041a123510c-e21f/)
 
-Locked notes must stay hidden or obscured until unlocked, and the app should require re-authentication after app restart or after a configurable timeout.
-
-#### Technical Requirements
-
-##### Core Features
-
-1. **Lock New Note**
-   - Option to enable lock during note creation
-   - Prompt for authentication method selection (Biometric/PIN)
-   - Secure storage of lock metadata
-
-2. **Lock Existing Note**
-   - Toggle lock from note settings/menu
-   - Authentication required to enable lock
-   - Graceful handling of already-locked notes
-
-3. **Authentication Methods**
-   - Face ID (iOS)
-   - Touch ID (iOS)
-   - Fingerprint (Android)
-   - Device PIN/Passcode fallback
-   - User-defined PIN as alternative
-   - Graceful degradation when biometrics unavailable
-
-4. **UI States for Locked Notes**
-   - Lock icon indicator in note list
-   - Obscured/hidden content preview
-   - Secure lock screen overlay
-   - No content leakage in previews or notifications
-
-5. **Unlock Flow**
-   - Tap locked note → authentication prompt → reveal content
-   - Failed auth: remain locked, show error
-   - Successful auth: temporary unlock with timeout
-
-6. **Re-authentication Requirements**
-   - Mandatory re-auth after app restart
-   - Configurable timeout (default: 5 minutes)
-   - Background-to-foreground triggers re-auth check
-
-7. **Lock Management**
-   - Remove lock from note settings (requires auth)
-   - Change lock settings/PIN (requires auth)
-   - Confirmation dialogs for destructive actions
-
-##### Architecture Requirements
-
-- Clean separation of concerns:
-  - `auth/` - Authentication layer
-  - `hooks/` - Lock state management
-  - `components/` - UI components
-  - `services/` - Secure storage and business logic
-
-- TypeScript interfaces for all data structures
-- Reusable components with clear prop interfaces
-- Unit tests for critical security paths
-
-##### Security Requirements
-
-- No plain-text storage of PIN or biometric data
-- Use platform secure storage (Keychain/Keystore)
-- Memory clearing of sensitive data after use
-- Prevent screenshot/recording on lock screen (where supported)
-- Obscure content in app switcher/multitasking view
-
-#### Implementation Checklist
-
-- [ ] Authentication service with biometric + PIN support
-- [ ] Secure storage service for lock metadata
-- [ ] Lock context/provider for app-wide state
-- [ ] Lock screen component
-- [ ] Note list with lock indicators
-- [ ] Note editor with lock toggle
-- [ ] Settings for lock management
-- [ ] Timeout/re-auth logic
-- [ ] Unit tests
-- [ ] Integration tests
-- [ ] Documentation
-
-#### Design Reference
-
-[Adobe XD Prototype](https://xd.adobe.com/view/b74cd4eb-ec51-400e-bdb2-5041a123510c-e21f/)
-
-#### Submission Rules
-
-1. Maximum 3 submission attempts
-2. Minimum 90% specification match required
-3. Payment at 100% completion only
-4. First code commit required at halfway mark
-5. Code must be original or properly licensed
-
----
-
-## Completed Bounties
-
-*No completed bounties yet.*
-
----
-
-## Bounty Status Legend
-
-| Symbol | Meaning |
-|--------|---------|
-| 🟢 | Active - Available for claiming |
-| 🟡 | Active - Claimed, in progress |
-| 🔵 | Under review |
-| ✅ | Completed and paid |
-| ❌ | Cancelled or expired |
+**Full Details:** [warpspeedopen.org/bounties](https://warpspeedopen.org/bounties)
 
 ---
 
 ## How to Claim a Bounty
 
-1. Visit [warpSpeed OPEN Bounties](https://warpspeedopen.org/bounties)
-2. Sign up as a developer
-3. Find the bounty on GitHub issues
-4. Comment: "I have signed up and would like to claim this bounty."
-5. Wait for maintainer confirmation before starting work
+1. Browse available bounty tasks on [our website](https://warpspeedopen.org/bounties)
+2. Sign up on the warpSpeed OPEN website
+3. Comment on the GitHub bounty issue to request assignment
+4. **Wait for maintainer confirmation before starting paid work**
+5. Fork the repository and create your branch
+6. Submit your pull request
 
----
+## Bounty Rules
 
-*For questions, contact the maintainers or join our Discord community.*
+- **Do not start work until a maintainer confirms your claim**
+- Maximum 3 submission attempts
+- Minimum 90% specification match required for consideration
+- Payment is made only at 100% completion
+- Payment is processed only after the pull request is approved and merged
+- First code commit is required at the halfway mark between bounty start and bounty expiration
+- Code must be original or properly licensed
+
+## Payment
+
+Bounties are paid only after the work is approved and the pull request is merged.
+
+## Categories
+
+- Frontend UI
+- React Native
+- Node.js API
+- Prisma / database work
+- TypeScript
+- AI productivity features
+- Documentation
+- Integrations
 Payment happens after the PR is approved and merged.
