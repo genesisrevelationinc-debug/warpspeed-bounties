@@ -7,9 +7,7 @@ pnpm-lock.yaml
 # Build output
 dist/
 build/
-*.js
-*.js.map
-!jest.config.js
+*.tsbuildinfo
 
 # Environment variables
 .env
@@ -35,3 +33,11 @@ coverage/
 
 # OS
 .DS_Store
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+uploads/
+downloads/
