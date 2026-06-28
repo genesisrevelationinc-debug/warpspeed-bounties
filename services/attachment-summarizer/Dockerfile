@@ -3,16 +3,23 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Install dependencies for native modules
+# Install build dependencies
 RUN apk add --no-cache python3 make g++
 
+# Copy package files
 COPY package*.json ./
 COPY prisma ./prisma/
 
+# Install dependencies
 RUN npm ci
 
+# Generate Prisma client
+RUN npx prisma generate
+
+# Copy source code
 COPY . .
 
+# Build TypeScript
 RUN npm run build
 
 # Production stage
@@ -28,20 +35,20 @@ RUN apk add --no-cache \
     tesseract-ocr-data-eng \
     && rm -rf /var/cache/apk/*
 
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001
+# Copy package files
+COPY package*.json ./
+COPY prisma ./prisma/
 
-COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
-COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
-COPY --from=builder --chown=nodejs:nodejs /app/package*.json ./
-COPY --from=builder --chown=nodejs:nodejs /app/prisma ./prisma
+# Install production dependencies only
+RUN npm ci --only=production && \
+    npx prisma generate
 
-USER nodejs
+# Copy built application from builder
+COPY --from=builder /app/dist ./dist
+
+# Create temp directories
+RUN mkdir -p tmp uploads downloads
 
 EXPOSE 3000
-
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD node -e "require('http').get('http://localhost:3000/health', (r) => r.statusCode === 200 ? process.exit(0) : process.exit(1))"
 
 CMD ["node", "dist/index.js"]
