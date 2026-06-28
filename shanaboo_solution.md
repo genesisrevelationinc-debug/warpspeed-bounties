@@ -21,8 +21,8 @@
 +# Application Configuration
 +NODE_ENV=development
 +LOG_LEVEL=info
++PROCESSING_TIMEOUT_MS=300000
 +MAX_FILE_SIZE_MB=50
-+SUPPORTED_MIME_TYPES=application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/plain,text/html,image/png,image/jpeg,image/gif
 +
 --- /dev/null
 +++ services/attachment-summarizer/.gitignore
@@ -31,7 +31,6 @@
 +node_modules/
 +package-lock.json
 +yarn.lock
-+pnpm-lock.yaml
 +
 +# Build output
 +dist/
@@ -47,8 +46,6 @@
 +logs/
 +*.log
 +npm-debug.log*
-+yarn-debug.log*
-+yarn-error.log*
 +
 +# Testing
 +coverage/
@@ -80,116 +77,126 @@
 +# Install dependencies for native modules
 +RUN apk add --no-cache python3 make g++
 +
-+# Copy package files
 +COPY package*.json ./
 +COPY prisma ./prisma/
 +
-+# Install dependencies
 +RUN npm ci
 +
-+# Generate Prisma client
-+RUN npx prisma generate
-+
-+# Copy source code
 +COPY . .
 +
-+# Build TypeScript
 +RUN npm run build
++RUN npx prisma generate
 +
 +# Production stage
 +FROM node:20-alpine AS production
 +
 +WORKDIR /app
 +
-+# Install runtime dependencies
-+RUN apk add --no-cache libreoffice tesseract-ocr
++# Install runtime dependencies for file processing
++RUN apk add --no-cache \
++    libreoffice \
++    poppler-utils \
++    tesseract-ocr \
++    tesseract-ocr-data-eng \
++    && rm -rf /var/cache/apk/*
 +
-+# Copy package files and install production dependencies
-+COPY package*.json ./
-+COPY prisma ./prisma/
-+RUN npm ci --only=production && npx prisma generate
++# Create non-root user
++RUN addgroup -g 1001 -S nodejs && \
++    adduser -S nodejs -u 1001
 +
-+# Copy built application from builder
-+COPY --from=builder /app/dist ./dist
++COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
++COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
++COPY --from=builder --chown=nodejs:nodejs /app/package*.json ./
++COPY --from=builder --chown=nodejs:nodejs /app/prisma ./prisma
 +
-+# Create temp directory for downloads
-+RUN mkdir -p /tmp/attachments
++USER nodejs
 +
-+# Expose port for health checks
 +EXPOSE 3000
 +
-+# Start the application
++HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
++    CMD node -e "require.resolve('./dist/healthcheck.js')" || exit 1
++
 +CMD ["node", "dist/index.js"]
 +
 --- /dev/null
 +++ services/attachment-summarizer/docker-compose.yml
-@@ -0,0 +1,56 @@
+@@ -0,0 +1,68 @@
 +version: '3.8'
 +
 +services:
-+  attachment-summarizer:
++  app:
 +    build:
 +      context: .
 +      dockerfile: Dockerfile
 +    container_name: attachment-summarizer
-+    env_file:
-+      - .env
 +    environment:
 +      - NODE_ENV=production
-+      - OLLAMA_BASE_URL=http://ollama:11434
++      - DATABASE_URL=postgresql://postgres:postgres@db:5432/attachments?schema=public
++      - REDIS_URL=redis://redis:6379
++    env_file:
++      - .env
 +    depends_on:
-+      - postgres
-+      - ollama
++      db:
++        condition: service_healthy
++      redis:
++        condition: service_started
++      ollama:
++        condition: service_started
 +    volumes:
-+      - ./tmp:/tmp/attachments
++      - ./tmp:/app/tmp
 +    networks:
-+      - attachment-summarizer-network
-+    restart: unless-stopped
++      - attachment-network
 +
-+  postgres:
++  db:
 +    image: postgres:15-alpine
-+    container_name: attachment-summarizer-db
++    container_name: attachment-db
 +    environment:
 +      POSTGRES_USER: postgres
 +      POSTGRES_PASSWORD: postgres
-+      POSTGRES_DB: attachment_summarizer
++      POSTGRES_DB: attachments
 +    volumes:
-+      - postgres_data:/var/lib/postgresql/data
-+    ports:
-+      - "5432:5432"
++      - postgres-data:/var/lib/postgresql/data
++    healthcheck:
++      test: ["CMD-SHELL", "pg_isready -U postgres"]
++      interval: 5s
++      timeout: 5s
++      retries: 5
 +    networks:
-+      - attachment-summarizer-network
++      - attachment-network
++
++  redis:
++    image: redis:7-alpine
++    container_name: attachment-redis
++    networks:
++      - attachment-network
 +
 +  ollama:
 +    image: ollama/ollama:latest
-+    container_name: attachment-summarizer-llm
++    container_name: attachment-ollama
 +    volumes:
-+      - ollama_data:/root/.ollama
-+    ports:
-+      - "11434:11434"
++      - ollama-data:/root/.ollama
++    environment:
++      - OLLAMA_HOST=0.0.0.0
 +    networks:
-+      - attachment-summarizer-network
-+    # Pull default model on first start
-+    entrypoint: >
-+      sh -c "ollama serve & sleep 10 && ollama pull llama3.2 && wait"
++      - attachment-network
 +
 +volumes:
-+  postgres_data:
-+  ollama_data:
++  postgres-data:
++  ollama-data:
 +
 +networks:
-+  attachment-summarizer-network:
++  attachment-network:
 +    driver: bridge
 +
 --- /dev/null
 +++ services/attachment-summarizer/jest.config.js
-@@ -0,0 +1,18 @@
+@@ -0,0 +1,20 @@
 +/** @type {import('ts-jest').JestConfigWithTsJest} */
 +module.exports = {
 +  preset: 'ts-jest',
 +  testEnvironment: 'node',
 +  roots: ['<rootDir>/src'],
-+  testMatch: ['**/__tests__/**/*.test.ts'],
++  testMatch: ['**/__tests__/**/*.test.ts', '**/?(*.)+(spec|test).ts'],
 +  transform: {
 +    '^.+\\.ts$': 'ts-jest',
 +  },
@@ -201,6 +208,7 @@
 +  coverageDirectory: 'coverage',
 +  coverageReporters: ['text', 'lcov', 'html'],
 +  setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],
++  testTimeout: 30000,
 +};
 +
 --- /dev/null
@@ -209,12 +217,4 @@
 +{
 +  "name": "attachment-summarizer",
 +  "version": "1.0.0",
-+  "description": "Node.js service that consumes email attachment events from SQS, extracts content, and generates summaries using a local LLM",
-+  "main": "dist/index.js",
-+  "scripts": {
-+    "build": "tsc",
-+    "start": "node dist/index.js",
-+    "dev": "ts-node-dev --respawn src/index.ts",
-+    "test": "jest",
-+    "test:watch": "jest --watch",
-+    "test:coverage": "
++  "description": "Node.js service that consumes email attachment events from SQS
