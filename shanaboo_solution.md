@@ -1,181 +1,183 @@
  ```diff
 --- /dev/null
-+++ b/src/components/audio/AudioPlayer.tsx
-@@ -0,0 +1,268 @@
-+import React, { useState, useEffect, useRef, useCallback } from 'react';
-+import {
-+  View,
-+  Text,
-+  TouchableOpacity,
-+  StyleSheet,
-+  Animated,
-+  PanResponder,
-+  Dimensions,
-+} from 'react-native';
-+import { Ionicons } from '@expo/vector-icons';
-+import { AudioPlayerProps, PlaybackSpeed } from '../../types/audio';
-+import { formatDuration } from '../../utils/timeUtils';
++++ b/src/components/AudioNote/AudioPlayer.tsx
+@@ -0,0 +1,245 @@
++import React, { useState, useEffect, useCallback, useRef } from 'react';
++import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
++import Slider from '@react-native-community/slider';
++import { AudioAttachment } from '../../types/notes';
 +import { audioService } from '../../services/audioService';
++import { formatDuration } from '../../utils/timeUtils';
 +
-+const { width: SCREEN_WIDTH } = Dimensions.get('window');
-+
-+const PLAYBACK_SPEEDS: PlaybackSpeed[] = [0.5, 1, 1.5, 2];
++interface AudioPlayerProps {
++  audioAttachment: AudioAttachment;
++  onDelete?: () => void;
++  onTranscribe?: () => void;
++  noteId: string;
++}
 +
 +export const AudioPlayer: React.FC<AudioPlayerProps> = ({
-+  audioUri,
-+  duration,
-+  lastPosition = 0,
++  audioAttachment,
 +  onDelete,
-+  onPositionChange,
++  onTranscribe,
 +  noteId,
 +}) => {
 +  const [isPlaying, setIsPlaying] = useState(false);
-+  const [currentPosition, setCurrentPosition] = useState(lastPosition);
-+  const [playbackSpeed, setPlaybackSpeed] = useState<PlaybackSpeed>(1);
++  const [currentPosition, setCurrentPosition] = useState(audioAttachment.lastPosition || 0);
++  const [duration, setDuration] = useState(audioAttachment.duration || 0);
++  const [playbackRate, setPlaybackRate] = useState(1.0);
 +  const [isLoading, setIsLoading] = useState(false);
 +  const progressAnim = useRef(new Animated.Value(0)).current;
-+  const progressRef = useRef(0);
++  const updateInterval = useRef<NodeJS.Timeout | null>(null);
 +
 +  useEffect(() => {
-+    const subscription = audioService.onPlaybackStatusUpdate((status) => {
-+      if (status.isLoaded) {
-+        setCurrentPosition(status.positionMillis);
-+        setIsPlaying(status.isPlaying);
-+
-+        if (status.didJustFinish) {
-+          setCurrentPosition(0);
-+          setIsPlaying(false);
-+          onPositionChange?.(0);
-+        }
++    return () => {
++      stopPlayback();
++      if (updateInterval.current) {
++        clearInterval(updateInterval.current);
 +      }
-+    });
-+
-+    return () => {
-+      subscription.remove();
-+    };
-+  }, [onPositionChange]);
-+
-+  useEffect(() => {
-+    const progress = duration > 0 ? currentPosition / duration : 0;
-+    progressAnim.setValue(progress * SCREEN_WIDTH * 0.7);
-+    progressRef.current = progress;
-+  }, [currentPosition, duration, progressAnim]);
-+
-+  useEffect(() => {
-+    return () => {
-+      audioService.stopPlayback();
 +    };
 +  }, []);
 +
-+  const handlePlayPause = async () => {
-+    if (isPlaying) {
-+      await audioService.pausePlayback();
-+      setIsPlaying(false);
-+      onPositionChange?.(currentPosition);
-+    } else {
++  const startPositionUpdate = useCallback(() => {
++    if (updateInterval.current) {
++      clearInterval(updateInterval.current);
++    }
++    updateInterval.current = setInterval(() => {
++      audioService.getCurrentPosition().then((position) => {
++        if (position >= 0) {
++          setCurrentPosition(position);
++        }
++      });
++    }, 250);
++  }, []);
++
++  const stopPositionUpdate = useCallback(() => {
++    if (updateInterval.current) {
++      clearInterval(updateInterval.current);
++      updateInterval.current = null;
++    }
++  }, []);
++
++  const play = async () => {
++    try {
 +      setIsLoading(true);
-+      try {
-+        await audioService.startPlayback(audioUri, currentPosition, playbackSpeed);
-+        setIsPlaying(true);
-+      } catch (error) {
-+        console.error('Playback error:', error);
-+      } finally {
-+        setIsLoading(false);
-+      }
++      await audioService.loadAudio(audioAttachment.uri, audioAttachment.lastPosition || 0);
++      await audioService.setPlaybackRate(playbackRate);
++      await audioService.play();
++      setIsPlaying(true);
++      setIsLoading(false);
++      startPositionUpdate();
++    } catch (error) {
++      console.error('Error playing audio:', error);
++      setIsLoading(false);
 +    }
 +  };
 +
-+  const handleSeek = async (seekPosition: number) => {
-+    const clampedPosition = Math.max(0, Math.min(seekPosition, duration));
-+    setCurrentPosition(clampedPosition);
-+    await audioService.seekTo(clampedPosition);
-+    onPositionChange?.(clampedPosition);
++  const pause = async () => {
++    try {
++      await audioService.pause();
++      setIsPlaying(false);
++      stopPositionUpdate();
++      await savePosition();
++    } catch (error) {
++      console.error('Error pausing audio:', error);
++    }
 +  };
 +
-+  const handleRewind = () => {
-+    handleSeek(Math.max(0, currentPosition - 10000));
++  const stopPlayback = async () => {
++    try {
++      await audioService.stop();
++      setIsPlaying(false);
++      stopPositionUpdate();
++      await savePosition();
++    } catch (error) {
++      console.error('Error stopping audio:', error);
++    }
 +  };
 +
-+  const handleFastForward = () => {
-+    handleSeek(Math.min(duration, currentPosition + 10000));
++  const savePosition = async () => {
++    const position = await audioService.getCurrentPosition();
++    // Save position to backend
++    await audioService.savePlaybackPosition(noteId, audioAttachment.id, position);
 +  };
 +
-+  const toggleSpeed = () => {
-+    const currentIndex = PLAYBACK_SPEEDS.indexOf(playbackSpeed);
-+    const nextIndex = (currentIndex + 1) % PLAYBACK_SPEEDS.length;
-+    const newSpeed = PLAYBACK_SPEEDS[nextIndex];
-+    setPlaybackSpeed(newSpeed);
-+    audioService.setPlaybackSpeed(newSpeed);
++  const seek = async (value: number) => {
++    try {
++      await audioService.seekTo(value);
++      setCurrentPosition(value);
++    } catch (error) {
++      console.error('Error seeking audio:', error);
++    }
 +  };
 +
-+  const panResponder = useRef(
-+    PanResponder.create({
-+      onStartShouldSetPanResponder: () => true,
-+      onMoveShouldSetPanResponder: () => true,
-+      onPanResponderGrant: (evt) => {
-+        const { locationX } = evt.nativeEvent;
-+        const progressBarWidth = SCREEN_WIDTH * 0.7;
-+        const newPosition = (locationX / progressBarWidth) * duration;
-+        handleSeek(newPosition);
-+      },
-+      onPanResponderMove: (evt) => {
-+        const { locationX } = evt.nativeEvent;
-+        const progressBarWidth = SCREEN_WIDTH * 0.7;
-+        const newPosition = (locationX / progressBarWidth) * duration;
-+        handleSeek(newPosition);
-+      },
-+    })
-+  ).current;
++  const togglePlaybackRate = () => {
++    const rates = [1.0, 1.5, 2.0];
++    const currentIndex = rates.indexOf(playbackRate);
++    const nextRate = rates[(currentIndex + 1) % rates.length];
++    setPlaybackRate(nextRate);
++    audioService.setPlaybackRate(nextRate);
++  };
 +
-+  const progressBarWidth = SCREEN_WIDTH * 0.7;
-+  const progressWidth = (currentPosition / duration) * progressBarWidth;
++  const skipForward = async () => {
++    const newPosition = Math.min(currentPosition + 15000, duration);
++    await seek(newPosition);
++  };
++
++  const skipBackward = async () => {
++    const newPosition = Math.max(currentPosition - 15000, 0);
++    await seek(newPosition);
++  };
++
++  const progress = duration > 0 ? currentPosition / duration : 0;
 +
 +  return (
 +    <View style={styles.container}>
 +      <View style={styles.waveformContainer}>
-+        <View style={styles.waveform}>
-+          {Array.from({ length: 40 }).map((_, i) => (
-+            <View
-+              key={i}
-+              style={[
-+                styles.waveformBar,
-+                {
-+                  height: 4 + Math.random() * 20,
-+                  opacity: i / 40 <= progressRef.current ? 1 : 0.3,
-+                },
-+              ]}
-+            />
-+          ))}
++        <AudioWaveform isPlaying={isPlaying} amplitude={0.5} />
++      </View>
++      
++      <View style={styles.progressContainer}>
++        <Slider
++          style={styles.slider}
++          minimumValue={0}
++          maximumValue={duration}
++          value={currentPosition}
++          onSlidingComplete={seek}
++          minimumTrackColor="#007AFF"
++          maximumTrackColor="#E5E5EA"
++          thumbTintColor="#007AFF"
++        />
++        <View style={styles.timeContainer}>
++          <Text style={styles.timeText}>{formatDuration(currentPosition)}</Text>
++          <Text style={styles.timeText}>{formatDuration(duration)}</Text>
 +        </View>
 +      </View>
 +
-+      <View style={styles.controls}>
-+        <TouchableOpacity onPress={handleRewind} style={styles.controlButton}>
-+          <Ionicons name="play-back" size={20} color="#333" />
++      <View style={styles.controlsContainer}>
++        <TouchableOpacity onPress={skipBackward} style={styles.controlButton}>
++          <Text style={styles.controlText}>⏪ 15s</Text>
 +        </TouchableOpacity>
-+
++        
 +        <TouchableOpacity
-+          onPress={handlePlayPause}
-+          disabled={isLoading}
++          onPress={isPlaying ? pause : play}
 +          style={styles.playButton}
++          disabled={isLoading}
 +        >
-+          <Ionicons
-+            name={isPlaying ? 'pause' : 'play'}
-+            size={28}
-+            color="#fff"
-+          />
++          <Text style={styles.playButtonText}>
++            {isLoading ? '...' : isPlaying ? '⏸' : '▶️'}
++          </Text>
 +        </TouchableOpacity>
-+
-+        <TouchableOpacity onPress={handleFastForward} style={styles.controlButton}>
-+          <Ionicons name="play-forward" size={20} color="#333" />
-+        </TouchableOpacity>
-+
-+        <TouchableOpacity onPress={toggleSpeed} style={styles.speedButton}>
-+          <Text style={styles.speedText}>{playbackSpeed}x</Text>
++        
++        <TouchableOpacity onPress={skipForward} style={styles.controlButton}>
++          <Text style={styles.controlText}>15s ⏩</Text>
 +        </TouchableOpacity>
 +      </View>
 +
-+      <View style={styles.progressContainer} {...panResponder.panHandlers}>
-+        <View style={styles.progressBar}>
-+          <View style={[styles.progressFill, { width: progressWidth }]} />
-+
++      <View style={styles.secondaryControls}>
++        <TouchableOpacity onPress={togglePlaybackRate} style={styles.rateButton}>
++          <Text style={styles.rateText}>{playbackRate}x</Text>
++        </TouchableOpacity>
++        
++        {onTranscribe && (
++          <TouchableOpacity onPress={onTranscribe} style={styles
