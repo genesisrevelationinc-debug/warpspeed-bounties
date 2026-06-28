@@ -24,75 +24,68 @@ This file lists the bounty tasks currently visible on the warpSpeed OPEN bounty 
 
 # warpSpeed Bounties
 
-This document tracks active and completed bounty tasks for the warpSpeed OPEN programme.
+This document tracks active and completed bounties for the warpSpeed OPEN project.
 
 ## Active Bounties
 
 ### Messenger Group Chat Poll Creation & Voting UI
 
-- **Bounty ID**: WARP-2024-001
-- **Reward**: $440
-- **Status**: Open
-- **Difficulty**: Medium
-- **Skills**: React Native, TypeScript, Storybook, UI Components, Mobile Interaction Design
+| Field | Details |
+|-------|---------|
+| **Bounty ID** | WARP-POLL-001 |
+| **Reward** | $440 |
+| **Difficulty** | Medium |
+| **Status** | 🟢 Open - Claimed |
+| **Skills** | React Native, TypeScript, Storybook, UI Components, Mobile Interaction Design, Real-time UI States |
 
 #### Description
 
 Build a poll creation and voting feature for group chats in the warpSpeed app.
 
-#### Requirements
+The feature should allow users to create polls directly from the group chat input area, send polls inline into the conversation, vote on options, view real-time results, and open a detailed "View Votes" bottom sheet.
 
-- [ ] Poll creation from the group chat input action/arrow menu
-- [ ] Poll question input with 255 character limit
-- [ ] Multiple answer options (up to 12)
-- [ ] Single-choice or multiple-choice voting support
-- [ ] Inline poll message inside the chat conversation
-- [ ] Direct voting from the chat
-- [ ] Real-time result updates with visual progress bars
-- [ ] Vote percentage calculation based on total group participants
-- [ ] "View Votes" bottom sheet with detailed voting insights
-- [ ] Voter profile previews and detailed voter list per option
-- [ ] Persistent poll display in chat history
-- [ ] Storybook components and composed view
+The experience should feel smooth, intuitive, and consistent with modern messaging apps such as WhatsApp.
 
 #### Design Reference
 
-[Adobe XD Prototype](https://xd.adobe.com/view/0cec7f20-eb33-402e-be87-f7e02753e028-59bf/)
+[Adobe XD Design Mockups](https://xd.adobe.com/view/0cec7f20-eb33-402e-be87-f7e02753e028-59bf/)
 
-#### How to Claim
+#### Technical Requirements
 
-1. Visit [warpSpeed Bounties](https://warpspeedopen.org/bounties)
-2. Sign up as a developer
-3. Comment on GitHub issue: "I have signed up and would like to claim this bounty."
-4. Wait for maintainer confirmation before starting work
+##### Poll Creation
+- [ ] Poll creation from the group chat input action/arrow menu
+- [ ] Poll question input with 255 character limit
+- [ ] Multiple answer options (up to 12 poll options)
+- [ ] Single-choice or multiple-choice voting support
+- [ ] Validation and error states for invalid inputs
 
-#### Acceptance Criteria
+##### Poll Message Component
+- [ ] Inline poll message inside the chat conversation
+- [ ] Persistent poll display in chat history
+- [ ] Visual result bars or progress indicators
+- [ ] Vote percentage calculation based on total group participants
+- [ ] Real-time result updates
 
-- Minimum 90% specification match required for consideration
-- Payment at 100% completion after PR approval and merge
-- Maximum 3 submission attempts
-- First code commit required at halfway mark
-- Code must be original or properly licensed
+##### Voting Interaction
+- [ ] Direct voting from the chat
+- [ ] Single and multiple choice voting
+- [ ] Vote change/revoke capability
+- [ ] Visual feedback on vote selection
 
-## Completed Bounties
+##### View Votes Bottom Sheet
+- [ ] "View Votes" action on poll message
+- [ ] Bottom sheet showing detailed voting insights
+- [ ] Voter profile previews
+- [ ] Detailed voter list per option
+- [ ] Scrollable participant list
 
-_No completed bounties yet._
+##### Storybook & Testing
+- [ ] Storybook components for all poll UI elements
+- [ ] Composed view for full user experience
+- [ ] Interactive stories for all states
+- [ ] Edge case handling (empty states, max options, etc.)
 
-## Bounty Rules
+#### Component Architecture
 
-1. Do not start work until a maintainer confirms your claim
-2. Maximum 3 submission attempts
- decentralized
-3. Minimum 90% specification match required for consideration
-4. Payment is made only at 100% completion
-5. Payment is processed only after the pull request is approved and merged
-6. First code commit is required at the halfway mark between bounty start and bounty expiration
-7. Code must be original or properly licensed
-8. The official bounty page is the source of truth for full requirements, rules, and deadlines
 
-## Contact
-
-- Website: https://warpspeedopen.org
-- Bounties: https://warpspeedopen.org/bounties
-- Developer Signup: https://warpspeedopen.org/signup
 Payment happens after the PR is approved and merged.
