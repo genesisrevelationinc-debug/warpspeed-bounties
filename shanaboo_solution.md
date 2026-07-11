@@ -1,10 +1,10 @@
-Based on the issue description, this is a React Native TypeScript project. The repository listing shows only documentation files, but the actual implementation files for the image editing feature need to be created. I'll create the necessary source files for the inline image editing feature.
+Based on the issue description, this is a React Native/TypeScript project that needs an inline image editing feature. Since the repository listing only shows documentation files, I need to create the actual implementation files. Let me create the core image editing components and utilities.
 
 ```diff
 --- /dev/null
 +++ b/src/components/ImageEditor/ImageEditorModal.tsx
 @@ -0,0 +1,312 @@
-+import React, { useState, useCallback, useRef, useEffect } from 'react';
++import React, { useState, useRef, useCallback, useEffect } from 'react';
 +import {
 +  Modal,
 +  View,
@@ -18,178 +18,135 @@ Based on the issue description, this is a React Native TypeScript project. The r
 +  GestureResponderEvent,
 +  PanResponderGestureState,
 +} from 'react-native';
++import { ImageEditorToolbar } from './ImageEditorToolbar';
++import { CropOverlay } from './CropOverlay';
++import { AnnotationLayer } from './AnnotationLayer';
++import { AdjustmentSliders } from './AdjustmentSliders';
 +import { ImageEditorProvider, useImageEditor } from './ImageEditorContext';
-+import { CropTool } from './tools/CropTool';
-+import { RotateTool } from './tools/RotateTool';
-+import { AdjustmentTool } from './tools/AdjustmentTool';
-+import { AnnotationTool } from './tools/AnnotationTool';
-+import { UndoRedoToolbar } from './UndoRedoToolbar';
-+import { EditorToolbar } from './EditorToolbar';
 +import { ImageProcessingService } from '../../services/ImageProcessingService';
-+import { ImageVersionManager } from '../../services/ImageVersionManager';
-+import { EditorAction, AnnotationType } from './types';
++import { Annotation, CropRect, ImageAdjustments, EditorTool } from './types';
++
++const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 +
 +interface ImageEditorModalProps {
 +  visible: boolean;
 +  imageUri: string;
-+  originalImageUri: string;
 +  onClose: () => void;
-+  onSave: (editedImageUri: string, originalImageUri: string) => void;
-+  context: 'notes' | 'messenger';
-+  messageTimestamp?: number;
++  onSave: (editedImageUri: string, originalUri: string) => void;
++  originalMessageTimestamp?: number;
 +}
-+
-+const SCREEN_WIDTH = Dimensions.get('window').width;
-+const SCREEN_HEIGHT = Dimensions.get('window').height;
 +
 +const ImageEditorContent: React.FC<{
 +  imageUri: string;
-+  originalImageUri: string;
 +  onClose: () => void;
-+  onSave: (editedImageUri: string, originalImageUri: string) => void;
-+  context: 'notes' | 'messenger';
-+  messageTimestamp?: number;
-+}> = ({ imageUri, originalImageUri, onClose, onSave, context, messageTimestamp }) => {
++  onSave: (editedImageUri: string, originalUri: string) => void;
++  originalMessageTimestamp?: number;
++}> = ({ imageUri, onClose, onSave, originalMessageTimestamp }) => {
 +  const {
-+    state,
-+    dispatch,
 +    activeTool,
 +    setActiveTool,
++    adjustments,
++    setAdjustments,
++    cropRect,
++    setCropRect,
++    rotation,
++    setRotation,
++    annotations,
++    setAnnotations,
++    undoStack,
++    redoStack,
++    pushUndo,
 +    undo,
 +    redo,
-+    canUndo,
-+    canRedo,
++    currentAnnotation,
++    setCurrentAnnotation,
 +  } = useImageEditor();
 +
 +  const [isSaving, setIsSaving] = useState(false);
-+  const [previewUri, setPreviewUri] = useState(imageUri);
++  const [imageSize, setImageSize] = useState({ width: SCREEN_WIDTH, height: SCREEN_WIDTH });
 +  const imageRef = useRef<View>(null);
-+
-+  const imageProcessingService = useRef(new ImageProcessingService());
-+  const imageVersionManager = useRef(new ImageVersionManager());
++  const panResponderRef = useRef(
++    PanResponder.create({
++      onStartShouldSetPanResponder: () => activeTool === 'pen' || activeTool === 'arrow' || activeTool === 'highlight',
++      onMoveShouldSetPanResponder: () => activeTool === 'pen' || activeTool === 'arrow' || activeTool === 'highlight',
++      onPanResponderGrant: (evt: GestureResponderEvent) => {
++        const { locationX, locationY } = evt.nativeEvent;
++        if (activeTool === 'pen' || activeTool === 'arrow' || activeTool === 'highlight') {
++          const newAnnotation: Annotation = {
++            id: Date.now().toString(),
++            type: activeTool as 'pen' | 'arrow' | 'highlight',
++            points: [{ x: locationX, y: locationY }],
++            color: '#FF0000',
++            strokeWidth: 3,
++          };
++          setCurrentAnnotation(newAnnotation);
++        }
++      },
++      onPanResponderMove: (evt: GestureResponderEvent, gestureState: PanResponderGestureState) => {
++        if (currentAnnotation && (activeTool === 'pen' || activeTool === 'arrow' || activeTool === 'highlight')) {
++          const { moveX, moveY } = evt.nativeEvent;
++          const updatedAnnotation = {
++            ...currentAnnotation,
++            points: [...currentAnnotation.points, { x: moveX, y: moveY }],
++          };
++          setCurrentAnnotation(updatedAnnotation);
++        }
++      },
++      onPanResponderRelease: () => {
++        if (currentAnnotation) {
++          pushUndo({ annotations: [...annotations] });
++          setAnnotations([...annotations, currentAnnotation]);
++          setCurrentAnnotation(null);
++        }
++      },
++    })
++  ).current;
 +
 +  useEffect(() => {
-+    dispatch({ type: 'LOAD_IMAGE', payload: { uri: imageUri } });
-+    setPreviewUri(imageUri);
-+  }, [imageUri, dispatch]);
-+
-+  const handleToolSelect = useCallback(
-+    (tool: string) => {
-+      setActiveTool(tool as any);
-+    },
-+    [setActiveTool]
-+  );
-+
-+  const handleCropComplete = useCallback(
-+    async (cropRegion: { x: number; y: number; width: number; height: number }) => {
-+      try {
-+        const croppedUri = await imageProcessingService.current.cropImage(
-+          previewUri,
-+          cropRegion
-+        );
-+        setPreviewUri(croppedUri);
-+        dispatch({
-+          type: 'APPLY_ACTION',
-+          payload: {
-+            action: {
-+              type: 'crop',
-+              params: cropRegion,
-+              previousUri: previewUri,
-+              newUri: croppedUri,
-+              timestamp: Date.now(),
-+            },
-+          },
-+        });
-+      } catch (error) {
-+        Alert.alert('Error', 'Failed to crop image');
++    Image.getSize(
++      imageUri,
++      (width, height) => {
++        const aspectRatio = width / height;
++        const displayWidth = SCREEN_WIDTH * 0.9;
++        const displayHeight = displayWidth / aspectRatio;
++        setImageSize({ width: displayWidth, height: Math.min(displayHeight, SCREEN_HEIGHT * 0.6) });
++      },
++      () => {
++        setImageSize({ width: SCREEN_WIDTH * 0.9, height: SCREEN_WIDTH * 0.9 });
 +      }
-+    },
-+    [previewUri, dispatch]
-+  );
++    );
++  }, [imageUri]);
 +
-+  const handleRotateComplete = useCallback(
-+    async (degrees: number) => {
-+      try {
-+        const rotatedUri = await imageProcessingService.current.rotateImage(
-+          previewUri,
-+          degrees
-+        );
-+        setPreviewUri(rotatedUri);
-+        dispatch({
-+          type: 'APPLY_ACTION',
-+          payload: {
-+            action: {
-+              type: 'rotate',
-+              params: { degrees },
-+              previousUri: previewUri,
-+              newUri: rotatedUri,
-+              timestamp: Date.now(),
-+            },
-+          },
-+        });
-+      } catch (error) {
-+        Alert.alert('Error', 'Failed to rotate image');
-+      }
-+    },
-+    [previewUri, dispatch]
-+  );
++  const handleSave = useCallback(async () => {
++    setIsSaving(true);
++    try {
++      const editedUri = await ImageProcessingService.applyEdits(imageUri, {
++        cropRect,
++        rotation,
++        adjustments,
++        annotations,
++      });
++      onSave(editedUri, imageUri);
++      onClose();
++    } catch (error) {
++      Alert.alert('Error', 'Failed to save edited image. Please try again.');
++    } finally {
++      setIsSaving(false);
++    }
++  }, [imageUri, cropRect, rotation, adjustments, annotations, onSave, onClose]);
 +
-+  const handleAdjustmentComplete = useCallback(
-+    async (adjustments: {
-+      brightness: number;
-+      contrast: number;
-+      saturation: number;
-+    }) => {
-+      try {
-+        const adjustedUri = await imageProcessingService.current.adjustImage(
-+          previewUri,
-+          adjustments
-+        );
-+        setPreviewUri(adjustedUri);
-+        dispatch({
-+          type: 'APPLY_ACTION',
-+          payload: {
-+            action: {
-+              type: 'adjust',
-+              params: adjustments,
-+              previousUri: previewUri,
-+              newUri: adjustedUri,
-+              timestamp: Date.now(),
-+            },
-+          },
-+        });
-+      } catch (error) {
-+        Alert.alert('Error', 'Failed to adjust image');
-+      }
-+    },
-+    [previewUri, dispatch]
-+  );
++  const handleUndo = useCallback(() => {
++    const previousState = undo();
++    if (previousState) {
++      if (previousState.annotations !== undefined) setAnnotations(previousState.annotations);
++      if (previousState.cropRect !== undefined) setCropRect(previousState.cropRect);
++      if (previousState.rotation !== undefined) setRotation(previousState.rotation);
++      if (previousState.adjustments !== undefined) setAdjustments(previousState.adjustments);
++    }
++  }, [undo, setAnnotations, setCropRect, setRotation, setAdjustments]);
 +
-+  const handleAnnotationComplete = useCallback(
-+    async (annotations: Array<{
-+      type: AnnotationType;
-+      points: Array<{ x: number; y: number }>;
-+      color: string;
-+      strokeWidth: number;
-+      text?: string;
-+    }>) => {
-+      try {
-+        const annotatedUri = await imageProcessingService.current.annotateImage(
-+          previewUri,
-+          annotations
-+        );
-+        setPreviewUri(annotatedUri);
-+        dispatch({
-+          type: 'APPLY_ACTION',
-+          payload: {
-+            action: {
-+              type: 'annotate',
-+              params: { annotations },
-+              previousUri: previewUri,
-+              newUri: annotatedUri,
-+              timestamp: Date.now(),
-+            },
-+          },
-+        });
-+      } catch (error) {
-+        Alert.alert('Error', '
++  const handleRedo = useCallback(() => {
++    const nextState = redo();
++    if (nextState) {
++      if (nextState.annotations !== undefined) setAnnotations(nextState.annotations);
++      if (nextState.cropRect !== undefined) setCropRect(nextState.cropRect);
