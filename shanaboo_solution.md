@@ -1,10 +1,12 @@
-Based on the issue description, this is a React Native/TypeScript project that needs an inline image editing feature. Since the repository listing only shows documentation files, I need to create the actual implementation files. Let me create the core image editing components and utilities.
+Based on the issue description, this is a React Native TypeScript project. The bounty requires building an inline image editing feature. Since the repository only shows documentation files, I need to create the actual implementation files for the image editor feature.
+
+Let me create the core implementation files:
 
 ```diff
 --- /dev/null
 +++ b/src/components/ImageEditor/ImageEditorModal.tsx
 @@ -0,0 +1,312 @@
-+import React, { useState, useRef, useCallback, useEffect } from 'react';
++import React, { useState, useCallback, useRef, useEffect } from 'react';
 +import {
 +  Modal,
 +  View,
@@ -33,6 +35,7 @@ Based on the issue description, this is a React Native/TypeScript project that n
 +  imageUri: string;
 +  onClose: () => void;
 +  onSave: (editedImageUri: string, originalUri: string) => void;
++  isMessageContext?: boolean;
 +  originalMessageTimestamp?: number;
 +}
 +
@@ -40,8 +43,9 @@ Based on the issue description, this is a React Native/TypeScript project that n
 +  imageUri: string;
 +  onClose: () => void;
 +  onSave: (editedImageUri: string, originalUri: string) => void;
++  isMessageContext?: boolean;
 +  originalMessageTimestamp?: number;
-+}> = ({ imageUri, onClose, onSave, originalMessageTimestamp }) => {
++}> = ({ imageUri, onClose, onSave, isMessageContext, originalMessageTimestamp }) => {
 +  const {
 +    activeTool,
 +    setActiveTool,
@@ -58,67 +62,23 @@ Based on the issue description, this is a React Native/TypeScript project that n
 +    pushUndo,
 +    undo,
 +    redo,
-+    currentAnnotation,
-+    setCurrentAnnotation,
++    isProcessing,
++    setIsProcessing,
 +  } = useImageEditor();
 +
-+  const [isSaving, setIsSaving] = useState(false);
-+  const [imageSize, setImageSize] = useState({ width: SCREEN_WIDTH, height: SCREEN_WIDTH });
++  const [imageLayout, setImageLayout] = useState({ x: 0, y: 0, width: 0, height: 0 });
 +  const imageRef = useRef<View>(null);
-+  const panResponderRef = useRef(
-+    PanResponder.create({
-+      onStartShouldSetPanResponder: () => activeTool === 'pen' || activeTool === 'arrow' || activeTool === 'highlight',
-+      onMoveShouldSetPanResponder: () => activeTool === 'pen' || activeTool === 'arrow' || activeTool === 'highlight',
-+      onPanResponderGrant: (evt: GestureResponderEvent) => {
-+        const { locationX, locationY } = evt.nativeEvent;
-+        if (activeTool === 'pen' || activeTool === 'arrow' || activeTool === 'highlight') {
-+          const newAnnotation: Annotation = {
-+            id: Date.now().toString(),
-+            type: activeTool as 'pen' | 'arrow' | 'highlight',
-+            points: [{ x: locationX, y: locationY }],
-+            color: '#FF0000',
-+            strokeWidth: 3,
-+          };
-+          setCurrentAnnotation(newAnnotation);
-+        }
-+      },
-+      onPanResponderMove: (evt: GestureResponderEvent, gestureState: PanResponderGestureState) => {
-+        if (currentAnnotation && (activeTool === 'pen' || activeTool === 'arrow' || activeTool === 'highlight')) {
-+          const { moveX, moveY } = evt.nativeEvent;
-+          const updatedAnnotation = {
-+            ...currentAnnotation,
-+            points: [...currentAnnotation.points, { x: moveX, y: moveY }],
-+          };
-+          setCurrentAnnotation(updatedAnnotation);
-+        }
-+      },
-+      onPanResponderRelease: () => {
-+        if (currentAnnotation) {
-+          pushUndo({ annotations: [...annotations] });
-+          setAnnotations([...annotations, currentAnnotation]);
-+          setCurrentAnnotation(null);
-+        }
-+      },
-+    })
-+  ).current;
 +
 +  useEffect(() => {
-+    Image.getSize(
-+      imageUri,
-+      (width, height) => {
-+        const aspectRatio = width / height;
-+        const displayWidth = SCREEN_WIDTH * 0.9;
-+        const displayHeight = displayWidth / aspectRatio;
-+        setImageSize({ width: displayWidth, height: Math.min(displayHeight, SCREEN_HEIGHT * 0.6) });
-+      },
-+      () => {
-+        setImageSize({ width: SCREEN_WIDTH * 0.9, height: SCREEN_WIDTH * 0.9 });
-+      }
-+    );
-+  }, [imageUri]);
++    if (imageRef.current) {
++      imageRef.current.measure((x, y, width, height, pageX, pageY) => {
++        setImageLayout({ x: pageX, y: pageY, width, height });
++      });
++    }
++  }, [rotation, cropRect]);
 +
 +  const handleSave = useCallback(async () => {
-+    setIsSaving(true);
++    setIsProcessing(true);
 +    try {
 +      const editedUri = await ImageProcessingService.applyEdits(imageUri, {
 +        cropRect,
@@ -126,27 +86,110 @@ Based on the issue description, this is a React Native/TypeScript project that n
 +        adjustments,
 +        annotations,
 +      });
++
++      const shouldLabelEdited =
++        isMessageContext &&
++        originalMessageTimestamp &&
++        Date.now() - originalMessageTimestamp < 15 * 60 * 1000;
++
 +      onSave(editedUri, imageUri);
-+      onClose();
 +    } catch (error) {
-+      Alert.alert('Error', 'Failed to save edited image. Please try again.');
++      Alert.alert('Error', 'Failed to save image edits. Please try again.');
 +    } finally {
-+      setIsSaving(false);
++      setIsProcessing(false);
 +    }
-+  }, [imageUri, cropRect, rotation, adjustments, annotations, onSave, onClose]);
++  }, [
++    imageUri,
++    cropRect,
++    rotation,
++    adjustments,
++    annotations,
++    onSave,
++    isMessageContext,
++    originalMessageTimestamp,
++    setIsProcessing,
++  ]);
 +
 +  const handleUndo = useCallback(() => {
-+    const previousState = undo();
-+    if (previousState) {
-+      if (previousState.annotations !== undefined) setAnnotations(previousState.annotations);
-+      if (previousState.cropRect !== undefined) setCropRect(previousState.cropRect);
-+      if (previousState.rotation !== undefined) setRotation(previousState.rotation);
-+      if (previousState.adjustments !== undefined) setAdjustments(previousState.adjustments);
-+    }
-+  }, [undo, setAnnotations, setCropRect, setRotation, setAdjustments]);
++    undo();
++  }, [undo]);
 +
 +  const handleRedo = useCallback(() => {
-+    const nextState = redo();
-+    if (nextState) {
-+      if (nextState.annotations !== undefined) setAnnotations(nextState.annotations);
-+      if (nextState.cropRect !== undefined) setCropRect(nextState.cropRect);
++    redo();
++  }, [redo]);
++
++  const handleAnnotationAdd = useCallback(
++    (annotation: Annotation) => {
++      pushUndo({ annotations: [...annotations] });
++      setAnnotations([...annotations, annotation]);
++    },
++    [annotations, pushUndo, setAnnotations]
++  );
++
++  const handleAnnotationUpdate = useCallback(
++    (index: number, annotation: Annotation) => {
++      pushUndo({ annotations: [...annotations] });
++      const updated = [...annotations];
++      updated[index] = annotation;
++      setAnnotations(updated);
++    },
++    [annotations, pushUndo, setAnnotations]
++  );
++
++  const handleAnnotationDelete = useCallback(
++    (index: number) => {
++      pushUndo({ annotations: [...annotations] });
++      const updated = annotations.filter((_, i) => i !== index);
++      setAnnotations(updated);
++    },
++    [annotations, pushUndo, setAnnotations]
++  );
++
++  const handleCropChange = useCallback(
++    (newCrop: CropRect) => {
++      pushUndo({ cropRect: { ...cropRect } });
++      setCropRect(newCrop);
++    },
++    [cropRect, pushUndo, setCropRect]
++  );
++
++  const handleRotationChange = useCallback(
++    (newRotation: number) => {
++      pushUndo({ rotation });
++      setRotation(newRotation);
++    },
++    [rotation, pushUndo, setRotation]
++  );
++
++  const handleAdjustmentsChange = useCallback(
++    (newAdjustments: ImageAdjustments) => {
++      pushUndo({ adjustments: { ...adjustments } });
++      setAdjustments(newAdjustments);
++    },
++    [adjustments, pushUndo, setAdjustments]
++  );
++
++  const renderEditorContent = () => {
++    switch (activeTool) {
++      case 'crop':
++        return (
++          <CropOverlay
++            imageLayout={imageLayout}
++            cropRect={cropRect}
++            onCropChange={handleCropChange}
++            rotation={rotation}
++          />
++        );
++      case 'adjust':
++        return (
++          <AdjustmentSliders
++            adjustments={adjustments}
++            onAdjustmentsChange={handleAdjustmentsChange}
++          />
++        );
++      case 'annotate':
++        return (
++          <AnnotationLayer
++            imageLayout={imageLayout}
++            annotations={annotations}
++            on
