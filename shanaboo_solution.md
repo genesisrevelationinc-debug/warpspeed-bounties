@@ -1,170 +1,195 @@
-Looking at the issue, this is about implementing an inline image editing feature for a React Native app. Since there are no existing source files shown in the repository listing, I need to create the core implementation files for this feature.
-
-Based on the bounty requirements, I'll create the main image editor component and supporting files. I'll structure this as a reusable React Native component that can be integrated into the existing app.
+Based on the issue description, this is a React Native TypeScript project. The repository listing shows only documentation files, but the actual implementation files for the image editing feature need to be created. I'll create the necessary source files for the inline image editing feature.
 
 ```diff
 --- /dev/null
-+++ b/src/components/ImageEditor/ImageEditor.tsx
-@@ -0,0 +1,350 @@
-+import React, { useState, useRef, useEffect } from 'react';
++++ b/src/components/ImageEditor/ImageEditorModal.tsx
+@@ -0,0 +1,312 @@
++import React, { useState, useCallback, useRef, useEffect } from 'react';
 +import {
++  Modal,
 +  View,
 +  StyleSheet,
 +  TouchableOpacity,
 +  Text,
-+  Slider,
-+  Modal,
-+  Dimensions,
 +  Alert,
++  ActivityIndicator,
++  Dimensions,
++  PanResponder,
++  GestureResponderEvent,
++  PanResponderGestureState,
 +} from 'react-native';
-+import { Image as RNImage } from 'react-native';
-+import { ImageEditorProps, ToolType, ImageAdjustments } from './types';
++import { ImageEditorProvider, useImageEditor } from './ImageEditorContext';
++import { CropTool } from './tools/CropTool';
++import { RotateTool } from './tools/RotateTool';
++import { AdjustmentTool } from './tools/AdjustmentTool';
++import { AnnotationTool } from './tools/AnnotationTool';
++import { UndoRedoToolbar } from './UndoRedoToolbar';
++import { EditorToolbar } from './EditorToolbar';
++import { ImageProcessingService } from '../../services/ImageProcessingService';
++import { ImageVersionManager } from '../../services/ImageVersionManager';
++import { EditorAction, AnnotationType } from './types';
 +
-+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
++interface ImageEditorModalProps {
++  visible: boolean;
++  imageUri: string;
++  originalImageUri: string;
++  onClose: () => void;
++  onSave: (editedImageUri: string, originalImageUri: string) => void;
++  context: 'notes' | 'messenger';
++  messageTimestamp?: number;
++}
 +
-+const ImageEditor: React.FC<ImageEditorProps> = ({
-+  isVisible,
-+  imageUri,
-+  onSave,
-+  onCancel,
-+  originalMessageTime,
-+}) => {
-+  const [tool, setTool] = useState<ToolType>('crop');
-+  const [adjustments, setAdjustments] = useState<ImageAdjustments>({
-+    brightness: 0,
-+    contrast: 0,
-+    saturation: 0,
-+  });
-+  const [rotation, setRotation] = useState(0);
-+  const [cropArea, setCropArea] = useState({ x: 0, y: 0, width: 0, height: 0 });
-+  const [history, setHistory] = useState<any[]>([]);
-+  const [historyIndex, setHistoryIndex] = useState(-1);
-+  const canvasRef = useRef<any>(null);
++const SCREEN_WIDTH = Dimensions.get('window').width;
++const SCREEN_HEIGHT = Dimensions.get('window').height;
 +
-+  // Save initial state to history
++const ImageEditorContent: React.FC<{
++  imageUri: string;
++  originalImageUri: string;
++  onClose: () => void;
++  onSave: (editedImageUri: string, originalImageUri: string) => void;
++  context: 'notes' | 'messenger';
++  messageTimestamp?: number;
++}> = ({ imageUri, originalImageUri, onClose, onSave, context, messageTimestamp }) => {
++  const {
++    state,
++    dispatch,
++    activeTool,
++    setActiveTool,
++    undo,
++    redo,
++    canUndo,
++    canRedo,
++  } = useImageEditor();
++
++  const [isSaving, setIsSaving] = useState(false);
++  const [previewUri, setPreviewUri] = useState(imageUri);
++  const imageRef = useRef<View>(null);
++
++  const imageProcessingService = useRef(new ImageProcessingService());
++  const imageVersionManager = useRef(new ImageVersionManager());
++
 +  useEffect(() => {
-+    if (isVisible && imageUri) {
-+      const initialState = {
-+        tool,
-+        adjustments,
-+        rotation,
-+        cropArea,
-+      };
-+      setHistory([initialState]);
-+      setHistoryIndex(0);
-+    }
-+  }, [isVisible, imageUri]);
++    dispatch({ type: 'LOAD_IMAGE', payload: { uri: imageUri } });
++    setPreviewUri(imageUri);
++  }, [imageUri, dispatch]);
 +
-+  const saveToHistory = (newState: any) => {
-+    const newHistory = history.slice(0, historyIndex + 1);
-+    newHistory.push(newState);
-+    setHistory(newHistory);
-+    setHistoryIndex(newHistory.length - 1);
-+  };
++  const handleToolSelect = useCallback(
++    (tool: string) => {
++      setActiveTool(tool as any);
++    },
++    [setActiveTool]
++  );
 +
-+  const handleUndo = () => {
-+    if (historyIndex > 0) {
-+      const prevState = history[historyIndex - 1];
-+      setTool(prevState.tool);
-+      setAdjustments(prevState.adjustments);
-+      setRotation(prevState.rotation);
-+      setCropArea(prevState.cropArea);
-+      setHistoryIndex(historyIndex - 1);
-+    }
-+  };
-+
-+  const handleRedo = () => {
-+    if (historyIndex < history.length - 1) {
-+      const nextState = history[historyIndex + 1];
-+      setTool(nextState.tool);
-+      setAdjustments(nextState.adjustments);
-+      setRotation(nextState.rotation);
-+      setCropArea(nextState.cropArea);
-+      setHistoryIndex(historyIndex + 1);
-+    }
-+  };
-+
-+  const handleAdjustmentChange = (key: keyof ImageAdjustments, value: number) => {
-+    const newAdjustments = { ...adjustments, [key]: value };
-+    setAdjustments(newAdjustments);
-+    saveToHistory({ ...history[historyIndex], adjustments: newAdjustments });
-+  };
-+
-+  const handleRotationChange = (direction: 'clockwise' | 'counterclockwise') => {
-+    const newRotation = direction === 'clockwise' 
-+      ? (rotation + 90) % 360 
-+      : (rotation - 90 + 360) % 360;
-+    setRotation(newRotation);
-+    saveToHistory({ ...history[historyIndex], rotation: newRotation });
-+  };
-+
-+  const handleSave = () => {
-+    // In a real implementation, this would process the image
-+    // For now, we'll just return the original URI with adjustments data
-+    const isEditedWithin15Minutes = originalMessageTime 
-+      ? (Date.now() - originalMessageTime) < 15 * 60 * 1000 
-+      : false;
-+    
-+    onSave({
-+      originalUri: imageUri,
-+      editedUri: imageUri, // In real implementation, this would be processed image
-+      adjustments,
-+      rotation,
-+      cropArea,
-+      isEditedWithin15Minutes,
-+    });
-+  };
-+
-+  const renderToolOptions = () => {
-+    switch (tool) {
-+      case 'adjust':
-+        return (
-+          <View style={styles.adjustmentPanel}>
-+            <View style={styles.adjustmentRow}>
-+              <Text>Brightness</Text>
-+              <Slider
-+                style={styles.slider}
-+                minimumValue={-100}
-+                maximumValue={100}
-+                value={adjustments.brightness}
-+                onValueChange={(value) => handleAdjustmentChange('brightness', value)}
-+                minimumTrackTintColor="#1976D2"
-+                maximumTrackTintColor="#d3d3d3"
-+              />
-+            </View>
-+            <View style={styles.adjustmentRow}>
-+              <Text>Contrast</Text>
-+              <Slider
-+                style={styles.slider}
-+                minimumValue={-100}
-+                maximumValue={100}
-+                value={adjustments.contrast}
-+                onValueChange={(value) => handleAdjustmentChange('contrast', value)}
-+                minimumTrackTintColor="#1976D2"
-+                maximumTrackTintColor="#d3d3d3"
-+              />
-+            </View>
-+            <View style={styles.adjustmentRow}>
-+              <Text>Saturation</Text>
-+              <Slider
-+                style={styles.slider}
-+                minimumValue={-100}
-+                maximumValue={100}
-+                value={adjustments.saturation}
-+                onValueChange={(value) => handleAdjustmentChange('saturation', value)}
-+                minimumTrackTintColor="#1976D2"
-+                maximumTrackTintColor="#d3d3d3"
-+              />
-+            </View>
-+          </View>
++  const handleCropComplete = useCallback(
++    async (cropRegion: { x: number; y: number; width: number; height: number }) => {
++      try {
++        const croppedUri = await imageProcessingService.current.cropImage(
++          previewUri,
++          cropRegion
 +        );
-+      case 'crop':
-+        return (
-+          <View style={styles.cropPanel}>
-+            <Text>Crop mode active</Text>
-+            <Text>Drag to select crop area</Text>
-+          </View>
++        setPreviewUri(croppedUri);
++        dispatch({
++          type: 'APPLY_ACTION',
++          payload: {
++            action: {
++              type: 'crop',
++              params: cropRegion,
++              previousUri: previewUri,
++              newUri: croppedUri,
++              timestamp: Date.now(),
++            },
++          },
++        });
++      } catch (error) {
++        Alert.alert('Error', 'Failed to crop image');
++      }
++    },
++    [previewUri, dispatch]
++  );
++
++  const handleRotateComplete = useCallback(
++    async (degrees: number) => {
++      try {
++        const rotatedUri = await imageProcessingService.current.rotateImage(
++          previewUri,
++          degrees
 +        );
-+      case 'pen':
-+        return (
-+          <View style
++        setPreviewUri(rotatedUri);
++        dispatch({
++          type: 'APPLY_ACTION',
++          payload: {
++            action: {
++              type: 'rotate',
++              params: { degrees },
++              previousUri: previewUri,
++              newUri: rotatedUri,
++              timestamp: Date.now(),
++            },
++          },
++        });
++      } catch (error) {
++        Alert.alert('Error', 'Failed to rotate image');
++      }
++    },
++    [previewUri, dispatch]
++  );
++
++  const handleAdjustmentComplete = useCallback(
++    async (adjustments: {
++      brightness: number;
++      contrast: number;
++      saturation: number;
++    }) => {
++      try {
++        const adjustedUri = await imageProcessingService.current.adjustImage(
++          previewUri,
++          adjustments
++        );
++        setPreviewUri(adjustedUri);
++        dispatch({
++          type: 'APPLY_ACTION',
++          payload: {
++            action: {
++              type: 'adjust',
++              params: adjustments,
++              previousUri: previewUri,
++              newUri: adjustedUri,
++              timestamp: Date.now(),
++            },
++          },
++        });
++      } catch (error) {
++        Alert.alert('Error', 'Failed to adjust image');
++      }
++    },
++    [previewUri, dispatch]
++  );
++
++  const handleAnnotationComplete = useCallback(
++    async (annotations: Array<{
++      type: AnnotationType;
++      points: Array<{ x: number; y: number }>;
++      color: string;
++      strokeWidth: number;
++      text?: string;
++    }>) => {
++      try {
++        const annotatedUri = await imageProcessingService.current.annotateImage(
++          previewUri,
++          annotations
++        );
++        setPreviewUri(annotatedUri);
++        dispatch({
++          type: 'APPLY_ACTION',
++          payload: {
++            action: {
++              type: 'annotate',
++              params: { annotations },
++              previousUri: previewUri,
++              newUri: annotatedUri,
++              timestamp: Date.now(),
++            },
++          },
++        });
++      } catch (error) {
++        Alert.alert('Error', '
